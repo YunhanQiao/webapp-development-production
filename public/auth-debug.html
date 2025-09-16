@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-Tab Auth Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; background: #f9f9f9; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .authenticated { background: #d4edda; color: #155724; }
+        .not-authenticated { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Cross-Tab Authentication Debug Tool</h1>
+    
+    <div id="status" class="status not-authenticated">
+        Status: Not Authenticated
+    </div>
+    
+    <div>
+        <button onclick="simulateLogin()">Simulate Login</button>
+        <button onclick="simulateLogout()">Simulate Logout</button>
+        <button onclick="clearStorage()">Clear All Storage</button>
+        <button onclick="showStorage()">Show Storage Contents</button>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+    
+    <h3>Storage Event Log:</h3>
+    <div id="log" class="log"></div>
+    
+    <h3>Current localStorage Contents:</h3>
+    <pre id="storage-contents"></pre>
+
+    <script>
+        const log = document.getElementById('log');
+        const status = document.getElementById('status');
+        const storageContents = document.getElementById('storage-contents');
+        
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.style.color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+            div.textContent = `[${timestamp}] ${message}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function updateStatus() {
+            const hasAuthData = Object.keys(localStorage).some(key => key.includes('@'));
+            const hasLogoutSignal = localStorage.getItem('auth-logout-signal');
+            
+            if (hasAuthData && !hasLogoutSignal) {
+                status.className = 'status authenticated';
+                status.textContent = 'Status: Authenticated';
+            } else {
+                status.className = 'status not-authenticated';
+                status.textContent = 'Status: Not Authenticated';
+            }
+        }
+        
+        function showStorage() {
+            const storage = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                storage[key] = localStorage.getItem(key);
+            }
+            storageContents.textContent = JSON.stringify(storage, null, 2);
+        }
+        
+        function simulateLogin() {
+            const testUser = {
+                user: {
+                    accountInfo: { email: 'test@example.com' },
+                    personalInfo: { firstName: 'Test', lastName: 'User' },
+                    speedgolfInfo: {},
+                    preferences: {},
+                    _id: 'test123'
+                },
+                tokens: {
+                    jwtToken: 'mock-jwt-token-' + Date.now(),
+                    jwtTokenExpiry: Date.now() + 3600000,
+                    refreshToken: 'mock-refresh-token',
+                    refreshTokenExpiry: Date.now() + 86400000
+                },
+                authenticated: true
+            };
+            
+            localStorage.setItem('test@example.com', JSON.stringify(testUser));
+            addLog('Login simulated - stored test user data', 'success');
+            updateStatus();
+            showStorage();
+        }
+        
+        function simulateLogout() {
+            // Clear user data
+            const allKeys = Object.keys(localStorage);
+            const emailKeys = allKeys.filter(key => key.includes('@'));
+            emailKeys.forEach(key => {
+                localStorage.removeItem(key);
+                addLog(`Removed key: ${key}`, 'info');
+            });
+            
+            // Add logout signal
+            localStorage.setItem('auth-logout-signal', Date.now().toString());
+            addLog('Added logout signal', 'info');
+            
+            // Remove signal after delay
+            setTimeout(() => {
+                localStorage.removeItem('auth-logout-signal');
+                addLog('Removed logout signal', 'info');
+                updateStatus();
+                showStorage();
+            }, 100);
+            
+            updateStatus();
+            showStorage();
+        }
+        
+        function clearStorage() {
+            localStorage.clear();
+            addLog('All localStorage cleared', 'info');
+            updateStatus();
+            showStorage();
+        }
+        
+        function clearLog() {
+            log.innerHTML = '';
+        }
+        
+        // Listen for storage events
+        window.addEventListener('storage', function(e) {
+            addLog(`Storage Event - Key: ${e.key}, Old: ${e.oldValue ? 'exists' : 'null'}, New: ${e.newValue ? 'exists' : 'null'}`, 'success');
+            updateStatus();
+            showStorage();
+        });
+        
+        // Initialize
+        addLog('Debug tool initialized - listening for storage events');
+        updateStatus();
+        showStorage();
+        
+        // Test if storage events work between tabs
+        setInterval(() => {
+            const testKey = 'heartbeat';
+            const currentValue = localStorage.getItem(testKey);
+            const newValue = Date.now().toString();
+            localStorage.setItem(testKey, newValue);
+        }, 5000);
+    </script>
+</body>
+</html>

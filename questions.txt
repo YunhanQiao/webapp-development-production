@@ -1,0 +1,2 @@
+1. why to remove hide class sidemenu in login function in login.js file?
+(the hidden class is not added by default then why to remove it?)

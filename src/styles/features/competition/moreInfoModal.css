@@ -1,0 +1,50 @@
+.comp-label-info-container {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.comp-label-info-container .label {
+    font-weight: bold;
+    font-size: 1rem;
+    white-space: nowrap;
+    width: 150px;
+}
+
+.comp-label-info-container .info {
+    flex: 1;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.comp-label-info-container .info a {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+table {
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+table th,
+table td {
+    border: 1px solid #dee2e6;
+    text-align: left;
+}
+
+table th {
+    background-color: #f8f9fa;
+    text-align: left;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.navbar-blue-btn {
+    background-color: var(--main-color);
+    color: var(--text-color);
+    border: none;
+}

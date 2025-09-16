@@ -1,0 +1,208 @@
+.course-container {
+  margin-left: 9rem;
+}
+
+.tee-container {
+  padding-left: 2rem;
+}
+
+.strokes-container {
+  /* margin-left: 27rem; */
+  margin-left: 17.5rem;
+}
+
+.finish-time-container {
+  margin-left: 0.4rem;
+}
+
+.scorecard-container {
+  padding-left: 4rem;
+  align-self: flex-end;
+}
+
+.roundTee {
+  min-width: 7rem;
+}
+
+.teeStartDate {
+  min-width: 7rem;
+  margin-left: 0.5rem;
+}
+
+.hideHole {
+  margin-left: 4rem;
+  margin-right: 2rem;
+}
+
+.course-container .form-control {
+  width: auto; /* Makes the input dynamic based on content */
+  min-width: 150px; /* Sets a minimum width to prevent the box from becoming too small */
+  max-width: 100%; /* Limits the maximum width to 100% of the parent container */
+  padding: 5px; /* Add some padding for aesthetics */
+  text-align: center; /* Centers the text within the input */
+}
+
+@media (max-width: 768px) {
+  .course-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+  }
+
+  .tee-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-left: -30px;
+  }
+
+  .form-control {
+    max-width: 300px; /* Limits the max-width on smaller screens */
+    width: auto; /* Keeps the input dynamic based on content */
+  }
+}
+
+/* Base styling for the symbol */
+/* Base styling for the score symbols */
+.score-symbol {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  margin-left: 8px;
+  margin-right: 8px;
+  text-align: center;
+  line-height: 20px; /* Center text in shapes if needed */
+  font-size: 12px; /* Optional: Add labels like "+1" */
+}
+
+/* GOLF ICON STYLES ********* */
+/* Outer circle */
+.outer-circle {
+  width: 25px; 
+  height: 25px;
+  border: 2px solid blue; 
+  border-radius: 100%; 
+  display: flex;
+  justify-content: center; 
+  align-items: center; 
+  position: relative;
+}
+
+.middle-circle {
+  width: 15px;
+  height: 15px;
+  border: 1px solid blue; 
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 255, 0.05);
+}
+
+.inner-circle {
+  width: 5px; 
+  height: 5px;
+  border: 0.5px solid blue; 
+  border-radius: 100%;
+  background: rgba(0, 0, 255, 0.1); 
+}
+
+.outer-square {
+  width: 25px;
+  height: 25px;
+  border: 2px solid black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.inner-square {
+  width: 15px;
+  height: 15px;
+  border: 2px solid black; 
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+
+.stroke-input {
+  padding: 5px 0;
+  border: 0;
+  width: 35px;
+  text-align: center;
+}
+
+.stroke-input::-webkit-inner-spin-button,
+.stroke-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* For Firefox */
+.stroke-input {
+  -moz-appearance: textfield;
+}
+
+.stroke-input:focus {
+  /* outline: none !important; */
+  border: none !important;
+}
+
+.circle {
+  border: 1px solid green;
+  border-radius: 50px;
+}
+
+.circle:focus {
+  border: 1px solid green !important;
+}
+
+.solid-circle {
+  /* border: 1px solid green; */
+  border-radius: 50px;
+  color: white;
+  background-color: black;
+}
+
+.square {
+  border: 1px solid green;
+  border-radius: 0;
+}
+
+.square:focus {
+  border: 1px solid green !important;
+  border-radius: 0;
+}
+
+.solid-square {
+  border: 1px solid green;
+  color: white;
+  background-color: black;
+  border-radius: 0;
+}
+
+.no-border {
+  border: none;
+}
+
+.cell-bg-white {
+  background-color: white;
+}
+
+.cell-bg-gray {
+  background-color: #F2F2F2;
+}
+
+.normal {
+  /* border: 1px solid black; */
+  border: none;
+  box-shadow: 1px 1px 3px 1px rgba(0,0,0,0.75);
+}
+
+.normal:focus {
+  /* border: 1px solid black !important; */
+  border: none;
+  border-radius: none !important;
+}

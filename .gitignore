@@ -1,0 +1,18 @@
+node_modules/
+test-results/
+.vscode/
+.env
+.env.local
+.DS_Store
+# Node.js
+node_modules/
+package-lock.json  # Exclude package-lock.json
+/playwright/.cache/
+/test-results/
+/blob-report/
+/playwright/.cache/
+build/
+.prettierrc
+TODO.txt
+old.txt
+test.py

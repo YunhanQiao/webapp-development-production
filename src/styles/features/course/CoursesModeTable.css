@@ -1,0 +1,63 @@
+.course-link {
+  text-decoration: none; /* Remove underline */
+  color: inherit; /* Inherit the text color */
+}
+.text-adjust {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.course-link:hover {
+  color: blue; /* Change color to light blue on hover */
+}
+
+.course-card {
+  -webkit-box-shadow: 9px 11px 13px -5px rgba(22, 26, 48, 0.5);
+  -moz-box-shadow: 9px 11px 13px -5px rgba(22, 26, 48, 0.5);
+  /* box-shadow: 9px 11px 13px -5px rgba(22,26,48,0.5); */
+  box-shadow: 14px 18px 14px -7px rgba(22, 26, 48, 0.9);
+  height: 100px; /* Set a fixed height for consistency
+  /* height: auto; */
+  overflow: hidden; /* Hide any overflow content */
+  border-radius: 2px;
+  transition: background-color 0.3s, box-shadow 0.3s; /* Smooth transition for hover effect */
+}
+
+.course-card:hover {
+  /*background-color: #fffacd; /* Light goldenrod yellow background on hover */
+  -webkit-box-shadow: 14px 18px 30px -7px rgba(22, 26, 48, 0.9);
+  -moz-box-shadow: 14px 18px 30px -7px rgba(22, 26, 48, 0.9);
+  /* box-shadow: 14px 18px 30px -7px rgba(22,26,48,0.9); */
+  box-shadow: 9px 11px 13px -5px rgba(22, 26, 48, 0.5);
+}
+
+.img-course {
+  width: 100%; /* Set the image to take full width of its column */
+  height: 100%; /* Set the image to take full height of its column */
+  object-fit: cover; /* Ensure the image covers the given width and height */
+}
+
+.course-address {
+  display: block; /* Ensure address is a block element */
+  white-space: pre-wrap; /* Preserve whitespace and handle newline characters */
+}
+
+.row.no-gutters {
+  margin-right: 0;
+  margin-left: 0;
+}
+
+.row.no-gutters > .col-4,
+.row.no-gutters > .col-8 {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.card-body {
+  flex: 1; /* Ensure card body takes up remaining space */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+

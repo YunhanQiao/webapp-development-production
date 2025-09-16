@@ -1,0 +1,192 @@
+:root {
+  --bs-modal-header-padding-y: 1rem;
+  --bs-modal-header-padding-x: 1rem;
+}
+
+/* NewTournament.css */
+.logo-image {
+  width: 120px;
+  height: 120px;
+  margin-right: 20px;
+  border: 1px solid;
+  display: inline-block;
+}
+
+.rounds-container {
+  border: 1px solid black;
+  padding: 20px;
+}
+
+.rounds-title {
+  padding: 0.2em 0.5em;
+  color: black;
+  font-size: 20px;
+  margin-left: 20px;
+  float: none;
+  width: fit-content;
+}
+
+.color-field {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.color-field label {
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.color-field .color-preview {
+  width: 30px;
+  height: 10px;
+  border: 1px solid #000;
+  border-radius: 1px;
+  background-color: var(--color-preview-bg, #fff);
+}
+
+.color-field .form-control {
+  width: auto;
+  height: 25px;
+  border-radius: 0;
+}
+
+.color-field .invalid-feedback {
+  display: block;
+}
+
+.cls-btn {
+  padding: calc(var(--bs-modal-header-padding-y) * 0.5) calc(var(--bs-modal-header-padding-x) * 0.5);
+  margin: calc(-0.5 * var(--bs-modal-header-padding-y)) calc(-0.5 * var(--bs-modal-header-padding-x))
+    calc(-0.5 * var(--bs-modal-header-padding-y)) auto;
+}
+
+.autocomplete-results-wrapper {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  max-height: 150px;
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid #ccc;
+  width: 100%;
+}
+
+.autocomplete-container {
+  position: relative;
+}
+
+.autocomplete-item {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.autocomplete-item:hover {
+  background-color: #f0f0f0;
+}
+
+.btn-transparent {
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+/* Tab Container */
+.tabs {
+  display: flex;
+  border-bottom: 2px solid #ddd;
+}
+
+/* Individual Tab */
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 5px 5px 0 0;
+  background: #f0f0f0;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+/* Active Tab */
+.tab.active {
+  border-color: #007bff;
+  background: #007bff;
+  color: white;
+}
+
+/* Hover Effect */
+.tab:hover {
+  background: #e0e0e0;
+}
+
+/* Tournament list keyboard navigation styles */
+.tournament-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease, outline 0.2s ease;
+}
+
+.tournament-row.focused-row {
+  background-color: #e3f2fd !important;
+  outline: 2px solid #1976d2;
+  outline-offset: -2px;
+}
+
+.tournament-row.focused-row:hover {
+  background-color: #bbdefb !important;
+}
+
+.tournament-row:hover:not(.focused-row) {
+  background-color: #f8f9fa !important;
+}
+
+/* Table focus management - completely disable table outline */
+.table[tabindex="0"]:focus,
+.table[tabindex="0"]:focus-visible,
+.table:focus,
+.table:focus-visible,
+table[tabindex="0"]:focus,
+table[tabindex="0"]:focus-visible {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Focus styles for collapsible headers */
+h4[role="button"]:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+  background-color: rgba(25, 118, 210, 0.1);
+  border-radius: 4px;
+}
+
+/* Ensure proper cursor for interactive elements */
+.tournament-row[role="button"] {
+  cursor: pointer;
+}
+
+/* Skip link for keyboard users */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #000;
+  color: #fff;
+  padding: 8px;
+  text-decoration: none;
+  z-index: 1000;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* Ensure empty state messages are not tabbable */
+tr[role="row"] td[role="cell"] {
+  color: #6c757d;
+  font-style: italic;
+}

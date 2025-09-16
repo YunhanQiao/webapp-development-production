@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage Event Diagnostic</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; }
+        .log { border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: scroll; background: #f9f9f9; }
+        button { padding: 10px 20px; margin: 5px; font-size: 16px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>Storage Event Diagnostic Tool</h1>
+    
+    <div class="section">
+        <h3>Environment Info</h3>
+        <div id="env-info"></div>
+    </div>
+    
+    <div class="section">
+        <h3>Storage Event Test</h3>
+        <p><strong>Instructions:</strong> Open this page in TWO tabs, then click buttons in one tab to see if events fire in the other.</p>
+        <button onclick="testBasicStorage()">Test Basic Storage</button>
+        <button onclick="testAuthStorage()">Test Auth Storage</button>
+        <button onclick="testBroadcastChannel()">Test BroadcastChannel (Alternative)</button>
+        <button onclick="clearAll()">Clear All</button>
+    </div>
+    
+    <div class="section">
+        <h3>Event Log</h3>
+        <div id="log" class="log"></div>
+    </div>
+    
+    <div class="section">
+        <h3>Current Storage</h3>
+        <pre id="storage-contents"></pre>
+    </div>
+
+    <script>
+        const log = document.getElementById('log');
+        const envInfo = document.getElementById('env-info');
+        const storageContents = document.getElementById('storage-contents');
+        let eventCount = 0;
+        
+        // BroadcastChannel as alternative to storage events
+        const broadcastChannel = new BroadcastChannel('auth-sync');
+        
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = type;
+            div.style.padding = '5px';
+            div.style.margin = '2px 0';
+            div.style.borderRadius = '3px';
+            div.textContent = `[${timestamp}] ${message}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+            console.log(`${type.toUpperCase()}: ${message}`);
+        }
+        
+        function updateStorageDisplay() {
+            const storage = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                storage[key] = localStorage.getItem(key);
+            }
+            storageContents.textContent = JSON.stringify(storage, null, 2);
+        }
+        
+        function updateEnvInfo() {
+            envInfo.innerHTML = `
+                <strong>URL:</strong> ${window.location.href}<br>
+                <strong>Origin:</strong> ${window.location.origin}<br>
+                <strong>User Agent:</strong> ${navigator.userAgent}<br>
+                <strong>Storage Support:</strong> ${typeof(Storage) !== "undefined" ? "✅ Yes" : "❌ No"}<br>
+                <strong>BroadcastChannel Support:</strong> ${typeof(BroadcastChannel) !== "undefined" ? "✅ Yes" : "❌ No"}
+            `;
+        }
+        
+        function testBasicStorage() {
+            const key = 'test-key';
+            const value = `Test value ${++eventCount} at ${new Date().toISOString()}`;
+            localStorage.setItem(key, value);
+            addLog(`Set ${key} = ${value}`, 'info');
+            updateStorageDisplay();
+        }
+        
+        function testAuthStorage() {
+            const key = 'test@example.com';
+            const value = JSON.stringify({
+                authenticated: true,
+                timestamp: Date.now(),
+                test: true
+            });
+            localStorage.setItem(key, value);
+            addLog(`Set auth data: ${key}`, 'info');
+            
+            // Test logout signal
+            setTimeout(() => {
+                localStorage.setItem('auth-logout-signal', Date.now().toString());
+                addLog('Set logout signal', 'info');
+                setTimeout(() => {
+                    localStorage.removeItem('auth-logout-signal');
+                    addLog('Removed logout signal', 'info');
+                    updateStorageDisplay();
+                }, 100);
+            }, 500);
+            updateStorageDisplay();
+        }
+        
+        function testBroadcastChannel() {
+            const message = {
+                type: 'AUTH_EVENT',
+                action: 'LOGOUT',
+                timestamp: Date.now()
+            };
+            broadcastChannel.postMessage(message);
+            addLog(`Sent BroadcastChannel message: ${JSON.stringify(message)}`, 'info');
+        }
+        
+        function clearAll() {
+            localStorage.clear();
+            addLog('Cleared all localStorage', 'info');
+            updateStorageDisplay();
+        }
+        
+        // Listen for storage events
+        window.addEventListener('storage', function(e) {
+            addLog(`📡 STORAGE EVENT - Key: "${e.key}", Old: "${e.oldValue}", New: "${e.newValue}"`, 'success');
+            updateStorageDisplay();
+        });
+        
+        // Listen for broadcast channel messages
+        broadcastChannel.onmessage = function(event) {
+            addLog(`📺 BROADCAST EVENT - ${JSON.stringify(event.data)}`, 'success');
+        };
+        
+        // Initialize
+        updateEnvInfo();
+        updateStorageDisplay();
+        addLog('🚀 Diagnostic tool initialized - listening for events');
+        
+        // Test connectivity
+        addLog('🔍 Testing if storage events work in this environment...');
+        addLog('📋 Open this page in ANOTHER TAB and click buttons to test cross-tab communication');
+    </script>
+</body>
+</html>

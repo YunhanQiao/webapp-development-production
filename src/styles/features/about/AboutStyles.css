@@ -1,0 +1,10 @@
+/* #aboutSpeedScore.show-modal {
+  display: block;
+  opacity: 1;
+} */
+
+/* Optional: Smooth transition for the modal */
+/* #aboutSpeedScore.modal.fade {
+  transition: opacity 0.3s ease-in-out;
+  opacity: 0;
+} */

@@ -1,0 +1,2376 @@
+/**
+ * Comprehensive Mobile UI Improvements
+ * 
+ * This file addresses multiple mobile UX issues:
+ * 1. Modal scrolling and button visibility
+ * 2. Public tournament banner responsive layout
+ * 3. Button scaling and touch-friendly sizing
+ * 4. Player scorecard mobile layout (transposed)
+ * 5. Tournament wizard action button positioning
+ * 6. Tab container independence from horizontal scroll
+ */
+
+/* ============================================
+   PREVENT HORIZONTAL SCROLL INTERFERENCE
+   ============================================ */
+
+/* Prevent horizontal scroll from affecting fixed elements */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden !important; /* Prevent horizontal page scroll */
+  }
+  
+  /* Ensure all fixed elements stay properly positioned */
+  [style*="position: fixed"] {
+    transform: translateX(0) !important;
+  }
+}
+
+/* ============================================
+   MODAL SCROLLING & BUTTON VISIBILITY
+   ============================================ */
+
+/* Mobile modal improvements - triggers on narrow OR short screens */
+@media (max-width: 768px), (max-height: 600px) {
+  
+  /* Force modal body to be scrollable with high specificity */
+  .modal.show .modal-dialog .modal-content .modal-body {
+    max-height: 60vh !important; /* Reduced to ensure footer buttons visible */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 1rem !important; /* Extra space before footer */
+  }
+  
+  /* Ensure modal dialog doesn't exceed viewport */
+  .modal.show .modal-dialog {
+    max-height: 90vh !important; /* Reduced to ensure buttons visible */
+    margin: 1rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  /* Ensure modal content uses flexbox properly */
+  .modal.show .modal-dialog .modal-content {
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: 100% !important;
+  }
+  
+  /* Keep header and footer fixed size with better visibility */
+  .modal.show .modal-dialog .modal-content .modal-header,
+  .modal.show .modal-dialog .modal-content .modal-footer {
+    flex-shrink: 0 !important;
+    background-color: #fff !important;
+    z-index: 10 !important;
+  }
+  
+  /* Ensure footer buttons are always visible and touch-friendly */
+  .modal.show .modal-dialog .modal-content .modal-footer {
+    padding: 1rem !important;
+    border-top: 2px solid #dee2e6 !important;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
+  }
+  
+  /* Make modal footer buttons more touch-friendly */
+  .modal-footer .btn {
+    min-height: 44px !important; /* iOS recommended touch target */
+    padding: 0.75rem 1rem !important;
+    font-size: 16px !important;
+    margin: 0.25rem !important;
+  }
+}
+
+/* Very small screens - more conservative */
+@media (max-width: 576px) {
+  .modal.show .modal-dialog .modal-content .modal-body {
+    max-height: 50vh !important; /* Even more conservative on small screens */
+  }
+  
+  .modal.show .modal-dialog {
+    margin: 0.5rem !important;
+  }
+  
+  /* Stack footer buttons vertically on very small screens */
+  .modal-footer {
+    flex-direction: column !important;
+  }
+  
+  .modal-footer .btn {
+    width: 100% !important;
+    margin: 0.25rem 0 !important;
+  }
+}
+
+/* ============================================
+   PUBLIC TOURNAMENT BANNER RESPONSIVE LAYOUT
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Tournament banner container - stack elements vertically */
+  .tournament-banner,
+  .comp-banner {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+  
+  /* Tournament image - make it smaller and centered */
+  .tournament-banner img,
+  .comp-banner img {
+    width: 150px !important;
+    height: 150px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  /* Tournament details section */
+  .tournament-details,
+  .comp-details {
+    width: 100% !important;
+    padding: 0 1rem !important;
+  }
+  
+  /* Tournament title responsive sizing */
+  .tournament-title,
+  .comp-title {
+    font-size: 1.5rem !important;
+    line-height: 1.3 !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Tournament info items - stack vertically */
+  .tournament-info,
+  .comp-info {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  
+  .tournament-info-item,
+  .comp-info-item {
+    font-size: 0.9rem !important;
+    padding: 0.25rem 0 !important;
+  }
+  
+  /* Public tournaments page header banner */
+  .d-flex.align-items-center {
+    flex-direction: column !important;
+    text-align: center !important;
+  }
+  
+  .d-flex.align-items-center img {
+    margin-right: 0 !important;
+    margin-bottom: 1rem !important;
+    height: 50px !important;
+  }
+  
+  /* Individual tournament detail pages - responsive layout */
+  .container .row .col-md-4,
+  .container .row .col-md-8 {
+    order: 1 !important;
+  }
+  
+  /* Tournament logo on detail pages */
+  .col-md-4 img.img-fluid {
+    max-height: 150px !important;
+    width: auto !important;
+    display: block !important;
+    margin: 0 auto 1rem auto !important;
+  }
+  
+  /* Tournament detail layout - stack image above content */
+  .container .row {
+    flex-direction: column !important;
+  }
+  
+  .container .row .col-md-4 {
+    order: 1 !important;
+    margin-bottom: 1rem !important;
+    text-align: center !important;
+  }
+  
+  .container .row .col-md-8 {
+    order: 2 !important;
+  }
+  
+  /* Tournament title responsive sizing */
+  h1.display-4 {
+    font-size: 2rem !important;
+    line-height: 1.3 !important;
+  }
+  
+  /* Course information responsive sizing */
+  .lead {
+    font-size: 1rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+}
+
+/* ============================================
+   RESPONSIVE BUTTON SCALING & TOUCH TARGETS
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* General button improvements for mobile */
+  .btn {
+    min-height: 44px !important; /* iOS/Android recommended touch target */
+    padding: 0.75rem 1rem !important;
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+  }
+  
+  /* Button icons scaling */
+  .btn i,
+  .btn .fa,
+  .btn svg {
+    font-size: 1rem !important;
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+  
+  /* Mode action buttons */
+  .mode-actions .btn,
+  .action-btn {
+    width: 100% !important;
+    margin-bottom: 0.5rem !important;
+    text-align: center !important;
+  }
+  
+  /* Tournament wizard buttons */
+  .tournament-wizard .btn,
+  .wizard-footer .btn {
+    min-height: 48px !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+  }
+  
+  /* Primary action buttons - make them more prominent */
+  .btn-primary {
+    box-shadow: 0 2px 8px rgba(0,123,255,0.3) !important;
+  }
+  
+  /* Button groups - stack vertically on mobile */
+  .btn-group {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  
+  .btn-group .btn {
+    border-radius: 6px !important;
+    margin-bottom: 0.5rem !important;
+    width: 100% !important;
+  }
+}
+
+/* ============================================
+   PLAYER SCORECARD MOBILE LAYOUT (BASIC IMPROVEMENTS ONLY)
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Simple scorecard improvements - just make it more readable */
+  .scorecard-table {
+    font-size: 0.75rem !important;
+    width: 100% !important;
+  }
+  
+  .scorecard-table th,
+  .scorecard-table td {
+    padding: 0.25rem !important;
+    text-align: center !important;
+  }
+  
+  /* Enable horizontal scrolling for wide tables */
+  .scorecard-modal .modal-body {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+/* ============================================
+   TOURNAMENT WIZARD SPECIFIC IMPROVEMENTS
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Wizard container improvements */
+  .tournament-wizard {
+    padding: 1rem !important;
+  }
+  
+  /* Wizard steps - make them more mobile-friendly */
+  .wizard-steps {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .wizard-step {
+    flex: 1 !important;
+    min-width: auto !important;
+    padding: 0.5rem !important;
+    font-size: 0.8rem !important;
+    text-align: center !important;
+  }
+  
+  /* Wizard content area */
+  .wizard-content {
+    margin-bottom: 2rem !important; /* Extra space for footer buttons */
+  }
+  
+  /* Wizard footer - always visible */
+  .wizard-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: #fff !important;
+    padding: 1rem !important;
+    border-top: 2px solid #dee2e6 !important;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
+    z-index: 100 !important;
+  }
+  
+  /* NEW TOURNAMENT WIZARD FOOTER - Fix button layout */
+  .d-flex.mb-3 {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+  }
+  
+  /* Tournament wizard footer buttons - stack vertically */
+  .mode-page-btn,
+  .mode-page-btn-cancel,
+  .action-dialog,
+  .action-button,
+  .cancel-button {
+    width: 100% !important;
+    margin: 0.25rem 0 !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 14px !important;
+    min-height: 48px !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  /* Cancel button styling */
+  .mode-page-btn-cancel.cancel-button {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: white !important;
+  }
+  
+  /* Action button styling - use app's custom blue */
+  .mode-page-btn.action-button {
+    background-color: #13294e !important; /* App's custom blue */
+    border-color: #13294e !important;
+    color: white !important;
+  }
+  
+  /* Consistent styling for React Bootstrap buttons in Basic Info tab */
+  .btn-secondary {
+    background-color: #13294e !important; /* Match app's custom blue */
+    border-color: #13294e !important;
+    color: white !important;
+    font-size: 14px !important;
+    min-height: 48px !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 0.375rem !important; /* Match footer button border radius */
+    font-family: inherit !important; /* Match footer button font */
+  }
+  
+  .btn-secondary:hover,
+  .btn-secondary:focus,
+  .btn-secondary:active {
+    background-color: #0f1f3a !important; /* Darker shade for hover */
+    border-color: #0f1f3a !important;
+    color: white !important;
+  }
+  
+  /* Consistent styling for all upload buttons and utility buttons */
+  .btn-transparent {
+    background-color: transparent !important;
+    border: 1px solid #13294e !important;
+    color: #13294e !important;
+    font-size: 14px !important;
+    min-height: 44px !important;
+    padding: 0.5rem 0.75rem !important;
+    border-radius: 0.375rem !important;
+  }
+  
+  .btn-transparent:hover,
+  .btn-transparent:focus {
+    background-color: #13294e !important;
+    color: white !important;
+  }
+  
+  /* Icon spacing in buttons */
+  .mode-page-btn i,
+  .mode-page-btn-cancel i {
+    margin-right: 0.25rem !important;
+    margin-left: 0.25rem !important;
+  }
+  
+  /* ============================================
+     TOURNAMENT WIZARD TAB RESPONSIVE LAYOUTS
+     ============================================ */
+  
+  /* Target the actual tournament wizard container */
+  .mode-page.action-dialog .form-group.row,
+  .mode-page.action-dialog .row,
+  .mode-page.action-dialog .form-group {
+    flex-direction: column !important;
+    margin-bottom: 1.5rem !important;
+    align-items: stretch !important;
+  }
+  
+  /* All wizard tab columns should stack vertically and left-align on mobile */
+  .mode-page.action-dialog .col,
+  .mode-page.action-dialog [class*="col-"],
+  .mode-page.action-dialog .col-sm-1,
+  .mode-page.action-dialog .col-sm-2,
+  .mode-page.action-dialog .col-sm-3,
+  .mode-page.action-dialog .col-sm-4,
+  .mode-page.action-dialog .col-sm-5,
+  .mode-page.action-dialog .col-sm-6,
+  .mode-page.action-dialog .col-sm-7,
+  .mode-page.action-dialog .col-sm-9 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 0.75rem !important;
+    text-align: left !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  /* Form labels should be consistent and left-aligned */
+  .mode-page.action-dialog .form-label {
+    font-weight: 600 !important;
+    margin-bottom: 0.5rem !important;
+    color: #495057 !important;
+    font-size: 14px !important;
+    text-align: left !important;
+    display: block !important;
+  }
+  
+  /* Remove text-end class behavior on mobile */
+  .mode-page.action-dialog .text-end {
+    text-align: left !important;
+  }
+  
+  /* Form controls should be full width and touch-friendly */
+  .mode-page.action-dialog .form-control,
+  .mode-page.action-dialog .form-select {
+    width: 100% !important;
+    min-height: 44px !important;
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 0.75rem !important;
+    border-radius: 0.375rem !important;
+    border: 1px solid #ced4da !important;
+    display: block !important;
+  }
+  
+  /* Date inputs and complex flex layouts - stack everything vertically */
+  .mode-page.action-dialog .d-flex {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: stretch !important;
+  }
+  
+  .mode-page.action-dialog .d-flex.gap-3 {
+    gap: 0.75rem !important;
+  }
+  
+  .mode-page.action-dialog .d-flex .form-control {
+    width: 100% !important;
+    margin-bottom: 0 !important;
+  }
+  
+  .mode-page.action-dialog .d-flex .form-label {
+    margin-bottom: 0.5rem !important;
+    text-align: left !important;
+    font-weight: 600 !important;
+  }
+  
+  /* Enhanced checkbox styling for mobile */
+  .mode-page.action-dialog .enhanced-checkbox {
+    margin-bottom: 1rem !important;
+    padding: 1rem !important;
+    background-color: #f8f9fa !important;
+    border-radius: 0.375rem !important;
+    border: 1px solid #dee2e6 !important;
+    display: block !important;
+  }
+  
+  .mode-page.action-dialog .enhanced-checkbox input[type="checkbox"] {
+    width: 24px !important;
+    height: 24px !important;
+    margin-right: 0.75rem !important;
+    vertical-align: top !important;
+  }
+  
+  .mode-page.action-dialog .enhanced-checkbox label {
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    cursor: pointer !important;
+    display: inline-block !important;
+    width: calc(100% - 40px) !important;
+  }
+  
+  /* Custom checkbox container improvements */
+  .mode-page.action-dialog .custom-checkbox-container {
+    margin-bottom: 0.75rem !important;
+    padding: 0.5rem !important;
+    text-align: left !important;
+  }
+  
+  /* Align items center should become left-aligned stacks */
+  .mode-page.action-dialog .align-items-center {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+  
+  /* Processing fees section - special layout for complex form */
+  .mode-page.action-dialog .d-flex.gap-3.align-items-center {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+  
+  .mode-page.action-dialog .d-flex.align-items-center input[type="number"] {
+    width: 100% !important;
+    min-height: 44px !important;
+    font-size: 16px !important;
+    padding: 0.75rem !important;
+    border-radius: 0.375rem !important;
+    border: 1px solid #ced4da !important;
+  }
+  
+  /* Percentage and fee input groups */
+  .mode-page.action-dialog .d-flex.align-items-center {
+    margin-bottom: 0.75rem !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  
+  .mode-page.action-dialog .d-flex.align-items-center span {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    margin: 0.25rem 0 !important;
+    color: #495057 !important;
+    text-align: left !important;
+  }
+  
+  /* Icon spacing in processing fees */
+  .mode-page.action-dialog .fa-plus {
+    margin: 0.75rem 0 !important;
+    text-align: center !important;
+    color: #6c757d !important;
+    font-size: 1.5rem !important;
+  }
+  
+  /* Input group styling */
+  .mode-page.action-dialog .input-group {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  
+  .mode-page.action-dialog .input-group .form-control {
+    border-radius: 0.375rem !important;
+  }
+  
+  /* Autocomplete container improvements */
+  .mode-page.action-dialog .autocomplete-container {
+    position: relative !important;
+    width: 100% !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .mode-page.action-dialog .autocomplete-results-wrapper {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1050 !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 0.375rem !important;
+    background: white !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+  }
+  
+  /* Table improvements for narrow screens */
+  .mode-page.action-dialog .table-responsive {
+    border: none !important;
+    margin-bottom: 2rem !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  .mode-page.action-dialog .table {
+    font-size: 12px !important;
+    min-width: 600px !important; /* Minimum width for table functionality */
+  }
+  
+  .mode-page.action-dialog .table th,
+  .mode-page.action-dialog .table td {
+    padding: 0.5rem 0.25rem !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+  }
+  
+  /* Better button alignment in tables */
+  .mode-page.action-dialog .table .btn {
+    font-size: 11px !important;
+    padding: 0.25rem 0.5rem !important;
+    margin: 0.1rem !important;
+    min-height: auto !important;
+  }
+  
+  /* Ensure all form sections have consistent spacing */
+  .mode-page.action-dialog .mb-3,
+  .mode-page.action-dialog .form-group {
+    margin-bottom: 1.5rem !important;
+    padding-bottom: 0.5rem !important;
+    border-bottom: 1px solid #f1f3f4 !important;
+  }
+  
+  .mode-page.action-dialog .mb-3:last-child,
+  .mode-page.action-dialog .form-group:last-child {
+    border-bottom: none !important;
+  }
+  
+  /* Container improvements */
+  .mode-page.action-dialog .container {
+    padding: 0.5rem !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+  
+  .mode-page.action-dialog .justify-content-center {
+    justify-content: stretch !important;
+  }
+  
+  /* Time picker and special input styling */
+  .mode-page.action-dialog input[type="time"],
+  .mode-page.action-dialog input[type="date"],
+  .mode-page.action-dialog input[type="number"] {
+    width: 100% !important;
+    min-height: 44px !important;
+    font-size: 16px !important;
+    padding: 0.75rem !important;
+    border-radius: 0.375rem !important;
+    border: 1px solid #ced4da !important;
+  }
+  
+  /* Wizard footer buttons - specific targeting */
+  .wizard-footer .btn {
+    width: 100% !important;
+    margin: 0.25rem 0 !important;
+  }
+  
+  .wizard-footer .btn-primary {
+    width: 100% !important;
+    margin-top: 0.5rem !important;
+  }
+}
+
+/* Extra small screens - even more conservative */
+@media (max-width: 576px) {
+  .mode-page-btn,
+  .mode-page-btn-cancel {
+    font-size: 12px !important;
+    padding: 0.5rem 0.75rem !important;
+    min-height: 44px !important;
+  }
+  
+  /* Reduce icon size on very small screens */
+  .mode-page-btn i,
+  .mode-page-btn-cancel i {
+    font-size: 0.8rem !important;
+  }
+}
+
+/* ============================================
+   MODE PAGE ACTION BUTTONS
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Mode page action button container */
+  .mode-actions {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: #fff !important;
+    padding: 1rem !important;
+    border-top: 1px solid #dee2e6 !important;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
+    z-index: 50 !important;
+    margin-top: 2rem !important;
+  }
+  
+  /* Floating action button alternative */
+  .floating-action {
+    position: fixed !important;
+    bottom: 2rem !important;
+    right: 2rem !important;
+    z-index: 1000 !important;
+    border-radius: 50% !important;
+    width: 56px !important;
+    height: 56px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  }
+  
+  .floating-action i {
+    font-size: 1.5rem !important;
+  }
+}
+
+/* ============================================
+   TOURNAMENT LIST TABLE MOBILE IMPROVEMENTS
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Tournament list table - convert to stacked card layout */
+  .tournament-list .table,
+  .container .table {
+    border: none !important;
+  }
+  
+  /* Hide table headers on mobile */
+  .tournament-list .table thead,
+  .container .table thead {
+    display: none !important;
+  }
+  
+  /* Convert table rows to card-like blocks */
+  .tournament-list .table tbody tr,
+  .container .table tbody tr {
+    display: block !important;
+    margin-bottom: 1rem !important;
+    padding: 1rem !important;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 0.5rem !important;
+    background-color: #fff !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  }
+  
+  /* Convert table cells to block elements with labels */
+  .tournament-list .table tbody td,
+  .container .table tbody td {
+    display: block !important;
+    border: none !important;
+    padding: 0.5rem 0 !important;
+    text-align: left !important;
+    position: relative !important;
+    padding-left: 0 !important;
+  }
+  
+  /* Add pseudo-element labels before each cell */
+  .tournament-list .table tbody td:nth-child(1)::before,
+  .container .table tbody td:nth-child(1)::before {
+    content: "Tournament: " !important;
+    font-weight: 600 !important;
+    color: #495057 !important;
+    display: block !important;
+    margin-bottom: 0.25rem !important;
+    font-size: 0.875rem !important;
+  }
+  
+  .tournament-list .table tbody td:nth-child(2)::before,
+  .container .table tbody td:nth-child(2)::before {
+    content: "Dates: " !important;
+    font-weight: 600 !important;
+    color: #495057 !important;
+    display: block !important;
+    margin-bottom: 0.25rem !important;
+    font-size: 0.875rem !important;
+    margin-top: 0.75rem !important;
+  }
+  
+  .tournament-list .table tbody td:nth-child(3)::before,
+  .container .table tbody td:nth-child(3)::before {
+    content: "Location: " !important;
+    font-weight: 600 !important;
+    color: #495057 !important;
+    display: block !important;
+    margin-bottom: 0.25rem !important;
+    font-size: 0.875rem !important;
+    margin-top: 0.75rem !important;
+  }
+  
+  /* Tournament name cell special styling */
+  .tournament-list .table tbody td:nth-child(1) div,
+  .container .table tbody td:nth-child(1) div {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+  
+  /* Tournament logo styling */
+  .tournament-list .table tbody td:nth-child(1) .logo-image,
+  .container .table tbody td:nth-child(1) .logo-image {
+    width: 60px !important;
+    height: 60px !important;
+    object-fit: cover !important;
+    border-radius: 0.375rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Tournament name and draft badge */
+  .tournament-list .table tbody td:nth-child(1) strong,
+  .container .table tbody td:nth-child(1) strong {
+    font-size: 1.1rem !important;
+    line-height: 1.3 !important;
+    color: #212529 !important;
+  }
+  
+  /* Draft badge styling */
+  .tournament-list .table tbody td:nth-child(1) .badge,
+  .container .table tbody td:nth-child(1) .badge {
+    margin-left: 0 !important;
+    margin-top: 0.25rem !important;
+    display: inline-block !important;
+  }
+  
+  /* Date and registration info styling */
+  .tournament-list .table tbody td:nth-child(2),
+  .container .table tbody td:nth-child(2) {
+    font-size: 0.9rem !important;
+    line-height: 1.4 !important;
+  }
+  
+  .tournament-list .table tbody td:nth-child(2) strong,
+  .container .table tbody td:nth-child(2) strong {
+    color: #dc3545 !important; /* Highlight registration deadline */
+    font-size: 0.9rem !important;
+  }
+  
+  /* Location info styling */
+  .tournament-list .table tbody td:nth-child(3),
+  .container .table tbody td:nth-child(3) {
+    font-size: 0.9rem !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* Hover effects for mobile cards */
+  .tournament-list .table tbody tr:hover,
+  .container .table tbody tr:hover,
+  .tournament-list .table tbody tr.focused-row,
+  .container .table tbody tr.focused-row {
+    background-color: #f8f9fa !important;
+    border-color: #13294e !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+    transform: translateY(-2px) !important;
+    transition: all 0.2s ease-in-out !important;
+  }
+  
+  /* Search functionality improvements */
+  .tournament-list .container .d-flex,
+  .container .d-flex {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.5rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  
+  .tournament-list .form-label,
+  .container .form-label {
+    font-weight: 600 !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .tournament-list .w-50,
+  .container .w-50 {
+    width: 100% !important;
+  }
+  
+  .tournament-list .form-control,
+  .container .form-control {
+    min-height: 44px !important;
+    font-size: 16px !important; /* Prevents iOS zoom */
+    padding: 0.75rem !important;
+    border-radius: 0.375rem !important;
+  }
+  
+  /* Section headers with expand/collapse - Target actual tournament list headers */
+  .justify-content-center h4.mb-3.d-flex.align-items-center,
+  h4.mb-3.d-flex.align-items-center {
+    padding: 1rem !important;
+    background-color: #f8f9fa !important;
+    border-radius: 0.5rem !important;
+    border: 1px solid #dee2e6 !important;
+    margin-bottom: 1rem !important;
+    min-height: 60px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important; /* Prevent wrapping */
+    font-size: 1.1rem !important;
+    transition: all 0.2s ease-in-out !important;
+    white-space: nowrap !important; /* Prevent text wrapping */
+    overflow: visible !important; /* Allow content to be visible */
+    gap: 0.5rem !important; /* Use gap instead of margins for better control */
+  }
+  
+  .justify-content-center h4.mb-3.d-flex.align-items-center:hover,
+  h4.mb-3.d-flex.align-items-center:hover {
+    background-color: #e9ecef !important;
+    border-color: #13294e !important;
+  }
+  
+  /* Chevron icon container - Override inline styles with higher specificity */
+  .justify-content-center h4.mb-3.d-flex.align-items-center span.me-2[style*="display"],
+  h4.mb-3.d-flex.align-items-center span.me-2[style*="display"] {
+    display: inline-flex !important;
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-right: 0 !important; /* Remove margin, use gap instead */
+    color: #13294e !important;
+    font-size: 16px !important;
+    flex-shrink: 0 !important; /* Don't shrink */
+    font-weight: bold !important;
+  }
+  
+  /* Status indicator circles - Override inline styles */
+  .justify-content-center h4.mb-3.d-flex.align-items-center span.rounded-circle.me-2[style*="width"],
+  h4.mb-3.d-flex.align-items-center span.rounded-circle.me-2[style*="width"] {
+    display: inline-block !important;
+    width: 12px !important;
+    height: 12px !important;
+    min-width: 12px !important;
+    margin-right: 0 !important; /* Remove margin, use gap instead */
+    flex-shrink: 0 !important; /* Don't shrink */
+  }
+  
+  /* Section title text - Target fw-bold span */
+  .justify-content-center h4.mb-3.d-flex.align-items-center span.fw-bold,
+  h4.mb-3.d-flex.align-items-center span.fw-bold {
+    font-size: 1rem !important; /* Slightly smaller for better fit */
+    font-weight: 700 !important;
+    color: #212529 !important;
+    margin-right: 0 !important; /* Remove margin, use gap instead */
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important; /* Show ... if text is too long */
+    flex-shrink: 1 !important; /* Allow shrinking if needed */
+    min-width: 0 !important; /* Allow flex items to shrink below content size */
+    display: inline !important;
+  }
+  
+  /* Tournament count - Override inline styles */
+  .justify-content-center h4.mb-3.d-flex.align-items-center small.text-muted.ms-2,
+  h4.mb-3.d-flex.align-items-center small.text-muted.ms-2 {
+    font-size: 0.9rem !important;
+    color: #6c757d !important;
+    font-weight: 600 !important;
+    margin-left: 0 !important; /* Remove margin, use gap instead */
+    flex-shrink: 0 !important; /* Don't shrink the count */
+    white-space: nowrap !important;
+    display: inline !important;
+  }
+  
+  /* Specific status colors for circles */
+  .justify-content-center h4.mb-3.d-flex.align-items-center .bg-success,
+  h4.mb-3.d-flex.align-items-center .bg-success {
+    background-color: #198754 !important; /* In Progress - green */
+  }
+  
+  .justify-content-center h4.mb-3.d-flex.align-items-center .bg-primary,
+  h4.mb-3.d-flex.align-items-center .bg-primary {
+    background-color: #0d6efd !important; /* Upcoming - blue */
+  }
+  
+  .justify-content-center h4.mb-3.d-flex.align-items-center .bg-secondary,
+  h4.mb-3.d-flex.align-items-center .bg-secondary {
+    background-color: #6c757d !important; /* Past - gray */
+  }
+  
+  /* Focus states for accessibility */
+  .justify-content-center h4.mb-3.d-flex.align-items-center:focus,
+  h4.mb-3.d-flex.align-items-center:focus {
+    outline: 2px solid #13294e !important;
+    outline-offset: 2px !important;
+    background-color: #e9ecef !important;
+  }
+  
+  /* Active state */
+  .justify-content-center h4.mb-3.d-flex.align-items-center:active,
+  h4.mb-3.d-flex.align-items-center:active {
+    background-color: #dee2e6 !important;
+    transform: translateY(1px) !important;
+  }
+  
+  /* Empty state messages */
+  .tournament-list .table tbody td[colspan],
+  .container .table tbody td[colspan] {
+    text-align: center !important;
+    padding: 2rem 1rem !important;
+    color: #6c757d !important;
+    font-style: italic !important;
+    background-color: #f8f9fa !important;
+    border-radius: 0.375rem !important;
+  }
+  
+  .tournament-list .table tbody td[colspan]::before,
+  .container .table tbody td[colspan]::before {
+    display: none !important; /* Hide the label for empty state messages */
+  }
+}
+
+/* ============================================
+   EXTRA SMALL SCREENS - TOURNAMENT LIST
+   ============================================ */
+
+@media (max-width: 576px) {
+  /* Accordion headers for very small screens - keep everything in one line */
+  .justify-content-center h4.mb-3.d-flex.align-items-center,
+  h4.mb-3.d-flex.align-items-center {
+    padding: 0.75rem 0.5rem !important; /* Reduce horizontal padding */
+    font-size: 0.95rem !important;
+    min-height: 50px !important; /* Slightly shorter */
+    gap: 0.25rem !important; /* Tighter gap on small screens */
+  }
+  
+  /* Even more compact chevron on very small screens */
+  .justify-content-center h4.mb-3.d-flex.align-items-center span.me-2[style*="display"],
+  h4.mb-3.d-flex.align-items-center span.me-2[style*="display"] {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    font-size: 14px !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Compact status circles */
+  .justify-content-center h4.mb-3.d-flex.align-items-center span.rounded-circle.me-2[style*="width"],
+  h4.mb-3.d-flex.align-items-center span.rounded-circle.me-2[style*="width"] {
+    width: 10px !important;
+    height: 10px !important;
+    min-width: 10px !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Smaller text but still readable */
+  .justify-content-center h4.mb-3.d-flex.align-items-center span.fw-bold,
+  h4.mb-3.d-flex.align-items-center span.fw-bold {
+    font-size: 0.9rem !important;
+    margin-right: 0 !important;
+  }
+  
+  .justify-content-center h4.mb-3.d-flex.align-items-center small.text-muted.ms-2,
+  h4.mb-3.d-flex.align-items-center small.text-muted.ms-2 {
+    font-size: 0.8rem !important;
+    margin-left: 0 !important;
+  }
+  
+  /* Tournament cards - tighter spacing on very small screens */
+  .tournament-list .table tbody tr,
+  .container .table tbody tr {
+    padding: 0.75rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+  
+  /* Smaller logo images */
+  .tournament-list .table tbody td:nth-child(1) .logo-image,
+  .container .table tbody td:nth-child(1) .logo-image {
+    width: 50px !important;
+    height: 50px !important;
+  }
+}
+
+/* ============================================
+   ROUND FORM MOBILE RESPONSIVENESS
+   ============================================ */
+
+/* Universal header styling for all screen sizes - ensure headers are always visible */
+#roundFormHeader,
+#roundsModeDialog h1,
+#roundsModeDialog .mode-page-header {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: var(--main-color, #333) !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+}
+
+/* Round form (Add/Edit Round) mobile improvements */
+@media (max-width: 768px) {
+  #roundsModeDialog {
+    margin: 0 !important;
+    padding: 1rem !important;
+    padding-top: 120px !important; /* Space for SpeedScore banner + mode tabs */
+    width: 100% !important;
+    height: 100vh !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    position: fixed !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+    z-index: 140 !important; /* Below banner/tabs but above content */
+  }
+  
+  /* Mobile-specific header adjustments */
+  #roundFormHeader,
+  #roundsModeDialog h1,
+  #roundsModeDialog .mode-page-header {
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    margin-bottom: 1.5rem !important;
+    margin-top: 0 !important;
+    padding: 0.75rem 0 !important;
+    position: relative !important;
+  }
+  
+  #logRoundForm {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin-top: 0 !important;
+    position: relative !important;
+  }
+  
+  /* Form groups and inputs */
+  #logRoundForm .mb-3 {
+    margin-bottom: 1.5rem !important;
+    width: 100% !important;
+  }
+  
+  /* All form inputs take full width */
+  #logRoundForm input,
+  #logRoundForm select,
+  #logRoundForm textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 44px !important; /* Touch-friendly */
+    font-size: 16px !important; /* Prevent zoom on iOS */
+    padding: 0.75rem !important;
+    border-radius: 6px !important;
+    border: 2px solid #ddd !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Exception for toggle switches - preserve their appearance */
+  #logRoundForm .form-switch input[type="checkbox"],
+  #logRoundForm input[role="switch"] {
+    width: 3rem !important;
+    height: 1.5rem !important;
+    min-height: 1.5rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 2rem !important;
+    background-color: #dee2e6 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
+    background-position: left center !important;
+    background-repeat: no-repeat !important;
+    background-size: contain !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    cursor: pointer !important;
+    transition: background-position 0.15s ease-in-out !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Toggle switch checked state */
+  #logRoundForm .form-switch input[type="checkbox"]:checked,
+  #logRoundForm input[role="switch"]:checked {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    background-position: right center !important;
+  }
+  
+  /* Remove the custom ::before pseudo-element since we're using background-image */
+  #logRoundForm .form-switch input[type="checkbox"]::before,
+  #logRoundForm input[role="switch"]::before {
+    display: none !important;
+  }
+  
+  /* Focus state for accessibility */
+  #logRoundForm .form-switch input[type="checkbox"]:focus,
+  #logRoundForm input[role="switch"]:focus {
+    outline: 2px solid #0d6efd !important;
+    outline-offset: 2px !important;
+  }
+  
+  /* Distance toggle container */
+  #logRoundForm .d-flex.justify-content-center {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1rem !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    flex-wrap: nowrap !important;
+  }
+  
+  /* Form switch container inside distance toggle */
+  #logRoundForm .d-flex.justify-content-center .form-switch {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  /* Form labels */
+  #logRoundForm label {
+    display: block !important;
+    width: 100% !important;
+    font-weight: 600 !important;
+    margin-bottom: 0.5rem !important;
+    color: var(--main-color, #333) !important;
+    text-align: left !important;
+    font-size: 16px !important;
+  }
+  
+  /* Course and Tee container - stack on mobile */
+  #logRoundForm .d-flex.flex-row {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+  
+  .course-container,
+  .tee-container {
+    width: 100% !important;
+    flex: none !important;
+  }
+  
+  /* Course cards - prevent stacking on mobile with maximum specificity */
+  .course-card .row.no-gutters {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+  }
+  
+  .course-card .row.no-gutters > .col-4,
+  .course-card .row.no-gutters > .col-8,
+  .course-card .col-4,
+  .course-card .col-8 {
+    flex: none !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+    position: relative !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  .course-card .row.no-gutters > .col-4,
+  .course-card .col-4 {
+    flex: 0 0 33.333333% !important;
+    max-width: 33.333333% !important;
+    width: 33.333333% !important;
+  }
+  
+  .course-card .row.no-gutters > .col-8,
+  .course-card .col-8 {
+    flex: 0 0 66.666667% !important;
+    max-width: 66.666667% !important;
+    width: 66.666667% !important;
+  }
+  
+  /* Ensure card content remains readable */
+  .course-card .card-body {
+    padding: 0.5rem !important;
+    font-size: 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    height: 100px !important; /* Match card height */
+  }
+  
+  .course-card .img-course {
+    width: 100% !important;
+    height: 100px !important; /* Match card height exactly */
+    object-fit: cover !important;
+    display: block !important;
+  }
+  
+  /* Ensure image container matches card height */
+  .course-card .col-4 {
+    height: 100px !important;
+    padding: 0 !important;
+  }
+  
+  /* Override any Bootstrap responsive behavior */
+  @media (max-width: 575.98px) {
+    .course-card .row.no-gutters > .col-4,
+    .course-card .col-4 {
+      flex: 0 0 33.333333% !important;
+      max-width: 33.333333% !important;
+      width: 33.333333% !important;
+    }
+    
+    .course-card .row.no-gutters > .col-8,
+    .course-card .col-8 {
+      flex: 0 0 66.666667% !important;
+      max-width: 66.666667% !important;
+      width: 66.666667% !important;
+    }
+  }
+
+/* Additional aggressive overrides for very small screens */
+@media (max-width: 576px) {
+  /* Force course cards to maintain horizontal layout */
+  .course-card .row.no-gutters {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+  }
+  
+  .course-card .col-4,
+  .course-card .col-8,
+  .course-card .row.no-gutters > .col-4,
+  .course-card .row.no-gutters > .col-8 {
+    display: block !important;
+    flex-basis: auto !important;
+  }
+  
+  .course-card .col-4,
+  .course-card .row.no-gutters > .col-4 {
+    flex: 0 0 35% !important;
+    max-width: 35% !important;
+    width: 35% !important;
+  }
+  
+  .course-card .col-8,
+  .course-card .row.no-gutters > .col-8 {
+    flex: 0 0 65% !important;
+    max-width: 65% !important;
+    width: 65% !important;
+  }
+  
+  .course-card .card-body {
+    padding: 0.3rem !important;
+    font-size: 12px !important;
+    height: 100px !important; /* Match card height */
+  }
+  
+  .course-card .img-course {
+    height: 100px !important; /* Match card height exactly */
+  }
+  
+  .course-card .col-4 {
+    height: 100px !important;
+    padding: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Even more aggressive for very small screens */
+  .course-card .col-4,
+  .course-card .row.no-gutters > .col-4 {
+    flex: 0 0 30% !important;
+    max-width: 30% !important;
+    width: 30% !important;
+  }
+  
+  .course-card .col-8,
+  .course-card .row.no-gutters > .col-8 {
+    flex: 0 0 70% !important;
+    max-width: 70% !important;
+    width: 70% !important;
+  }
+  
+  .course-card .card-body {
+    padding: 0.25rem !important;
+    font-size: 11px !important;
+    height: 100px !important; /* Match card height */
+  }
+  
+  .course-card .img-course {
+    height: 100px !important; /* Match card height exactly */
+  }
+  
+  .course-card .col-4 {
+    height: 100px !important;
+    padding: 0 !important;
+  }
+}
+  
+  /* Course autocomplete dropdown fixes for mobile */
+  #logRoundForm .autocomplete-wrapper {
+    position: relative !important;
+    width: 100% !important;
+  }
+  
+  /* Course search/filter section - aggressive centering fix for mobile */
+  /* Target the specific container with multiple selectors for maximum specificity */
+  div.container.d-flex.justify-content-center.align-items-center,
+  .container.d-flex.justify-content-center.align-items-center {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+  
+  /* Force the label to be centered */
+  div.container.d-flex.justify-content-center.align-items-center .form-label,
+  .container.d-flex.justify-content-center.align-items-center .form-label,
+  .container .form-label[for="searchBox"] {
+    margin-bottom: 0.25rem !important;
+    text-align: center !important;
+    width: 100% !important;
+    font-weight: 600 !important;
+    display: block !important;
+  }
+  
+  /* Force the input container to be centered */
+  div.container.d-flex.justify-content-center.align-items-center .w-50,
+  .container.d-flex.justify-content-center.align-items-center .w-50,
+  .container .w-50 {
+    width: 80% !important;
+    max-width: 300px !important;
+    margin: 0 auto !important;
+    display: block !important;
+  }
+  
+  /* Nuclear approach - completely restructure the search layout on mobile */
+  /* Override Bootstrap's flex behavior entirely */
+  @media (max-width: 768px) {
+    /* Force the main container to stack vertically */
+    div.container.d-flex.justify-content-center.align-items-center,
+    .container.d-flex.justify-content-center.align-items-center {
+      display: block !important;
+      text-align: center !important;
+      width: 100% !important;
+      padding: 1rem !important;
+    }
+    
+    /* Make the label a centered block */
+    div.container.d-flex.justify-content-center.align-items-center .form-label,
+    .container .form-label[for="searchBox"],
+    label[for="searchBox"] {
+      display: block !important;
+      text-align: center !important;
+      width: 100% !important;
+      margin: 0 auto 0.5rem auto !important;
+      font-weight: 600 !important;
+    }
+    
+    /* Make the input wrapper a centered block */
+    div.container.d-flex.justify-content-center.align-items-center .w-50,
+    .container .w-50 {
+      display: block !important;
+      width: 90% !important;
+      max-width: 300px !important;
+      margin: 0 auto !important;
+    }
+    
+    /* Ensure the input field is centered */
+    #searchBox,
+    input#searchBox.form-control {
+      width: 100% !important;
+      margin: 0 auto !important;
+      display: block !important;
+      text-align: left !important; /* Keep text left-aligned inside the input */
+    }
+  }
+  
+  /* Ensure radio buttons remain centered */
+  .radio-centered {
+    justify-content: center !important;
+    margin-top: 0.5rem !important;
+  }
+  
+  #logRoundForm .autocomplete-results-wrapper {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 2000 !important; /* High z-index to appear above all other elements */
+    max-height: 250px !important;
+    overflow-y: auto !important;
+    border: 2px solid #ced4da !important;
+    border-top: none !important;
+    border-radius: 0 0 6px 6px !important;
+    background: white !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    margin-top: 0 !important;
+  }
+  
+  #logRoundForm .autocomplete-results {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  
+  #logRoundForm .autocomplete-item,
+  #logRoundForm .autocomplete-item-1 {
+    width: 100% !important;
+    padding: 12px 15px !important;
+    min-height: 48px !important; /* Touch-friendly */
+    font-size: 16px !important;
+    border-bottom: 1px solid #eee !important;
+    cursor: pointer !important;
+    background: white !important;
+    color: #333 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  #logRoundForm .autocomplete-item-1 {
+    background-color: #f8f9fa !important;
+    color: var(--main-red-color, #ff0f00) !important;
+    font-weight: 600 !important;
+  }
+  
+  #logRoundForm .autocomplete-item:hover,
+  #logRoundForm .autocomplete-item:focus {
+    background-color: #f0f8ff !important;
+    color: var(--main-color, #333) !important;
+  }
+  
+  #logRoundForm .autocomplete-item:last-child {
+    border-bottom: none !important;
+    border-radius: 0 0 6px 6px !important;
+  }
+  
+  /* Time input container - make inline inputs stack better */
+  #logRoundForm #roundMinutes,
+  #logRoundForm #roundSeconds {
+    display: inline-block !important;
+    width: 48% !important;
+    margin: 0 1% !important;
+    min-height: 50px !important;
+    font-size: 18px !important;
+    text-align: center !important;
+  }
+  
+  /* Scorecard section */
+  #logRoundForm .d-flex.flex-column.align-items-center {
+    width: 100% !important;
+    text-align: center !important;
+  }
+  
+  #logRoundForm .btn.btn-outline-dark {
+    min-height: 50px !important;
+    width: auto !important;
+    padding: 0.75rem 1.5rem !important;
+    font-size: 16px !important;
+    margin-top: 1rem !important;
+  }
+  
+  /* Checkbox containers */
+  #logRoundForm .d-flex.align-items-center {
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important; /* Don't wrap to keep checkbox and label on same line */
+    gap: 0.5rem !important;
+    margin-bottom: 1rem !important;
+    align-items: center !important; /* Ensure vertical alignment */
+  }
+  
+  #logRoundForm .custom-control-input,
+  #logRoundForm input[type="checkbox"] {
+    width: auto !important;
+    min-width: 20px !important; /* Ensure checkbox has minimum size */
+    min-height: 20px !important; /* Square checkbox */
+    margin-right: 0.5rem !important;
+    flex-shrink: 0 !important;
+    order: 1 !important; /* Put checkbox before label */
+  }
+  
+  #logRoundForm .custom-control-label {
+    margin: 0 !important;
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+    flex: 1 !important;
+    order: 2 !important; /* Put label after checkbox */
+    white-space: nowrap !important; /* Prevent label wrapping */
+  }
+  
+  /* Specific fix for scorecard section */
+  #logRoundForm .d-flex.flex-column.align-items-center .d-flex.align-items-center {
+    flex-direction: row !important;
+    justify-content: flex-start !important; /* Left-align like other checkboxes */
+    white-space: nowrap !important;
+    width: 100% !important; /* Take full width */
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Fix for "No Official Score" checkbox container */
+  #logRoundForm .d-flex.align-items-center.justify-content-center {
+    justify-content: flex-start !important; /* Ensure left alignment */
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 0.5rem !important;
+  }
+  
+  /* Fix for "Keep this round private" checkbox container */
+  #logRoundForm .container.mt-3.mb-3 .form-group.text-center {
+    text-align: left !important; /* Left-align instead of center */
+  }
+  
+  #logRoundForm .container.mt-3.mb-3 .custom-control.custom-checkbox {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-direction: row !important;
+    gap: 0.5rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  /* Ensure the "Keep this round private" label appears after checkbox */
+  #logRoundForm .container.mt-3.mb-3 .custom-control-label {
+    order: 2 !important;
+    margin: 0 !important;
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+    white-space: normal !important; /* Allow this label to wrap if needed */
+  }
+  
+  #logRoundForm .container.mt-3.mb-3 .custom-control-input {
+    order: 1 !important;
+    width: auto !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    margin-right: 0.5rem !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Form text descriptions */
+  #logRoundForm .form-text {
+    font-size: 14px !important;
+    color: #666 !important;
+    margin-top: 0.5rem !important;
+    line-height: 1.4 !important;
+    text-align: left !important;
+  }
+  
+  /* Centered text and headings */
+  #logRoundForm .centered {
+    text-align: center !important;
+    width: 100% !important;
+  }
+  
+  /* Error box */
+  #roundErrorBox {
+    margin: 1rem 0 !important;
+    padding: 1rem !important;
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+    border-radius: 6px !important;
+  }
+  
+  /* Notes textarea */
+  #roundNotes {
+    min-height: 120px !important;
+    resize: vertical !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  }
+  
+  /* Button container */
+  .mode-page-btn-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+    margin-top: 2rem !important;
+    margin-bottom: 2rem !important;
+    width: 100% !important;
+  }
+  
+  /* All buttons in the form */
+  .mode-page-btn,
+  .mode-page-btn-cancel,
+  .delete-round-btn {
+    width: 100% !important;
+    min-height: 54px !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    padding: 1rem !important;
+    border-radius: 8px !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Primary action button */
+  .mode-page-btn.action-button {
+    background-color: var(--main-color, #13294e) !important;
+    color: white !important;
+    box-shadow: 0 3px 10px rgba(19, 41, 78, 0.3) !important;
+  }
+  
+  .mode-page-btn.action-button:hover {
+    background-color: var(--main-color-dark, #0d1d35) !important;
+    box-shadow: 0 5px 15px rgba(19, 41, 78, 0.4) !important;
+    transform: translateY(-1px) !important;
+  }
+  
+  /* Delete button */
+  .delete-round-btn {
+    background-color: #dc3545 !important;
+    color: white !important;
+    box-shadow: 0 3px 10px rgba(220, 53, 69, 0.3) !important;
+  }
+  
+  .delete-round-btn:hover {
+    background-color: #c82333 !important;
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4) !important;
+    transform: translateY(-1px) !important;
+  }
+  
+  /* Cancel button */
+  .mode-page-btn-cancel {
+    background-color: #6c757d !important;
+    color: white !important;
+    box-shadow: 0 3px 10px rgba(108, 117, 125, 0.3) !important;
+  }
+  
+  .mode-page-btn-cancel:hover {
+    background-color: #5a6268 !important;
+    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4) !important;
+    transform: translateY(-1px) !important;
+  }
+  
+  /* Button icons */
+  .mode-page-btn i,
+  .mode-page-btn span.fa,
+  .mode-page-btn-cancel i,
+  .mode-page-btn-cancel span.fa {
+    font-size: 1.1rem !important;
+  }
+  
+  /* Tooltip text wrapping */
+  .text-primary.text-decoration-underline {
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    display: block !important;
+    margin-top: 0.5rem !important;
+    text-align: center !important;
+  }
+  
+  /* Distance input component */
+  #logRoundForm .distance-input-container {
+    width: 100% !important;
+  }
+  
+  /* Par information displays */
+  #logRoundForm h6 {
+    font-size: 16px !important;
+    margin: 0.5rem 0 !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* Autocomplete dropdown adjustments */
+  .dropdown-menu {
+    width: 100% !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    font-size: 16px !important;
+  }
+}
+
+/* Smaller screens - more compact */
+@media (max-width: 480px) {
+  #roundsModeDialog {
+    padding: 0.5rem !important;
+  }
+  
+  #logRoundForm .mb-3 {
+    margin-bottom: 1rem !important;
+  }
+  
+  .mode-page-btn,
+  .mode-page-btn-cancel,
+  .delete-round-btn {
+    font-size: 16px !important;
+    min-height: 50px !important;
+    padding: 0.875rem !important;
+  }
+  
+  #logRoundForm input,
+  #logRoundForm select,
+  #logRoundForm textarea {
+    font-size: 16px !important;
+    padding: 0.625rem !important;
+  }
+}
+
+/* ============================================
+   ROUNDS TABLE MOBILE RESPONSIVENESS
+   ============================================ */
+
+/* Convert rounds table to card layout on mobile */
+@media (max-width: 768px) {
+  #roundsTable {
+    display: block !important;
+    width: 100% !important;
+    border: none !important;
+  }
+  
+  #roundsTable thead {
+    display: none !important; /* Hide table header on mobile */
+  }
+  
+  #roundsTable tbody {
+    display: block !important;
+    width: 100% !important;
+  }
+  
+  #roundsTable tr {
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 1rem !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+    background: white !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    cursor: pointer !important;
+  }
+  
+  #roundsTable tr:hover {
+    background-color: #f8f9fa !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+  }
+  
+  #roundsTable td {
+    display: block !important;
+    width: 100% !important;
+    padding: 0.25rem 0 !important;
+    border: none !important;
+    text-align: left !important;
+    position: relative !important;
+    padding-left: 100px !important; /* Space for labels */
+  }
+  
+  /* Add labels before each data item */
+  #roundsTable td:nth-child(1)::before {
+    content: "Date: " !important;
+    font-weight: bold !important;
+    color: var(--main-color, #333) !important;
+    position: absolute !important;
+    left: 0 !important;
+    width: 90px !important;
+  }
+  
+  #roundsTable td:nth-child(2)::before {
+    content: "Course: " !important;
+    font-weight: bold !important;
+    color: var(--main-color, #333) !important;
+    position: absolute !important;
+    left: 0 !important;
+    width: 90px !important;
+  }
+  
+  #roundsTable td:nth-child(3)::before {
+    content: "Strokes: " !important;
+    font-weight: bold !important;
+    color: var(--main-color, #333) !important;
+    position: absolute !important;
+    left: 0 !important;
+    width: 90px !important;
+  }
+  
+  #roundsTable td:nth-child(4)::before {
+    content: "Time: " !important;
+    font-weight: bold !important;
+    color: var(--main-color, #333) !important;
+    position: absolute !important;
+    left: 0 !important;
+    width: 90px !important;
+  }
+  
+  #roundsTable td:nth-child(5)::before {
+    content: "SGS: " !important;
+    font-weight: bold !important;
+    color: var(--main-color, #333) !important;
+    position: absolute !important;
+    left: 0 !important;
+    width: 90px !important;
+  }
+  
+  #roundsTable td:nth-child(6)::before {
+    content: "Distance: " !important;
+    font-weight: bold !important;
+    color: var(--main-color, #333) !important;
+    position: absolute !important;
+    left: 0 !important;
+    width: 90px !important;
+  }
+  
+  #roundsTable td:nth-child(7)::before {
+    content: "Pace: " !important;
+    font-weight: bold !important;
+    color: var(--main-color, #333) !important;
+    position: absolute !important;
+    left: 0 !important;
+    width: 90px !important;
+  }
+  
+  /* Style the table caption for mobile */
+  #roundsTableCaption {
+    display: block !important;
+    text-align: center !important;
+    margin-top: 1rem !important;
+    font-style: italic !important;
+    color: #666 !important;
+  }
+  
+  /* Handle the "No rounds" message */
+  #roundsTable tr td[colspan] {
+    padding-left: 0 !important;
+    text-align: center !important;
+    font-style: italic !important;
+    color: #666 !important;
+  }
+  
+  #roundsTable tr td[colspan]::before {
+    display: none !important; /* Don't show label for colspan message */
+  }
+}
+
+/* ============================================
+   MODE TABS RESPONSIVE IMPROVEMENTS
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Mode tabs container - ensure it works on mobile */
+  .modetab-container {
+    position: fixed !important;
+    top: 59px !important;
+    left: 0 !important;
+    right: 0 !important; /* Use right instead of width to ensure full coverage */
+    width: 100vw !important; /* Use viewport width instead of percentage */
+    z-index: 150 !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow: hidden !important; /* No scrolling - force all tabs to fit */
+    padding: 0 !important; /* Remove any container padding */
+    margin: 0 !important; /* Remove any container margins */
+    gap: 0 !important; /* Remove any gaps between tabs */
+    scroll-behavior: auto !important; /* Reset any smooth scrolling */
+    transform: translateX(0) !important; /* Prevent any transforms */
+    box-sizing: border-box !important; /* Ensure proper box model */
+  }
+  
+  /* Ensure the container always scrolls to the left when a tab is clicked */
+  .modetab-container::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 1px !important;
+    height: 1px !important;
+    scroll-snap-align: start !important;
+  }
+  
+  /* Mode tab buttons - responsive sizing with maximum specificity */
+  #modeTabs .modetab-btn,
+  .modetab-container .modetab-btn {
+    border-top: 1px solid var(--main-color) !important;
+    border-left: none !important; /* Remove left border to reduce spacing */
+    border-right: none !important; /* Remove right border to reduce spacing */
+    border-bottom: 1px solid var(--main-color) !important; /* Default bottom border */
+    background-color: var(--main-color) !important;
+    color: var(--text-color) !important;
+    font-size: 14px !important; /* Larger font for better readability */
+    font-variant: small-caps !important;
+    width: 20% !important; /* Equal width for 5 tabs */
+    min-width: 0 !important; /* Remove minimum width constraint */
+    max-width: 20% !important; /* Ensure tabs don't exceed 20% */
+    text-align: center !important;
+    padding: 4px 1px !important; /* Minimal horizontal padding */
+    margin: 0 !important; /* Remove any margins */
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    flex-shrink: 1 !important; /* Allow shrinking if needed */
+    flex-grow: 1 !important; /* Allow growing to fill space */
+    flex-basis: 20% !important; /* Base width of 20% */
+    font-weight: normal !important; /* Normal font weight for mobile */
+    position: relative !important; /* Ensure proper positioning */
+  }
+  
+  /* Selected tab styling - maximum specificity */
+  #modeTabs .modetab-btn.modetab-selected,
+  .modetab-container .modetab-btn.modetab-selected,
+  .modetab-btn.modetab-selected {
+    cursor: default !important;
+    border-bottom: 4px solid var(--main-red-color) !important;
+    border-bottom-color: var(--main-red-color) !important;
+  }
+}
+
+/* Small screens - reduce spacing further */
+@media (max-width: 576px) {
+  .modetab-btn {
+    font-size: 12px !important; /* Still good readability */
+    padding: 4px 0.5px !important; /* Even less horizontal padding */
+    font-weight: normal !important; /* Normal font weight */
+  }
+  
+  /* Selected tab styling for small screens - maximum specificity */
+  #modeTabs .modetab-btn.modetab-selected,
+  .modetab-container .modetab-btn.modetab-selected,
+  .modetab-btn.modetab-selected {
+    cursor: default !important;
+    border-bottom: 4px solid var(--main-red-color) !important;
+    border-bottom-color: var(--main-red-color) !important;
+  }
+}
+
+/* Very small screens - minimal spacing, good font size */
+@media (max-width: 480px) {
+  .modetab-btn {
+    font-size: 11px !important; /* Readable size */
+    padding: 3px 0px !important; /* No horizontal padding */
+    font-weight: normal !important; /* Normal font weight */
+    line-height: 1.1 !important; /* Tight line height */
+    letter-spacing: -0.5px !important; /* Slightly tighter letter spacing */
+  }
+  
+  /* Selected tab styling for very small screens - maximum specificity */
+  #modeTabs .modetab-btn.modetab-selected,
+  .modetab-container .modetab-btn.modetab-selected,
+  .modetab-btn.modetab-selected {
+    cursor: default !important;
+    border-bottom: 4px solid var(--main-red-color) !important;
+    border-bottom-color: var(--main-red-color) !important;
+  }
+}
+
+/* Ultra small screens - still maintain good readability */
+@media (max-width: 360px) {
+  .modetab-btn {
+    font-size: 10px !important; /* Still quite readable */
+    padding: 2px 0px !important;
+    font-weight: normal !important; /* Normal font weight */
+    letter-spacing: -0.5px !important; /* Tighter spacing */
+  }
+  
+  /* Selected tab styling for ultra small screens - maximum specificity */
+  #modeTabs .modetab-btn.modetab-selected,
+  .modetab-container .modetab-btn.modetab-selected,
+  .modetab-btn.modetab-selected {
+    cursor: default !important;
+    border-bottom: 4px solid var(--main-red-color) !important;
+    border-bottom-color: var(--main-red-color) !important;
+  }
+}
+
+/* Player Picker Modal Styles */
+.player-picker-modal .modal-dialog {
+  margin: 15px auto;
+  display: flex;
+  align-items: center;
+  min-height: calc(100vh - 30px);
+}
+
+.player-picker-modal .modal-content {
+  width: 100%;
+  margin: auto;
+}
+
+@media (min-width: 769px) {
+  .player-picker-modal .modal-dialog {
+    max-width: 600px;
+    margin: 1.75rem auto;
+    min-height: calc(100vh - 3.5rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .player-picker-modal .modal-dialog {
+    margin: 10px;
+    max-width: calc(100vw - 20px);
+    min-height: calc(100vh - 20px);
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+  
+  .player-picker-modal .modal-body {
+    padding: 20px 15px;
+  }
+  
+  .player-picker-modal .search-results {
+    max-height: 200px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .player-picker-modal .search-result-item {
+    min-height: 50px !important;
+    padding: 15px 12px !important;
+  }
+  
+  .player-picker-modal .modal-footer {
+    padding: 15px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .player-picker-modal .modal-footer .btn {
+    width: 100%;
+  }
+}
+
+/* ============================================
+   GENERATE TEE TIMES DIALOG MOBILE FIXES
+   ============================================ */
+
+@media (max-width: 768px), (max-height: 600px) {
+  /* Additional mobile-specific improvements for generate tee times dialog */
+  .mobile-friendly-modal .modal-header {
+    padding: 1rem !important;
+    border-bottom: 2px solid #dee2e6 !important;
+  }
+  
+  .mobile-friendly-modal .modal-body {
+    padding: 1rem !important;
+    /* Add subtle scroll indicators */
+    background: linear-gradient(white 30%, rgba(255,255,255,0)),
+                linear-gradient(rgba(255,255,255,0), white 70%) 0 100%,
+                radial-gradient(50% 0, rgba(0,0,0,.2), rgba(0,0,0,0)),
+                radial-gradient(50% 100%, rgba(0,0,0,.2), rgba(0,0,0,0)) 0 100% !important;
+    background-repeat: no-repeat !important;
+    background-color: white !important;
+    background-size: 100% 40px, 100% 40px, 100% 14px, 100% 14px !important;
+    background-attachment: local, local, scroll, scroll !important;
+  }
+  
+  .mobile-friendly-modal .modal-footer {
+    padding: 1rem !important;
+    border-top: 2px solid #dee2e6 !important;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
+  }
+  
+  /* Touch-friendly buttons */
+  .mobile-btn {
+    min-height: 48px !important;
+    padding: 0.75rem 1.5rem !important;
+    font-size: 16px !important;
+    border-radius: 8px !important;
+  }
+  
+  /* Mobile drag container improvements */
+  .mobile-drag-container {
+    background-color: #f8f9fa !important;
+    border-radius: 8px !important;
+  }
+  
+  .mobile-drag-item {
+    background-color: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .mobile-drag-item:active {
+    transform: scale(1.02) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+  }
+  
+  /* Form improvements */
+  .mobile-friendly-modal .form-control {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 0.75rem !important;
+    border-radius: 6px !important;
+  }
+  
+  .mobile-friendly-modal .form-select {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 0.75rem !important;
+    border-radius: 6px !important;
+  }
+  
+  .mobile-friendly-modal .form-check-input {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+  }
+  
+  .mobile-friendly-modal .form-check-label {
+    font-size: 16px !important;
+    padding-left: 0.5rem !important;
+  }
+}
+
+/* Very small screens - additional optimizations */
+@media (max-width: 576px) {
+  .mobile-friendly-modal .modal-footer {
+    flex-direction: column !important;
+  }
+  
+  .mobile-friendly-modal .mobile-btn {
+    width: 100% !important;
+    margin: 0.25rem 0 !important;
+  }
+  
+  /* Stack interval inputs vertically on very small screens */
+  .mobile-friendly-modal .d-flex.align-items-center.flex-wrap {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  
+  .mobile-friendly-modal .d-flex.align-items-center.flex-wrap > div {
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+}
+
+/* ============================================
+   UNIVERSAL MODAL HEIGHT HANDLING
+   ============================================ */
+
+/* Smart modal height management - works regardless of screen size */
+.modal.show .modal-dialog {
+  max-height: 95vh !important;
+  margin: 2.5vh auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.modal.show .modal-content {
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important; /* Prevent content from spilling out */
+}
+
+.modal.show .modal-header {
+  flex-shrink: 0 !important;
+  border-bottom: 1px solid #dee2e6 !important;
+}
+
+.modal.show .modal-footer {
+  flex-shrink: 0 !important;
+  border-top: 1px solid #dee2e6 !important;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.08) !important;
+}
+
+.modal.show .modal-body {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  /* Let the modal body scroll when content is too tall */
+  min-height: 0 !important; /* Important for flexbox scrolling */
+}
+
+/* Specific improvements for Generate Tee Times modal */
+.mobile-friendly-modal .modal-dialog {
+  max-height: 90vh !important; /* Slightly more conservative for tall modals */
+  margin: 5vh auto !important;
+}
+
+.mobile-friendly-modal .modal-body {
+  /* Ensure smooth scrolling on all devices */
+  scroll-behavior: smooth !important;
+  padding: 1.5rem !important;
+}
+
+/* Force mobile behavior on ANY screen that's short, regardless of width */
+@media (max-height: 700px) {
+  .modal.show .modal-dialog {
+    max-height: calc(100vh - 2rem) !important;
+    margin: 1rem auto !important;
+  }
+  
+  .mobile-friendly-modal .modal-dialog {
+    max-height: calc(100vh - 1rem) !important;
+    margin: 0.5rem auto !important;
+  }
+}
+
+/* Even more aggressive for very short screens */
+@media (max-height: 500px) {
+  .modal.show .modal-dialog {
+    margin: 0.25rem !important;
+    max-height: calc(100vh - 0.5rem) !important;
+  }
+  
+  .modal.show .modal-header {
+    padding: 0.5rem 1rem !important;
+  }
+  
+  .modal.show .modal-footer {
+    padding: 0.5rem 1rem !important;
+  }
+}
+
+/* ============================================
+   DEBUG INDICATORS (Remove in production)
+   ============================================ */
+
+/* Visual indicator when smart scrolling is active */
+.modal.show .modal-dialog[style*="max-height"] .modal-header::before {
+  content: "📜 SMART SCROLL" !important;
+  background: #6f42c1 !important;
+  color: white !important;
+  padding: 2px 6px !important;
+  border-radius: 3px !important;
+  font-size: 10px !important;
+  position: absolute !important;
+  top: -15px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 1000 !important;
+}
+
+/* Visual indicator when mobile styles are active */
+@media (max-width: 768px) {
+  .modal.show .modal-header {
+    position: relative !important;
+  }
+  
+  .modal.show .modal-header::before {
+    content: "📱 MOBILE WIDTH" !important;
+    background: #28a745 !important;
+    color: white !important;
+    padding: 2px 6px !important;
+    border-radius: 3px !important;
+    font-size: 10px !important;
+    position: absolute !important;
+    top: -15px !important;
+    left: 10px !important;
+    z-index: 1000 !important;
+  }
+}
+
+@media (max-height: 700px) {
+  .modal.show .modal-header {
+    position: relative !important;
+  }
+  
+  .modal.show .modal-header::after {
+    content: "📏 SHORT HEIGHT" !important;
+    background: #dc3545 !important;
+    color: white !important;
+    padding: 2px 6px !important;
+    border-radius: 3px !important;
+    font-size: 10px !important;
+    position: absolute !important;
+    top: -15px !important;
+    right: 10px !important;
+    z-index: 1000 !important;
+  }
+}

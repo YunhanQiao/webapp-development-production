@@ -1,0 +1,981 @@
+/*************************************************************************
+* SPEEDSCORE APP's MAIN STYLESHEET
+* This stylesheet defines the CSS styles that give the SpeedScore app
+* its look and feel. It is divided logically into sections, with each
+* section addressing a specific user interface element or component.
+*************************************************************************/
+
+/*************************************************************************
+* GLOBAL CSS VARIABLES
+* These are global variable definitions for the theme colors and other
+* attributes of the app's visual appearance. They can be easily tweaked.
+*************************************************************************/
+:root {
+  --main-color: #13294e;
+  --text-color: white;
+  --main-red-color: #ff0f00;
+  --item-highlight-color: #f0f0f0;
+  --side-menu-width: 250px;
+}
+
+/*************************************************************************
+* GLOBAL CSS CLASSES
+* These are global classes that care useful for a variety of elements.
+*************************************************************************/
+*:focus {
+  border: 3px solid #94bff9 !important;
+  border-radius: 3px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 3px rgba(102, 175, 233, 0.6);
+  outline: 0 none;
+}
+button::-moz-focus-inner {
+  border: 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.disabled {
+  color: lightgray !important;
+  pointer-events: none;
+}
+
+/*************************************************************************
+* CSS CLASSES FOR SKIP LINK (USED BY SCREEN READERS AND KEYBOARD NAV)
+* A skip link allows keyboard users to quickly skip over an app's 
+* navigation elements to reach its content. It is a best practice for
+* accessibility.
+*************************************************************************/
+.skip-link {
+  cursor: pointer;
+  background: var(--main-color);
+  color: var(--text-color);
+  font-weight: 700;
+  left: 50%;
+  padding: 4px;
+  position: absolute;
+  transform: translateY(-200%);
+  transition: transform 0.3s;
+  z-index: 200;
+}
+
+.skip-link:focus {
+  transform: translateY(0%);
+}
+/**************************************************************************
+Reset password dialog ontainer 
+**********************************************************************/
+.blur-effect {
+  filter: blur(8px);
+}
+
+.dialog-container {
+  position: fixed; /* or absolute */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050; /* Ensure it's above other content */
+}
+
+.dialog-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Dim the background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure it's above other content */
+}
+
+.dialog {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 300px; /* Adjust as needed */
+  z-index: 1001; /* Above the backdrop */
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+.show-hide-pass {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  padding: 5px 10px; /* Add some padding */
+  background-color: #e1dede; /* Add a background color */
+  border-radius: 5px; /* Round the corners */
+}
+.password-field-wrapper {
+  position: relative;
+}
+
+.password-strength {
+  height: 10px;
+  width: 5%; /* Adjust the width as needed */
+  border: 1px dashed; /* Add a dashed border */
+  margin-bottom: 10px; /* Add some space below the bar */
+  margin:auto
+}
+
+.password-strength.strength-0 { background-color: red; }
+.password-strength.strength-1 { background-color: orange; }
+.password-strength.strength-2 { background-color: yellow; }
+.password-strength.strength-3 { background-color: lightgreen; }
+.password-strength.strength-4 { background-color: green; }
+.password-strength.strength-5 { background-color: darkgreen; }
+/*************************************************************************
+* CSS CLASSES FOR TOP NAVIGATION BAR
+*************************************************************************/
+
+/* Styling of the fixed navbar ("banner") bar in the app. Its background
+   needs to be the app's main color (--main-color).  */
+.navbar {
+  display: flex; /* Occupies its own horizontal space */
+  background-color: var(--main-color);
+  position: fixed; /* Doesn't move */
+  top: 0px; /* 0px from top-left */
+  left: 0px;
+  width: 100%; /* 100% of width of screen */
+  align-items: center;
+  z-index: 200; /* Force it to be on top */
+}
+
+.navbar-login {
+  display: flex; /* Occupies its own horizontal space */
+  background-color: var(--main-color);
+  position: fixed; /* Doesn't move */
+  top: 0px; /* 0px from top-left */
+  left: 0px;
+  width: 100%; /* 100% of width of screen */
+  align-items: center;
+  z-index: 200; /* Force it to be on top */
+  justify-content: left;
+  padding: 10px 0px;
+}
+
+/* navbar-right-item styles items within navbar that should be right-justified.
+*/
+.navbar-right-items {
+  display: flex;
+  margin-left: auto;
+  align-items: center;
+}
+
+/* navbar-btn styles the buttons in the navbar. Its background 
+   needs to be transparent so that it looks like it's part of the 
+   navbar. Its border color needs to be --main-color so it blends in to
+   the navbar.
+*/
+.navbar-btn {
+  background-color: transparent;
+  border: none;
+}
+
+/* navbar-btn-icon styles button icons in the navbar. It should be white, in a large
+   font, centered within the button, and the cursor should change to a pointer 
+   when over it. 
+*/
+.navbar-btn-icon {
+  color: var(--text-color);
+  font-size: 36px;
+  cursor: pointer;
+}
+
+/* navbar-app-icon styles the SpeedScore app icon in the navbar. 
+   It should be 38 x 38 pixels, with a small right margin so that 
+   there is space between it and the navbar's title
+*/
+.navbar-app-icon {
+  height: 38px;
+  width: 38px;
+}
+/* navbar-title styles the navbar's title text (the name of the app). 
+   It should be text color in a large font.
+*/
+.navbar-title {
+  display: flex;
+  margin: 0px 0px 0px 4px;
+  color: var(--text-color);
+  font-size: 26px;
+}
+
+/* navbar-profile-pic styles the user's profile picture 
+   that appears in the navbar 
+*/
+.navbar-profile-btn {
+  margin-left: 8px;
+  margin-right: 8px;
+  height: 44px;
+  width: 44px;
+  /* background-image: url("../images/DefaultProfilePic.jpg"); */
+  background-size: cover;
+  flex-shrink: 0;
+}
+
+.navbar-profile-pic {
+  background-size: cover;
+}
+
+/*************************************************************************
+* CSS CLASSES FOR SIDE MENU
+*************************************************************************/
+
+/* sidemenu -- Styles the side menu */
+.sidemenu {
+  position: fixed; /* Menu stays in place */
+  top: 60px; /* Position menu just below top navbar */
+  padding: 0; /* Remove padding */
+  margin: 0; /* Remove margins */
+  z-index: 250; /* Force the menu to be near the front */
+  left: 0px; /* Position side menu on left-hand side of screen */
+  height: 100%; /* Menu is full height of window */
+  overflow: hidden;
+  background-color: var(--main-color); /* Match to main-color */
+  color: var(--text-color);
+  list-style-type: none; /* Remove bullets */
+  transition: 0.5s;
+  width: 0px;
+}
+
+/* sidemenu-open -- Sets the width of the side menu */
+.sidemenu-open {
+  width: var(--side-menu-width);
+}
+
+/* sidemenu-li -- Styles items in the side menu. */
+.sidemenu li {
+  padding: 24px 0px 24px 24px; /* top, right, bottom, left */
+  font-size: 18px;
+}
+
+/* sidemenu-li -- Styles items in the side menu on hover. */
+.sidemenu li:hover {
+  cursor: pointer;
+  background-color: var(--item-highlight-color);
+  color: var(--main-color);
+}
+
+/*************************************************************************
+* CSS CLASSES FOR TOP MODE TABS
+*************************************************************************/
+/* .modetab -- Style the container enclosing the mode tabs */
+.modetab-container {
+  position: fixed;
+  top: 59px;
+  left: 0px;
+  width: 100%;
+  z-index: 150;
+  display: flex;
+}
+
+/* .modetab-btn -- Style mode tabs */
+.modetab-btn {
+  border: 1px solid var(--main-color);
+  background-color: var(--main-color);
+  color: var(--text-color);
+  font-size: 17px;
+  font-variant: small-caps;
+  width: 25%;
+  text-align: center;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  cursor: pointer;
+}
+
+/* .modetab-selected -- Style the selected mode tab */
+.modetab-selected {
+  cursor: default;
+  border-bottom: 4px solid var(--main-red-color) !important;
+}
+
+/*************************************************************************
+* CSS CLASSES FOR MODE PAGES
+*************************************************************************/
+.mode-page {
+  padding-top: 100px;
+}
+
+.mode-page-header {
+  text-align: center;
+  font-size: 48px;
+}
+
+.mode-page-content {
+  text-align: center;
+  font-size: 24px;
+}
+
+.mode-page-icon {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  height: 200px;
+  width: 200px;
+}
+
+.mode-page-btn-container {
+  display: flex;
+  justify-content: center;
+  margin: auto;
+  width: 80%;
+  gap: 10%;
+}
+
+.mode-page-btn {
+  display: inline;
+  font-size: 36px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  color: var(--text-color);
+  background-color: var(--main-color);
+  cursor: pointer;
+}
+
+.mode-page-btn-cancel {
+  display: inline;
+  font-size: 36px;
+  width: 30%;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  color: var(--text-color);
+  background-color: var(--main-red-color);
+  cursor: pointer;
+}
+
+/*************************************************************************
+* CSS CLASSES FOR FLOATING ACTION BUTTON
+*************************************************************************/
+/* Float-btn -- Styling for the floating action button. */
+.float-btn {
+  position: fixed;
+  min-width: 136px;
+  height: 40px;
+  bottom: 20px;
+  right: 20px;
+  color: var(--text-color);
+  background-color: var(--main-color);
+  border-radius: 50px;
+  text-align: center;
+  box-shadow: 2px 2px 3px #999;
+}
+
+/* float-btn:hover -- When float button is hovered, 
+change cursor to pointer */
+.float-btn:hover {
+  cursor: pointer;
+}
+
+/*************************************************************************
+* CSS CLASSES FOR FORMS
+*************************************************************************/
+
+.fm-label {
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.fm-field {
+  text-align: center;
+  width: 90%;
+  height: 10%;
+  font-size: 24px;
+}
+
+.fm-field-descr {
+  font-style: italic;
+  padding-bottom: 16px;
+}
+
+.fm-primary-btn {
+  width: 70%;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-size: 36px;
+  color: var(--text-color);
+  background-color: var(--main-color);
+}
+
+.fm-profile-pic {
+  padding-bottom: 8px;
+}
+
+.centered {
+  text-align: center;
+}
+
+.radio-centered:checked {
+  text-align: center;
+  background-color: var(--main-color);
+}
+
+.highlight-error {
+  background-color: #ffdddd;
+}
+
+.large-padded-text {
+  text-align: center;
+  font-style: italic;
+  font-size: 32px;
+  padding: 64px;
+}
+
+.no-space {
+  margin: 0px;
+  padding: 0px;
+  vertical-align: top;
+}
+
+/*************************************************************************
+* CSS CLASSES FOR DIALOGS
+*************************************************************************/
+
+.dialog-primary-btn {
+  width: 35%;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-right: 8px;
+  font-size: 24px;
+  color: var(--text-color);
+  background-color: var(--main-color);
+}
+
+.dialog-cancel-btn {
+  width: 35%;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-size: 24px;
+  color: var(--text-color);
+  background-color: var(--main-red-color);
+}
+
+/*************************************************************************
+* CSS CLASSES FOR TOAST NOTIFICATION
+*************************************************************************/
+
+.toast-container {
+  background-color: lightgoldenrodyellow;
+  width: 100%;
+  line-height: 40px;
+  display: flex;
+}
+
+.toast-text {
+  font-size: larger;
+  width: 100%;
+  text-align: center;
+}
+
+.toast-close {
+  pointer-events: visible;
+  margin-left: auto;
+  vertical-align: middle;
+}
+
+/*************************************************************************
+* CSS CLASSES FOR AUTOCOMPLETE BOX
+*************************************************************************/
+.autocomplete-input {
+  position: relative;
+  display: inline-block;
+}
+.avoid-clicks-a {
+  pointer-events: none;
+}
+.avoid-clicks-b {
+  pointer-events: all;
+}
+
+.autocomplete-input-a {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.autocomplete-input-b {
+  width: 30pc;
+}
+
+.autocomplete-wrapper-a {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.autocomplete-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.autocomplete-results-wrapper {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  text-align: left;
+  z-index: 1000;
+}
+
+.autocomplete-results {
+  list-style-type: none; /* Remove bullets */
+  padding: 0; /* Remove padding */
+  margin: 0; /* Remove margins */
+}
+
+.autocomplete-item {
+  width: 100%;
+  background-color: white;
+  outline: 1px solid lightgray;
+}
+
+.autocomplete-item-1 {
+  width: 100%;
+  background-color: rgb(208, 204, 204);
+  outline: 1px solid rgb(12, 11, 11);
+  color: #ff0f00;
+}
+
+.autocomplete-item:hover {
+  background-color: #f0f0f0;
+}
+
+/*************************************************************************
+* CSS CLASS FOR DISABLING A BUTTON
+*************************************************************************/
+.disable-btn {
+  pointer-events: none;
+  background-color: lightgray;
+}
+/*************************************************************************
+* CSS CLASS FOR LANDING PAGE - Shifted to its own file in the user features directory
+*************************************************************************/
+
+
+/*************************************************************************
+* CSS CLASS FOR COURSE TABLE ITEMS IN COURSES MODE
+*************************************************************************/
+.info-btn {
+  color: white;
+  background-color: var(--main-color);
+  margin-right: 6px;
+  margin-bottom: 6px;
+  height: 30px;
+  width: 80px;
+}
+
+.info-btn:hover {
+  border: 1px solid var(--main-color);
+  color: var(--main-color);
+  background-color: white;
+}
+
+.info-btn-outer-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.info-btn-inner-container {
+  flex: 1;
+}
+
+@media (max-width: 476px) {
+  .info-btn-inner-container {
+    flex: 0 1 calc(50%);
+    margin-bottom: 5px;
+  }
+}
+
+.caption-center {
+  text-align: center;
+}
+
+.scaled-image {
+  width: 300px;
+}
+
+@media (max-width: 675px) {
+  .scaled-image {
+    width: 200px;
+  }
+}
+
+@media (max-width: 575px) {
+  .scaled-image {
+    width: 150px;
+  }
+}
+
+@media (max-width: 525px) {
+  .scaled-image {
+    width: 100px;
+  }
+}
+
+@media (max-width: 200px) {
+  .scaled-image {
+    width: 50px;
+  }
+}
+
+@media (max-width: 150px) {
+  .scaled-image {
+    width: 0px;
+  }
+}
+
+.fluid-image {
+  max-width: 100%;
+  width: auto;
+  border-bottom: 6px;
+}
+
+.search-box-centered {
+  display: flex;
+  text-align: center;
+  justify-content: center;
+}
+
+.radio-centered {
+  display: flex;
+  justify-content: center;
+}
+
+/*************************************************************************
+* CSS CLASS FOR COURSES MODE DETAILS PAGE
+*************************************************************************/
+.float-center-padding {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 1em;
+}
+
+.table-narrow {
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.float-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.img-with-button-container {
+  position: relative;
+  border: 2px solid black;
+  width: fit-content;
+  margin: auto;
+  display: block;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.form-check-input:checked {
+  background-color: var(--main-color);
+}
+
+.font-small {
+  font-size: small;
+}
+
+.img-course {
+  width: 300px;
+  height: auto;
+}
+
+.btn-overlaid {
+  position: absolute;
+  padding: 8px;
+  background-color: var(--main-color);
+  color: white;
+  border-radius: 24px;
+  bottom: 10px;
+  right: 10px;
+  width: 50px;
+}
+
+.btn-theme {
+  background-color: var(--main-color);
+  color: white;
+}
+
+.star-no-edit {
+  pointer-events: none;
+}
+
+.star-selected {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: gold;
+}
+
+.star-unselected {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: lightgray;
+}
+
+.txt-wrap {
+  white-space: pre-wrap;
+  text-align: left;
+}
+
+.notes-div {
+  width: 60%;
+}
+
+.par-width {
+  width: 2.5em;
+}
+
+.dist-width {
+  width: 3.5em;
+}
+
+.time-width {
+  width: 3.5em;
+}
+
+.geopt-width {
+  width: 4em;
+}
+
+.btn-green {
+  outline: 0;
+  color: green;
+}
+
+.btn-golf {
+  outline: 1px solid;
+  background-color: red;
+  color: white;
+}
+
+.btn-trans {
+  outline: 1px solid yellow;
+  background-color: black;
+  color: yellow;
+}
+
+/* .nav-link {
+  color: var(--main-color);
+}
+
+.nav-link:hover {
+  color: var(--main-red-color);
+} */
+
+.btn-profile {
+  outline: 1px solid gray;
+  /* background-color: lightgray; */
+}
+
+.btn-start {
+  outline: 1px solid lightgray;
+  background-color: lightgray;
+  color: black;
+}
+
+.btn-muted-start {
+  outline: 1px solid lightgray;
+  background-color: white;
+  color: lightgray;
+  pointer-events: none;
+}
+
+.btn-red {
+  outline: 0;
+  color: red;
+}
+
+.btn-gray {
+  outline: 0;
+  color: lightgray;
+  pointer-events: none;
+}
+
+.table-responsive {
+  max-height: 62vh;
+}
+
+.sticky-head {
+  position: sticky;
+  top: 0px;
+  background-color: white;
+}
+
+.map-container {
+  height: 768px;
+  display: flex;
+}
+
+.map-hole-pane {
+  width: 225px;
+}
+
+.map-box-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* .map-box-container .map-box-full .mapboxgl-canvas {
+    width: 100% !important;
+    height: 100% !important;
+  } */
+.map-box-full {
+  width: 100%;
+  height: 100%;
+}
+
+.hole-profile {
+  width: 100%;
+  height: 25%;
+}
+
+.btn-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.flex-container-left {
+  align-items: center;
+  display: flex;
+  justify-content: left;
+}
+
+.flex-container-centered {
+  display: flex;
+  justify-content: center;
+}
+
+.flex-container-vertical {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 0;
+}
+
+.mapboxgl-canvas .mapboxgl-draw-line {
+  stroke-width: 4px;
+  stroke: red;
+}
+
+.map-table-width {
+  width: 14%;
+}
+.txt-small-bold {
+  font-size: small;
+  font-weight: bold;
+}
+
+.status-box {
+  z-index: 1;
+  width: 400px;
+  position: absolute;
+  top: 1px;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  background-color: white;
+  color: black;
+  padding: 5px;
+  text-align: center;
+  outline: 1px dotted gray;
+}
+
+.profile-btn-selected {
+  background-color: gray;
+}
+
+.layout-inline-block {
+  display: inline-block;
+}
+
+.small-pad {
+  padding-bottom: 5px;
+}
+
+.txt-align-left {
+  text-align: left;
+}
+
+.txt-align-right {
+  text-align: right;
+}
+
+.txt-yellow {
+  color: yellow;
+}
+
+.bg-black {
+  background-color: black;
+}
+
+.txt-red {
+  color: red;
+}
+
+.txt-blue {
+  color: blue;
+}
+
+.txt-green {
+  color: lightgreen;
+}
+
+.txt-gray {
+  color: gray;
+}
+
+/* Styles for scorecard */
+
+.scorecard-save {
+  background-color: var(--main-color);
+  color: var(--text-color);
+  border: none;
+  /* padding: 10px; */
+  /* font-size: 24px; */
+  cursor: pointer;
+}
+
+.scorecard-cancel {
+  background-color: var(--main-red-color);
+  color: var(--text-color);
+  border: none;
+  /* padding: 10px; */
+  /* font-size: 24px; */
+  cursor: pointer;
+}
+
+.delete-round-btn {
+  background-color: var(--main-red-color);
+  color: var(--text-color);
+  font-size: 36px;
+  border: 2px solid black;
+  border-radius: 0;
+}

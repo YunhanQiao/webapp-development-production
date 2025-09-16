@@ -1,0 +1,21 @@
+.support-ticket-button {
+  position: fixed;
+  bottom: 100px;
+  right: 0px;
+  z-index: 1049;
+  background-color: #003366;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  /* border-radius: 50px; */
+  border-top-left-radius: 16px;
+  border-bottom-left-radius: 16px;
+  font-size: 14px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.3);
+  transition: background-color 0.3s ease;
+}
+
+.support-ticket-button:hover {
+  background-color: #0055aa;
+  cursor: pointer;
+}

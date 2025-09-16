@@ -1,0 +1,559 @@
+.stroke-input {
+  padding: 5px 0;
+  border: 0;
+  width: 35px;
+  height: 35px;
+  text-align: center;
+  box-sizing: border-box;
+  position: relative;
+  display: inline-block;
+  margin: 0;
+  appearance: textfield;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  color: #000 !important; /* Ensure text is visible */
+  font-weight: 500;
+  background-color: transparent;
+}
+
+.stroke-input::-webkit-inner-spin-button,
+.stroke-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.stroke-input {
+  -moz-appearance: textfield;
+}
+
+.stroke-input:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(24, 82, 197, 0.5);
+  z-index: 1;
+}
+
+.circle,
+.square,
+.solid-circle,
+.solid-square,
+.no-border,
+.normal {
+  box-sizing: border-box;
+  width: 35px;
+  height: 35px;
+  display: inline-block;
+  text-align: center;
+}
+
+.circle {
+  border: 1px solid green;
+  border-radius: 50%;
+  color: #000 !important; /* Birdie - black text on white background */
+  background-color: white;
+}
+
+.square {
+  border: 1px solid green;
+  border-radius: 0;
+  color: #000 !important; /* Bogey - black text on white background */
+  background-color: white;
+}
+
+.solid-circle {
+  border-radius: 50%;
+  color: white !important; /* Eagle and better - white text on black background */
+  background-color: black;
+  border: 1px solid black;
+}
+
+.solid-square {
+  border: 1px solid black;
+  color: white !important; /* Double bogey and worse - white text on black background */
+  background-color: black;
+  border-radius: 0;
+}
+
+.no-border {
+  border: none;
+  color: #000 !important; /* Par - black text on white background */
+  background-color: white;
+}
+
+.cell-bg-white {
+  background-color: white;
+}
+
+.cell-bg-gray {
+  background-color: #f2f2f2;
+}
+
+.normal {
+  border: none;
+  box-shadow: 1px 1px 3px 1px rgba(0, 0, 0, 0.25);
+  color: #000 !important; /* Normal scores - black text */
+  background-color: white;
+}
+.circle:focus,
+.square:focus,
+.solid-circle:focus,
+.solid-square:focus,
+.no-border:focus,
+.normal:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(24, 82, 197, 0.5);
+  border-radius: inherit;
+  border-color: inherit;
+  background-color: inherit;
+  color: inherit;
+}
+table td {
+  padding: 6px !important;
+  box-sizing: border-box;
+  height: 47px;
+  vertical-align: middle;
+}
+input[type="time"] {
+  padding: 5px;
+  height: 35px;
+  box-sizing: border-box;
+}
+
+.stroke-input.with-time {
+  border-bottom: 2px dotted #4299e1;
+}
+
+.hole-time-toggle {
+  display: inline-block;
+  margin-left: 16px;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.toggle-label input {
+  margin-right: 6px;
+}
+
+.hole-time-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  /* width: 300px; */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.hole-time-input-full {
+  margin: 10px 0;
+  padding: 8px;
+  font-size: 16px;
+}
+
+.hole-time-display {
+  font-size: 10px;
+  color: #666;
+  margin-top: 2px;
+  text-align: center;
+}
+
+.time-inputs-wrapper {
+  margin: 15px 0;
+}
+
+.time-inputs-row {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.time-input-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.number-input {
+  width: 70px;
+  height: 40px;
+  font-size: 18px;
+  text-align: center;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.time-label {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #666;
+}
+
+.modal-options {
+  margin-top: 15px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+.skip-option {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.skip-option input {
+  margin-right: 8px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.modal-btn {
+  background-color: #13294e;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-btn:hover {
+  background-color: #0d1d3a;
+}
+
+.sc-score-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.sc-score-input {
+  width: 35px;
+  height: 35px;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.sc-time-input-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.sc-time-inputs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+  border-radius: 3px;
+  padding: 2px;
+  width: 100%;
+  max-width: 70px;
+}
+
+.sc-time-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sc-time-min-input,
+.sc-time-sec-input {
+  width: 25px;
+  height: 22px;
+  text-align: center;
+  padding: 0;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  margin: 0;
+}
+
+.sc-time-separator {
+  margin: 0 2px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.sc-time-label {
+  font-size: 9px;
+  color: #666;
+  margin-top: 1px;
+}
+
+table td {
+  padding: 8px !important;
+  box-sizing: border-box;
+  height: auto;
+  min-height: 47px;
+  vertical-align: middle;
+}
+
+input[type="number"] {
+  padding: 0;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Specific styling for the first column (hole labels) in scorecard */
+.scorecard-first-column {
+  width: 140px !important;
+  min-width: 140px !important;
+  text-align: right !important;
+  padding: 6px 12px 6px 6px !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  font-size: 0.75rem !important;
+  vertical-align: middle !important;
+}
+
+/* Ensure first column font size is applied to all child elements */
+.scorecard-first-column * {
+  font-size: 0.75rem !important;
+  text-align: right !important;
+}
+
+/* Target all first column cells in scorecard table (both th and td) */
+.scorecard-table th:first-child,
+.scorecard-table td:first-child {
+  text-align: right !important;
+}
+
+/* Force right alignment for any content in the first column */
+.scorecard-table th:first-child *,
+.scorecard-table td:first-child * {
+  text-align: right !important;
+}
+
+/* Stronger rules for first column - including flex containers */
+.scorecard-table tbody tr.player-data-row td:first-child,
+.scorecard-table tbody tr.player-data-row td:first-child div,
+.scorecard-table tbody tr.player-data-row td:first-child div div {
+  text-align: right !important;
+  justify-content: flex-end !important;
+  align-items: flex-end !important;
+}
+
+/* Ensure header rows in first column are also right-aligned */
+.scorecard-table tbody tr:not(.player-data-row) th:first-child,
+.scorecard-table tbody tr:not(.player-data-row) td:first-child {
+  text-align: right !important;
+  justify-content: flex-end !important;
+}
+
+/* Force right alignment for any text content in first column */
+.scorecard-table th:first-child,
+.scorecard-table td:first-child {
+  text-align: right !important;
+}
+
+/* Hole number columns - keep them narrow and consistent */
+.scorecard-table th:not(.scorecard-first-column):not(.scorecard-summary-column) {
+  width: 35px !important;
+  min-width: 35px !important;
+  max-width: 35px !important;
+  text-align: center !important;
+  padding: 6px !important;
+}
+
+/* Score cells with time - maintain consistent width */
+.scorecard-table td:not(.scorecard-first-column):not(.scorecard-summary-column) {
+  width: 35px !important;
+  min-width: 35px !important;
+  text-align: center !important;
+  padding: 6px !important;
+}
+
+/* Summary columns - allow them to be wider */
+.scorecard-summary-column {
+  width: 90px !important;
+  min-width: 90px !important;
+  font-size: 0.85rem !important;
+  padding: 6px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  border-color: #dee2e6 !important;
+  white-space: nowrap !important;
+}
+
+/* Apply modal-style formatting to all summary column content */
+.scorecard-summary-column div,
+.scorecard-summary-column span {
+  font-size: inherit !important;
+  line-height: 1.4 !important;
+}
+
+/* Override conflicting table styles for scorecard - ONLY apply to player data rows */
+.scorecard-table tbody tr.player-data-row td {
+  height: 150px !important;
+  min-height: 150px !important;
+  padding: 6px !important;
+  font-size: 0.85rem !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  border-color: #dee2e6 !important;
+}
+
+/* Ensure all scorecard cell content uses consistent flex alignment - ONLY for player data rows (exclude first column) */
+.scorecard-table tbody tr.player-data-row td:not(:first-child) > div {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+/* Make each row within scorecard cells equal height - ONLY for player data rows (exclude first column) */
+.scorecard-table tbody tr.player-data-row td:not(:first-child) > div > div {
+  height: 33.33% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Special rules for first column in player data rows to maintain right alignment */
+.scorecard-table tbody tr.player-data-row td:first-child > div {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  align-items: flex-end !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  text-align: right !important;
+}
+
+/* Make each row within first column equal height with right alignment */
+.scorecard-table tbody tr.player-data-row td:first-child > div > div {
+  height: 33.33% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  text-align: right !important;
+  width: 100% !important;
+}
+
+/* Simple table layout management with horizontal scroll support */
+.scorecard-table {
+  table-layout: fixed !important;
+  font-size: 0.85rem !important;
+  border-collapse: collapse !important;
+}
+
+/* Ensure horizontal scrolling works on all devices */
+.overflow-x-auto {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  width: 100%;
+  display: block;
+}
+
+/* Always show horizontal scrollbar when content overflows */
+.overflow-x-auto::-webkit-scrollbar {
+  height: 14px;
+  display: block;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 7px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 7px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Force the scrollbar to be visible even when not hovering */
+.overflow-x-auto {
+  scrollbar-width: auto;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+/* Force horizontal scroll on smaller screens */
+@media (max-width: 1400px) {
+  .scorecard-table {
+    width: auto !important;
+  }
+  
+  .overflow-x-auto {
+    overflow-x: scroll !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .scorecard-table {
+    min-width: 1100px !important;
+  }
+  
+  .scorecard-first-column {
+    width: 100px !important;
+    min-width: 100px !important;
+    font-size: 0.7rem !important;
+  }
+  
+  .scorecard-summary-column {
+    width: 80px !important;
+    min-width: 80px !important;
+  }
+}

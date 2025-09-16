@@ -1,0 +1,87 @@
+name: front-end CI/CD
+
+on:
+  push:
+    branches: [production, staging]
+
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build the React application
+      run: npm run build
+      env:
+        CI: false
+        REACT_APP_MAPBOX_KEY: ${{ secrets.REACT_APP_MAPBOX_KEY }}
+        REACT_APP_TUTORIAL_VIDEOS_URL: ${{ secrets.REACT_APP_TUTORIAL_VIDEOS_URL }}
+        REACT_APP_GOOGLE_PLACES_KEY: ${{ secrets.REACT_APP_GOOGLE_PLACES_KEY }}
+        # REACT_APP_API_BASE_ENDPOINT: ${{ secrets.REACT_APP_API_BASE_ENDPOINT }}
+        REACT_APP_API_BASE_ENDPOINT: ${{ github.ref == 'refs/heads/production' && secrets.REACT_APP_API_BASE_PROD_ENDPOINT || secrets.REACT_APP_API_BASE_STAGING_ENDPOINT }}
+        REACT_APP_COMPETITION_ENDPOINT: ${{ secrets.REACT_APP_COMPETITION_ENDPOINT }}
+        REACT_APP_FETCH_ALL_USERNAMES_ENDPOINT: ${{ secrets.REACT_APP_FETCH_ALL_USERNAMES_ENDPOINT }}
+        REACT_APP_STRIPE_PUBLISHABLE_KEY: ${{ secrets.REACT_APP_STRIPE_PUBLISHABLE_KEY }}
+
+    - name: Archive the build directory
+      run: zip -r build.zip build
+
+    - name: Determine target environment
+      id: env
+      run: |
+        if [[ "${{ github.ref }}" == "refs/heads/production" ]]; then
+          echo "env=production" >> $GITHUB_OUTPUT
+        else
+          echo "env=staging" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Log target environment
+      run: echo "Deploying to ${{ steps.env.outputs.env }} environment..."
+
+    - name: Deploy build to EC2
+      env:
+        PRIVATE_KEY: ${{ steps.env.outputs.env == 'production' && secrets.EC2_PROD_PRIVATE_KEY || secrets.EC2_UAT_PRIVATE_KEY }}
+        HOST: ${{ steps.env.outputs.env == 'production' && secrets.EC2_HOST_PROD || secrets.EC2_HOST_UAT }}
+        USER: ${{ steps.env.outputs.env == 'production' && secrets.EC2_PROD_USER || secrets.EC2_UAT_USER }}
+      run: |
+        echo "$PRIVATE_KEY" > private_key.pem && chmod 600 private_key.pem
+
+        # Prepare the EC2 instance
+        ssh -i private_key.pem -o StrictHostKeyChecking=no ${USER}@${HOST} '
+          rm -rf /home/ubuntu/frontend &&
+          mkdir -p /home/ubuntu/frontend
+        '
+
+        # Copy the build file to EC2
+        scp -i private_key.pem -o StrictHostKeyChecking=no build.zip ${USER}@${HOST}:/home/ubuntu/frontend/
+
+        # Extract and set up the build on EC2
+        ssh -i private_key.pem -o StrictHostKeyChecking=no ${USER}@${HOST} '
+          sudo apt update && sudo apt install unzip -y &&
+          unzip -o /home/ubuntu/frontend/build.zip -d /home/ubuntu/frontend &&
+          chmod -R o+r /home/ubuntu/frontend/build &&
+          find /home/ubuntu/frontend/build -type d -exec chmod o+x {} \; &&
+          rm /home/ubuntu/frontend/build.zip &&
+          # cp /home/ubuntu/frontend-env/.env /home/ubuntu/frontend &&
+          tmux kill-session -t react-app 2>/dev/null || true
+          tmux new-session -d -s react-app "sudo serve -s /home/ubuntu/frontend/build -l 3000 --no-clipboard"
+          sudo systemctl restart nginx
+        '
+
+    - name: Cleanup
+      run: rm private_key.pem
