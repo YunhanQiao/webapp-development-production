@@ -4,7 +4,7 @@ const { devices } = require('@playwright/test');
 const config = {
     outputDir: './test-results',
     use: {
-      baseURL: 'http://localhost:5500', 
+      baseURL: 'http://localhost:3000', 
       // headless: false,
       // launchOptions: {sloMo: 1000,},
     },
