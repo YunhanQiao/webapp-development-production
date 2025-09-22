@@ -82,10 +82,21 @@ test.describe('✅ WORKING Tournament Creation End-to-End', () => {
       page.click('button:has-text("Save & Next")')
     ]);
     
-    // Extract tournament ID from response
-    const basicInfoData = await basicInfoResponse.json();
-    tournamentId = basicInfoData.competitionId;
-    console.log(`✅ Basic Info saved successfully. Tournament ID: ${tournamentId}`);
+    // Extract tournament ID from response and verify success
+    if (basicInfoResponse.status() === 200) {
+      const basicInfoData = await basicInfoResponse.json();
+      tournamentId = basicInfoData.competitionId;
+      console.log(`✅ Basic Info saved successfully. Tournament ID: ${tournamentId}`);
+      
+      // Verify we got a valid tournament ID
+      if (!tournamentId) {
+        throw new Error('❌ Basic Info save failed: No tournament ID returned');
+      }
+    } else {
+      const errorMessage = `❌ Basic Info save failed (status: ${basicInfoResponse.status()})`;
+      console.log(errorMessage);
+      throw new Error(errorMessage);
+    }
 
     // ============================================
     
@@ -132,7 +143,9 @@ test.describe('✅ WORKING Tournament Creation End-to-End', () => {
         console.log(`✅ Registration & Payment saved successfully (status: ${regPaymentResponse.status()}, no JSON response)`);
       }
     } else {
-      console.log(`❌ Registration & Payment save failed (status: ${regPaymentResponse.status()})`);
+      const errorMessage = `❌ Registration & Payment save failed (status: ${regPaymentResponse.status()})`;
+      console.log(errorMessage);
+      throw new Error(errorMessage);
     }
     
     // Verify we moved to Color Theme tab
@@ -163,7 +176,9 @@ test.describe('✅ WORKING Tournament Creation End-to-End', () => {
         console.log(`✅ Color Theme saved successfully (status: ${colorThemeResponse.status()}, no JSON response)`);
       }
     } else {
-      console.log(`❌ Color Theme save failed (status: ${colorThemeResponse.status()})`);
+      const errorMessage = `❌ Color Theme save failed (status: ${colorThemeResponse.status()})`;
+      console.log(errorMessage);
+      throw new Error(errorMessage);
     }
     
     // Verify we moved to Courses tab
@@ -231,7 +246,9 @@ test.describe('✅ WORKING Tournament Creation End-to-End', () => {
         console.log(`✅ Courses saved successfully (status: ${coursesResponse.status()}, no JSON response)`);
       }
     } else {
-      console.log(`❌ Courses save failed (status: ${coursesResponse.status()})`);
+      const errorMessage = `❌ Courses save failed (status: ${coursesResponse.status()})`;
+      console.log(errorMessage);
+      throw new Error(errorMessage);
     }
     
     // Verify we moved to Divisions tab
@@ -310,7 +327,9 @@ test.describe('✅ WORKING Tournament Creation End-to-End', () => {
         console.log(`✅ Divisions saved successfully (status: ${divisionsResponse.status()}, no JSON response)`);
       }
     } else {
-      console.log(`❌ Divisions save failed (status: ${divisionsResponse.status()})`);
+      const errorMessage = `❌ Divisions save failed (status: ${divisionsResponse.status()})`;
+      console.log(errorMessage);
+      throw new Error(errorMessage);
     }
 
     // ============================================
