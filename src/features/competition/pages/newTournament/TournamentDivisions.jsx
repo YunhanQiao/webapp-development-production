@@ -110,13 +110,8 @@ const TournamentDivisions = () => {
     // Serialize the data to prevent Redux serialization errors with Date objects
     const serializedDivisions = serializeDivisionsData(newDivisions);
 
-    // Update wizard state (single source of truth)
-    dispatch(
-      updateWizardTab({
-        tab: "divisions",
-        data: serializedDivisions,
-      }),
-    );
+    // 🎨 UI-ONLY: Skip wizard state update
+    console.log("🎨 UI-ONLY: Skipping wizard state update for divisions");
 
     // Also update form for backward compatibility (some components might still read from it)
     setValue("divisions", serializedDivisions);
@@ -126,8 +121,8 @@ const TournamentDivisions = () => {
   };
 
   const handleDeleteDivision = () => {
-    // 🎯 SINGLE SOURCE OF TRUTH: Update wizard state instead of form
-    console.log("🎯 Deleting division from wizard state, index:", divisionToDelete);
+    // � UI-ONLY: Skip wizard state update
+    console.log("� UI-ONLY: Skipping wizard state update for division deletion, index:", divisionToDelete);
 
     const currentDivisions = wizardState?.divisions || [];
     const newDivisions = currentDivisions.filter((_, index) => index !== divisionToDelete);
@@ -135,13 +130,8 @@ const TournamentDivisions = () => {
     // Serialize the data to prevent Redux serialization errors
     const serializedDivisions = serializeDivisionsData(newDivisions);
 
-    // Update wizard state (single source of truth)
-    dispatch(
-      updateWizardTab({
-        tab: "divisions",
-        data: serializedDivisions,
-      }),
-    );
+    // 🎨 UI-ONLY: Skip wizard state update
+    console.log("🎨 UI-ONLY: Skipping wizard state update for deleted divisions");
 
     // Also update form for backward compatibility
     setValue("divisions", serializedDivisions);
