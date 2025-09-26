@@ -97,20 +97,16 @@ const AddTournament = () => {
 
   // Function to clear dirty flags after successful save
   const clearDirtyFlags = useCallback(() => {
-    console.log("🎨 UI-ONLY: Skipping clear dirty tabs dispatch");
   }, []);
 
   // On mount we check if there's an Id in the URL. If it exists, we add the tournament as active.
   useEffect(() => {
     if (id) {
-      console.log("🎨 UI-ONLY: Skipping fetchCompetitionByID dispatch for id:", id);
     } else {
-      console.log("🎨 UI-ONLY: Skipping tournament reset dispatches for new tournament");
+
     }
-    console.log("🎨 UI-ONLY: Skipping fetchAllUsers dispatch");
     // On unmount, we reset to the default values
     return () => {
-      console.log("🎨 UI-ONLY: Skipping cleanup dispatches on unmount");
     };
   }, [id]); // Removed dispatch from dependencies
 
@@ -128,22 +124,15 @@ const AddTournament = () => {
   const onSubmit = useCallback(
     next => async data => {
       try {
-        console.log("🎯 UI-ONLY: Form submitted for tab:", tab);
-        console.log("🎯 UI-ONLY: Form data received:", data);
-        
-        // In UI-only mode, we just log the data but don't save to Redux or backend
-        console.log("� UI-ONLY: Skipping all Redux state updates and backend saves");
 
         // Just handle navigation
         if (next) {
-          console.log("🎯 UI-ONLY: Navigating to next tab");
           handleNextTab();
         } else {
-          console.log("🎯 UI-ONLY: Exiting wizard");
           handleTabClose();
         }
       } catch (error) {
-        console.error("Error during UI-only navigation:", error);
+        console.error("Error during navigation:", error);
       }
     },
     [tab, handleNextTab, handleTabClose],
@@ -153,19 +142,15 @@ const AddTournament = () => {
   const saveWizardState = useCallback(
     async next => {
       try {
-        console.log("� UI-ONLY: saveWizardState called for tab:", tab);
-        console.log("� UI-ONLY: Skipping validation and state updates");
 
         // In UI-only mode, just handle navigation
         if (next) {
-          console.log("� UI-ONLY: Navigating to next tab");
           handleNextTab();
         } else {
-          console.log("� UI-ONLY: Exiting wizard");
           handleTabClose();
         }
       } catch (error) {
-        console.error("� UI-ONLY: Error during navigation:", error);
+        console.error("Error during navigation:", error);
       }
     },
     [tab, handleNextTab, handleTabClose],
@@ -230,11 +215,11 @@ const AddTournament = () => {
   };
 
   const handleDiscardChanges = async () => {
-    console.log("🎨 UI-ONLY: User chose to discard changes - skipping state restore");
+    console.log("User chose to discard changes - skipping state restore");
 
     try {
-      console.log("🎨 UI-ONLY: Skipping cancelWizardChangesAction dispatch");
-      console.log("🎨 UI-ONLY: Wizard state restore skipped");
+      console.log("Skipping cancelWizardChangesAction dispatch");
+      console.log("Wizard state restore skipped");
 
       // Just close the modal and navigate
       setUnsavedChangesModalOpen(false);
@@ -280,14 +265,13 @@ const AddTournament = () => {
 
   // To update/reset defaultValues on tab change
   useEffect(() => {
-    // 🎨 UI-ONLY: Always use clean default values, ignore wizard state and active tournament
-    console.log("🎨 UI-ONLY: Resetting form to default values for tab:", tab);
+    //Always use clean default values, ignore wizard state and active tournament
+    console.log("Resetting form to default values for tab:", tab);
     
     let dataToUse = defaultValues;
     
-    // For UI-only mode, we ignore wizard state and active tournament data
     // This ensures users always start with empty/default forms
-    console.log("🎨 UI-ONLY: Using default values:", dataToUse);
+    console.log("Using default values:", dataToUse);
 
     // Special handling for basicInfo tab to ensure clean slate
     if (tab === "basicInfo") {
