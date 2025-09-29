@@ -211,7 +211,7 @@ async function verifyRegPaymentInfoInDB(tournamentName, expectedData) {
   }
 }
 
-async function verifyColorThemeInDB(tournamentName) {
+async function verifyColorThemeInDB(tournamentName, expectedColorTheme) {
   try {
     const TestCompetition = global.TestCompetition;
     const tournament = await TestCompetition.findOne({
@@ -224,9 +224,34 @@ async function verifyColorThemeInDB(tournamentName) {
       );
     }
 
-    // Color theme step might be optional, so we just verify the tournament exists
+    if (!tournament.colorTheme) {
+      throw new Error(
+        `Color theme data not found for tournament "${tournamentName}"`,
+      );
+    }
+
+    const colorTheme = tournament.colorTheme;
+    console.log("🔍 Color theme data in DB:", {
+      titleText: colorTheme.titleText,
+      headerRowBg: colorTheme.headerRowBg,
+      headerRowTxt: colorTheme.headerRowTxt,
+      updateBtnBg: colorTheme.updateBtnBg,
+      updateBtnTxt: colorTheme.updateBtnTxt,
+    });
+
+    // Verify the specific colors we set in the test
+    for (const [fieldName, expectedValue] of Object.entries(
+      expectedColorTheme,
+    )) {
+      if (colorTheme[fieldName] !== expectedValue) {
+        throw new Error(
+          `Color theme field mismatch: ${fieldName} expected ${expectedValue}, got ${colorTheme[fieldName]}`,
+        );
+      }
+    }
+
     console.log(
-      `✅ TEST 3: Color theme step verified in DB for: ${tournamentName}`,
+      `✅ TEST 3 PASSED: Color theme verified in DB for: ${tournamentName} - All ${Object.keys(expectedColorTheme).length} color fields match!`,
     );
     return tournament;
   } catch (error) {
@@ -600,9 +625,41 @@ test.describe("✅ WORKING Tournament Creation End-to-End", () => {
     // ============================================
     // ✅ Test 3: Color Theme - Fill and Save + DATABASE VERIFICATION
     // ============================================
+    console.log("\n🎨 TEST 3: Color Theme - Fill Color Fields and Save");
 
-    // Color theme selection is optional - we can proceed without selecting
-    // console.log("✅ Color theme step (optional selection)");
+    // Define specific color values to test
+    const testColorTheme = {
+      titleText: "#FF5733", // Custom orange for title
+      headerRowBg: "#3498DB", // Custom blue for header background
+      headerRowTxt: "#FFFFFF", // White for header text
+      updateBtnBg: "#2ECC71", // Custom green for update button
+      updateBtnTxt: "#000000", // Black for update button text
+    };
+
+    // Wait for color theme form to be ready
+    await page.waitForSelector("#titleText", { timeout: 5000 });
+    console.log("✅ Color theme form loaded");
+
+    // Fill color theme fields with test values
+    for (const [fieldName, colorValue] of Object.entries(testColorTheme)) {
+      console.log(`🎨 Setting ${fieldName} to ${colorValue}`);
+
+      // Simply fill the input field - Playwright should handle React updates automatically
+      await page.fill(`#${fieldName}`, colorValue);
+
+      // Verify the value was set correctly
+      const actualValue = await page.inputValue(`#${fieldName}`);
+      if (actualValue !== colorValue) {
+        console.log(
+          `⚠️ Warning: ${fieldName} expected ${colorValue}, got ${actualValue}`,
+        );
+      }
+    }
+
+    console.log("✅ Color theme fields filled with test values");
+
+    // Wait for React state to stabilize
+    await page.waitForTimeout(1000);
 
     // Save Color Theme and go directly to database verification
     await page.click('button:has-text("Save & Next")');
@@ -612,8 +669,9 @@ test.describe("✅ WORKING Tournament Creation End-to-End", () => {
       "Courses",
     );
 
-    // 🔥 DATABASE VERIFICATION - Check if color theme step was saved
-    await verifyColorThemeInDB(tournamentName);
+    // 🔥 DATABASE VERIFICATION - Check if color theme was saved with correct values
+    console.log("🔍 Verifying Color Theme was saved to database...");
+    await verifyColorThemeInDB(tournamentName, testColorTheme);
 
     // ============================================
     // Test 4: Courses - Fill and Save + DATABASE VERIFICATION
