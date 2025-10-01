@@ -22,9 +22,10 @@ on:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
-    # Explicitly grant permissions for the GITHUB_TOKEN to write content.
+    # Explicitly grant permissions for the GITHUB_TOKEN.
     permissions:
       contents: write
+      workflows: write # This is the crucial fix.
 
     steps:
       # Step 1: Check out the specified branch
