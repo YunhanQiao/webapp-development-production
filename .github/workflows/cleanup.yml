@@ -38,7 +38,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      # Step 2: NEW - Run Git Diagnostics
+      # Step 2: Run Git Diagnostics
       # This step will print the state of the repository as the runner sees it.
       - name: Run Git Diagnostics
         run: |
@@ -62,7 +62,16 @@ jobs:
       - name: Reset Branch to Starting Point
         run: git reset --hard ${{ github.event.inputs.reset_point }}
 
-      # Step 5: Force push the reset state to the remote branch
+      # Step 5: NEW - Verify the local reset before pushing
+      # This step confirms if the reset command worked locally.
+      - name: Verify Local Reset
+        run: |
+          echo "--- LOG AFTER LOCAL RESET ---"
+          echo "The next line should show the HEAD at your reset_point (e.g., test-start)."
+          git log --oneline --decorate -n 1
+          echo "-----------------------------"
+
+      # Step 6: Force push the reset state to the remote branch
       # This overwrites the branch's history on GitHub, effectively cleaning it.
       - name: Force Push to Clean the Branch
         run: git push --force origin ${{ github.event.inputs.branch_to_clean }}
