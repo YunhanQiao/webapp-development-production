@@ -1,0 +1,51 @@
+# This GitHub Action workflow is for resetting a participant's branch
+# to a clean, starting state after a user study is complete.
+# WARNING: This is a destructive operation that force-pushes to the
+# specified branch, rewriting its history.
+
+name: Cleanup Study Branch
+
+# Manually trigger this workflow from the Actions tab.
+on:
+  workflow_dispatch:
+    inputs:
+      branch_to_clean:
+        description: 'CRITICAL: The exact name of the branch to reset (e.g., study/participant-A)'
+        required: true
+        type: string
+      reset_point:
+        description: 'The tag or commit hash to reset to.'
+        required: true
+        type: string
+        default: 'study-start' # Default tag for the study's starting point
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the specified branch
+      # We need to check out the code to operate on it.
+      # The GITHUB_TOKEN has permissions to push back to the repo.
+      - name: Checkout branch to be cleaned
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch_to_clean }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 2: Configure Git user for the push
+      # The commit history will show this action was performed by "GitHub Actions".
+      - name: Configure Git
+        run: |
+          git config --global user.name 'GitHub Actions Cleanup'
+          git config --global user.email 'actions@github.com'
+
+      # Step 3: Reset the branch to the specified starting point
+      # 'git reset --hard' discards all changes and moves the branch pointer.
+      - name: Reset Branch to Starting Point
+        run: git reset --hard ${{ github.event.inputs.reset_point }}
+
+      # Step 4: Force push the reset state to the remote branch
+      # This overwrites the branch's history on GitHub, effectively cleaning it.
+      - name: Force Push to Clean the Branch
+        run: git push --force origin ${{ github.event.inputs.branch_to_clean }}
