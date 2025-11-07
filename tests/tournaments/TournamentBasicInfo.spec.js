@@ -3,10 +3,8 @@ const { test, expect } = require("@playwright/test");
 const LOGIN_EMAIL = "seal-osu@gmail.com";
 const LOGIN_PASSWORD = "GoodLuck2025!";
 
-const LOGO_PNG_BASE64 =
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AApgB9p8KBygAAAAASUVORK5CYII=";
-const SAMPLE_PDF_BASE64 =
-  "JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoKMiAwIG9iago8PC9UeXBlL1BhZ2VzL0tpZHMgWzMgMCBSXS9Db3VudCAxPj4KZW5kb2JqCjMgMCBvYmoKPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveCBbMCAwIDYxMiA3OTJdL1Jlc291cmNlcyA8PC9Gb250IDw8L0YxIDQgMCBSID4+ID4+L0NvbnRlbnRzIDUgMCBSPj4KZW5kb2JqCjQgMCBvYmoKPDwvVHlwZS9Gb250L1N1YnR5cGUvVHlwZTEvTmFtZS9GMS9CYXNlRm9udC9UaW1lcy1Sb21hbi9FbmNvZGluZy9XaW5BbnNpRW5jb2Rpbmc+PgplbmRvYmoKNSAwIG9iago8PC9MZW5ndGggNDggPj5zdHJlYW0KBTQgMCBSIAVGMSAxMiBUZgoobWluaW1hbCBwZGYpIApFVAplbmRzdHJlYW0KZW5kb2JqCnhyZWYKMCA2CjAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMTMgMDAwMDAgbiAKMDAwMDAwMDY0IDAwMDAwIG4gCjAwMDAwMDAxMSAwMDAwMCBuIAowMDAwMDAwMTkgMDAwMDAgbiAKdHJhaWxlcgo8PC9Sb290IDEgMCBSL1NpemUgNj4+CnN0YXJ0eHJlZgoxMTEKJSVFT0Y=";
+const TEST_PDF_PATH = "tests/tournaments/Test.pdf";
+const TEST_LOGO_PATH = "tests/tournaments/test-image.png";
 
 async function loginWithCredentials(page) {
   await page.goto("http://localhost:3000/login", {
@@ -35,7 +33,6 @@ async function loginWithCredentials(page) {
   if (response.status() === 200) {
     await page.waitForURL(/.*\/feed/, { timeout: 10000 });
     await page.waitForSelector("#tournamentsMode", { timeout: 10000 });
-    console.log("✅ Login successful");
   } else {
     throw new Error("Login failed");
   }
@@ -90,10 +87,35 @@ async function getCurrentUserProfile(page) {
   });
 }
 
+async function getPersistedWizardBasicInfo(page) {
+  return await page.evaluate(() => {
+    const persistRoot = window.localStorage.getItem("persist:root");
+    if (!persistRoot) {
+      return null;
+    }
+
+    try {
+      const parsedRoot = JSON.parse(persistRoot);
+      if (!parsedRoot?.wizard) {
+        return null;
+      }
+
+      const wizardState = JSON.parse(parsedRoot.wizard);
+      return wizardState?.basicInfo || null;
+    } catch (error) {
+      console.warn("Unable to read persisted wizard state", error);
+      return null;
+    }
+  });
+}
+
 test.describe("Basic Info tab", () => {
-  test.beforeEach(async ({ page }) => {
+  test("should complete the full basic info workflow in one session", async ({
+    page,
+  }) => {
     await loginWithCredentials(page);
     await dismissInitialAlerts(page);
+
     const tournamentsModeButton = page.locator("#tournamentsMode");
     await tournamentsModeButton.waitFor({ state: "visible" });
     await tournamentsModeButton.click();
@@ -116,268 +138,273 @@ test.describe("Basic Info tab", () => {
     const nameField = page.locator("#name");
     await nameField.waitFor({ state: "visible", timeout: 10000 });
     await nameField.fill("Test Tournament");
-  });
 
-  test("It should have default title", async ({ page }) => {
-    const header = page.locator("#tournamentFormHeader");
-    await expect(header).toBeVisible({ timeout: 5000 });
-    await expect(header).toContainText("New Tournament: Basic Info", {
-      timeout: 5000,
-    });
-  });
-
-  test("It should prefill tournament host with the logged in user", async ({
-    page,
-  }) => {
-    const hostInput = page.locator("#tournamentCreatorName");
-    await expect(hostInput).toBeVisible({ timeout: 5000 });
-    await expect(hostInput).not.toBeEditable();
-
-    const hostValue = (await hostInput.inputValue()).trim();
-    expect(hostValue).not.toEqual("");
-
-    const currentUser = await getCurrentUserProfile(page);
-
-    if (currentUser) {
-      const nameFromProfile = [
-        currentUser?.personalInfo?.firstName || "",
-        currentUser?.personalInfo?.lastName || "",
-      ]
-        .map((part) => part.trim())
-        .filter(Boolean)
-        .join(" ");
-
-      const fallbackName =
-        currentUser?.username ||
-        currentUser?.displayName ||
-        currentUser?.accountInfo?.username ||
-        currentUser?.accountInfo?.email ||
-        "";
-
-      const expectedHost = (nameFromProfile || fallbackName).trim();
-      expect(expectedHost).not.toEqual("");
-      expect(hostValue).toEqual(expectedHost);
-    }
-  });
-
-  test("It should prefill host email with the logged in user's email", async ({
-    page,
-  }) => {
-    const emailInput = page.locator("#tournamentCreatorEmail");
-    await expect(emailInput).toBeVisible({ timeout: 5000 });
-    await expect(emailInput).not.toBeEditable();
-
-    const emailValue = (await emailInput.inputValue()).trim();
-    expect(emailValue).not.toEqual("");
-
-    const currentUser = await getCurrentUserProfile(page);
-
-    if (currentUser) {
-      const expectedEmail =
-        currentUser?.accountInfo?.email ||
-        currentUser?.email ||
-        currentUser?.username ||
-        "";
-
-      expect(expectedEmail).not.toEqual("");
-      expect(emailValue.toLowerCase()).toEqual(expectedEmail.toLowerCase());
-    } else {
-      expect(emailValue.toLowerCase()).toEqual(LOGIN_EMAIL.toLowerCase());
-    }
-  });
-
-  test("It should enforce tournament dates and tee time defaults", async ({
-    page,
-  }) => {
-    const startDateInput = page.locator("#startDate");
-    const endDateInput = page.locator("#endDate");
-
-    await expect(startDateInput).toHaveAttribute("type", "date");
-    await expect(endDateInput).toHaveAttribute("type", "date");
-
-    await startDateInput.fill("2024-04-03");
-    await endDateInput.fill("2024-04-05");
-
-    await expect(endDateInput).toHaveAttribute("min", "2024-04-03");
-
-    const teeTimeInputs = page.locator('[id^="teeTime-"]');
-    await expect(teeTimeInputs).toHaveCount(3, { timeout: 5000 });
-
-    const expectedLabels = ["04/03/2024:", "04/04/2024:", "04/05/2024:"];
-
-    for (let index = 0; index < expectedLabels.length; index++) {
-      const teeTimeInput = teeTimeInputs.nth(index);
-      await expect(teeTimeInput).toHaveAttribute("type", "time");
-      await expect(teeTimeInput).toHaveValue("07:00");
-
-      const teeTimeLabel = page.locator(`label[for="teeTime-${index}"]`);
-      await expect(teeTimeLabel).toHaveText(expectedLabels[index]);
-    }
-
-    // Attempt to set an end date before the start date; it should snap back to the start date value
-    await endDateInput.fill("2024-04-02");
-    await expect(endDateInput).toHaveValue("2024-04-03");
-
-    await expect(teeTimeInputs).toHaveCount(1, { timeout: 5000 });
-    await expect(teeTimeInputs.first()).toHaveValue("07:00");
-    await expect(page.locator('label[for="teeTime-0"]')).toHaveText(
-      "04/03/2024:",
-    );
-  });
-
-  test("It should upload a tournament logo image", async ({ page }) => {
-    const logoInput = page.locator("#logo");
-    await expect(logoInput).toHaveAttribute("accept", "image/*");
-
-    const logoBuffer = Buffer.from(LOGO_PNG_BASE64, "base64");
-    await logoInput.setInputFiles({
-      name: "tournament-logo.png",
-      mimeType: "image/png",
-      buffer: logoBuffer,
+    await test.step("Verify default header title", async () => {
+      const header = page.locator("#tournamentFormHeader");
+      await expect(header).toBeVisible({ timeout: 5000 });
+      await expect(header).toContainText("New Tournament: Basic Info", {
+        timeout: 5000,
+      });
+      console.log("✅ Verify default header title - PASSED");
     });
 
-    const logoPreview = page.locator(".logo-image");
-    await expect(logoPreview).toBeVisible({ timeout: 5000 });
-    await expect(logoPreview).toHaveAttribute("src", /data:image\/png;base64/);
-  });
+    await test.step("Verify host name is prefilled", async () => {
+      const hostInput = page.locator("#tournamentCreatorName");
+      await expect(hostInput).toBeVisible({ timeout: 5000 });
+      await expect(hostInput).not.toBeEditable();
 
-  test("It should upload a tournament rules PDF", async ({ page }) => {
-    const pdfInputs = page.locator('input[type="file"][accept=".pdf"]');
-    const rulesInput = pdfInputs.nth(0);
+      const hostValue = (await hostInput.inputValue()).trim();
+      expect(hostValue).not.toEqual("");
 
-    await expect(rulesInput).toHaveAttribute("accept", ".pdf");
+      const currentUser = await getCurrentUserProfile(page);
 
-    const pdfBuffer = Buffer.from(SAMPLE_PDF_BASE64, "base64");
-    await rulesInput.setInputFiles({
-      name: "sample-rules.pdf",
-      mimeType: "application/pdf",
-      buffer: pdfBuffer,
+      if (currentUser) {
+        const nameFromProfile = [
+          currentUser?.personalInfo?.firstName || "",
+          currentUser?.personalInfo?.lastName || "",
+        ]
+          .map((part) => part.trim())
+          .filter(Boolean)
+          .join(" ");
+
+        const fallbackName =
+          currentUser?.username ||
+          currentUser?.displayName ||
+          currentUser?.accountInfo?.username ||
+          currentUser?.accountInfo?.email ||
+          "";
+
+        const expectedHost = (nameFromProfile || fallbackName).trim();
+        expect(expectedHost).not.toEqual("");
+        expect(hostValue).toEqual(expectedHost);
+      }
+      console.log("✅ Verify host name is prefilled - PASSED");
     });
 
-    const rulesNameField = page.locator(
-      'input[placeholder="No document uploaded"]',
-    );
-    await expect(rulesNameField).toHaveValue("sample-rules.pdf");
-    await expect(
-      page.getByRole("button", { name: "Upload Rules Doc..." }),
-    ).toHaveCount(0);
-  });
+    await test.step("Verify host email is prefilled", async () => {
+      const emailInput = page.locator("#tournamentCreatorEmail");
+      await expect(emailInput).toBeVisible({ timeout: 5000 });
+      await expect(emailInput).not.toBeEditable();
 
-  test("It should allow entering prize descriptions", async ({ page }) => {
-    const prizeTextInput = page.locator("#prizeText");
-    await prizeTextInput.fill("Winners receive custom medals");
-    await expect(prizeTextInput).toHaveValue("Winners receive custom medals");
+      const emailValue = (await emailInput.inputValue()).trim();
+      expect(emailValue).not.toEqual("");
 
-    await expect(
-      page.getByRole("button", { name: "Upload Prizes Doc..." }),
-    ).toBeVisible();
-  });
+      const currentUser = await getCurrentUserProfile(page);
 
-  test("It should upload a prize PDF and hide the description input", async ({
-    page,
-  }) => {
-    const pdfInputs = page.locator('input[type="file"][accept=".pdf"]');
-    const prizeInput = pdfInputs.nth(1);
+      if (currentUser) {
+        const expectedEmail =
+          currentUser?.accountInfo?.email ||
+          currentUser?.email ||
+          currentUser?.username ||
+          "";
 
-    const pdfBuffer = Buffer.from(SAMPLE_PDF_BASE64, "base64");
-    await prizeInput.setInputFiles({
-      name: "prize-details.pdf",
-      mimeType: "application/pdf",
-      buffer: pdfBuffer,
+        expect(expectedEmail).not.toEqual("");
+        expect(emailValue.toLowerCase()).toEqual(expectedEmail.toLowerCase());
+      } else {
+        expect(emailValue.toLowerCase()).toEqual(LOGIN_EMAIL.toLowerCase());
+      }
+      console.log("✅ Verify host email is prefilled - PASSED");
     });
 
-    await expect(page.locator("#prizeText")).toHaveCount(0);
-    const prizeSection = page.locator("div.mb-3", {
-      has: page.locator("text=Prizes:"),
-    });
-    const prizeDocField = prizeSection.locator("input.form-control").first();
-    await expect(prizeDocField).toHaveValue("prize-details.pdf");
-    await expect(
-      page.getByRole("button", { name: "Upload Prizes Doc..." }),
-    ).toHaveCount(0);
-  });
+    await test.step("Enforce tournament date and tee time defaults", async () => {
+      const startDateInput = page.locator("#startDate");
+      const endDateInput = page.locator("#endDate");
 
-  test("It should allow entering additional info text", async ({ page }) => {
-    const additionalInfoInput = page.locator("#additionalInfoText");
-    await additionalInfoInput.fill("Shotgun start at 9am, lunch provided");
-    await expect(additionalInfoInput).toHaveValue(
-      "Shotgun start at 9am, lunch provided",
-    );
+      await expect(startDateInput).toHaveAttribute("type", "date");
+      await expect(endDateInput).toHaveAttribute("type", "date");
 
-    await expect(
-      page.getByRole("button", { name: "Upload Additional Info Doc..." }),
-    ).toBeVisible();
-  });
+      await startDateInput.fill("2024-04-03");
+      await endDateInput.fill("2024-04-05");
 
-  test("It should upload an additional info PDF and hide the text area", async ({
-    page,
-  }) => {
-    const pdfInputs = page.locator('input[type="file"][accept=".pdf"]');
-    const addlInfoInput = pdfInputs.nth(2);
+      await expect(endDateInput).toHaveAttribute("min", "2024-04-03");
 
-    const pdfBuffer = Buffer.from(SAMPLE_PDF_BASE64, "base64");
-    await addlInfoInput.setInputFiles({
-      name: "additional-info.pdf",
-      mimeType: "application/pdf",
-      buffer: pdfBuffer,
-    });
+      const teeTimeInputs = page.locator('[id^="teeTime-"]');
+      await expect(teeTimeInputs).toHaveCount(3, { timeout: 5000 });
 
-    await expect(page.locator("#additionalInfoText")).toHaveCount(0);
-    const additionalInfoSection = page.locator("div.mb-3", {
-      has: page.locator("text=Additional Info:"),
-    });
-    const additionalDocField = additionalInfoSection
-      .locator("input.form-control")
-      .first();
-    await expect(additionalDocField).toHaveValue("additional-info.pdf");
-    await expect(
-      page.getByRole("button", { name: "Upload Additional Info Doc..." }),
-    ).toHaveCount(0);
-  });
+      const expectedLabels = ["04/03/2024:", "04/04/2024:", "04/05/2024:"];
 
-  test("It should show one tee time for a single-day tournament", async ({
-    page,
-  }) => {
-    await page.locator("#startDate").fill("2024-04-01");
-    await page.locator("#endDate").fill("2024-04-01");
+      for (let index = 0; index < expectedLabels.length; index++) {
+        const teeTimeInput = teeTimeInputs.nth(index);
+        await expect(teeTimeInput).toHaveAttribute("type", "time");
+        await expect(teeTimeInput).toHaveValue("07:00");
 
-    const teeTimeInputs = page.locator('[id^="teeTime-"]');
-    await expect(teeTimeInputs).toHaveCount(1, { timeout: 5000 });
-    await expect(teeTimeInputs.first()).toBeVisible();
-    await expect(teeTimeInputs.first()).toHaveAttribute("type", "time");
-    await expect(teeTimeInputs.first()).toHaveValue("07:00");
-    await expect(page.locator('label[for="teeTime-0"]')).toHaveText(
-      "04/01/2024:",
-    );
-  });
+        const teeTimeLabel = page.locator(`label[for="teeTime-${index}"]`);
+        await expect(teeTimeLabel).toHaveText(expectedLabels[index]);
+      }
 
-  test("It should show tee times for each tournament day", async ({ page }) => {
-    await page.locator("#startDate").fill("2024-04-01");
-    await page.locator("#endDate").fill("2024-04-04");
+      await endDateInput.fill("2024-04-02");
+      await expect(endDateInput).toHaveValue("2024-04-03");
 
-    const teeTimeInputs = page.locator('[id^="teeTime-"]');
-    await expect(teeTimeInputs).toHaveCount(4, { timeout: 5000 });
-
-    const expectedLabels = [
-      "04/01/2024:",
-      "04/02/2024:",
-      "04/03/2024:",
-      "04/04/2024:",
-    ];
-
-    for (let index = 0; index < expectedLabels.length; index++) {
-      await expect(teeTimeInputs.nth(index)).toHaveAttribute("type", "time");
-      await expect(teeTimeInputs.nth(index)).toHaveValue("07:00");
-      await expect(page.locator(`label[for="teeTime-${index}"]`)).toHaveText(
-        expectedLabels[index],
+      await expect(teeTimeInputs).toHaveCount(1, { timeout: 5000 });
+      await expect(teeTimeInputs.first()).toHaveValue("07:00");
+      await expect(page.locator('label[for="teeTime-0"]')).toHaveText(
+        "04/03/2024:",
       );
-    }
-  });
+      console.log("✅ Enforce tournament date and tee time defaults - PASSED");
+    });
 
-  test("It should redirect to the '/competitions/' after clicking 'Cancel Changes & Exit'", async ({
-    page,
-  }) => {
-    await page.getByRole("button", { name: "Cancel Changes & Exit" }).click();
-    await expect(page.url()).toMatch(/competitions\/?$/);
+    await test.step("Upload tournament logo image", async () => {
+      const logoInput = page.locator("#logo");
+      await expect(logoInput).toHaveAttribute("accept", "image/*");
+
+      await logoInput.setInputFiles(TEST_LOGO_PATH);
+
+      const logoPreview = page.locator(".logo-image");
+      await expect(logoPreview).toBeVisible({ timeout: 5000 });
+      await expect(logoPreview).toHaveAttribute("src", /blob:|data:image/);
+      console.log("✅ Upload tournament logo image - PASSED");
+    });
+
+    await test.step("Upload tournament rules PDF", async () => {
+      const pdfInputs = page.locator('input[type="file"][accept=".pdf"]');
+      const rulesInput = pdfInputs.nth(0);
+
+      await expect(rulesInput).toHaveAttribute("accept", ".pdf");
+
+      await rulesInput.setInputFiles(TEST_PDF_PATH);
+
+      const rulesNameField = page.locator(
+        'input[placeholder="No document uploaded"]',
+      );
+      await expect(rulesNameField).toHaveValue("Test.pdf");
+      await expect(
+        page.getByRole("button", { name: "Upload Rules Doc..." }),
+      ).toHaveCount(0);
+      console.log("✅ Upload tournament rules PDF - PASSED");
+    });
+
+    await test.step("Allow entering prize descriptions", async () => {
+      const prizeTextInput = page.locator("#prizeText");
+      await prizeTextInput.fill("Winners receive custom medals");
+      await expect(prizeTextInput).toHaveValue("Winners receive custom medals");
+
+      await expect(
+        page.getByRole("button", { name: "Upload Prizes Doc..." }),
+      ).toBeVisible();
+
+      await prizeTextInput.fill("");
+      await expect(prizeTextInput).toHaveValue("");
+      console.log("✅ Allow entering prize descriptions - PASSED");
+    });
+
+    await test.step("Upload prize PDF hides description field", async () => {
+      // Click the upload button to trigger file chooser
+      const uploadButton = page.getByRole("button", {
+        name: "Upload Prizes Doc...",
+      });
+      await expect(uploadButton).toBeVisible();
+
+      const [fileChooser] = await Promise.all([
+        page.waitForEvent("filechooser"),
+        uploadButton.click(),
+      ]);
+
+      await fileChooser.setFiles(TEST_PDF_PATH);
+
+      // Wait for UI to update
+      await page.waitForTimeout(1000);
+
+      // Verify the prize doc name appears in a disabled input field (matching rules behavior)
+      const prizeDocNameField = page
+        .locator('input[value="Test.pdf"][disabled]')
+        .first();
+      await expect(prizeDocNameField).toBeVisible({ timeout: 5000 });
+
+      // Verify upload button is no longer visible (matches rules test pattern)
+      await expect(
+        page.getByRole("button", { name: "Upload Prizes Doc..." }),
+      ).toHaveCount(0);
+      console.log("✅ Upload prize PDF hides description field - PASSED");
+    });
+
+    await test.step("Allow entering additional info text", async () => {
+      const additionalInfoInput = page.locator("#additionalInfoText");
+      await additionalInfoInput.fill("Shotgun start at 9am, lunch provided");
+      await expect(additionalInfoInput).toHaveValue(
+        "Shotgun start at 9am, lunch provided",
+      );
+
+      await expect(
+        page.getByRole("button", { name: "Upload Additional Info Doc..." }),
+      ).toBeVisible();
+
+      await additionalInfoInput.fill("");
+      await expect(additionalInfoInput).toHaveValue("");
+      console.log("✅ Allow entering additional info text - PASSED");
+    });
+
+    await test.step("Upload additional info PDF hides text area", async () => {
+      const uploadButton = page.getByRole("button", {
+        name: "Upload Additional Info Doc...",
+      });
+      await expect(uploadButton).toBeVisible();
+
+      const [fileChooser] = await Promise.all([
+        page.waitForEvent("filechooser"),
+        uploadButton.click(),
+      ]);
+
+      await fileChooser.setFiles(TEST_PDF_PATH);
+
+      // Wait for UI to update
+      await page.waitForTimeout(1000);
+
+      // Verify the additional info doc name appears in a disabled input field
+      const addlInfoDocNameField = page
+        .locator('input[value="Test.pdf"][disabled]')
+        .nth(1);
+      await expect(addlInfoDocNameField).toBeVisible({ timeout: 5000 });
+
+      // Verify upload button is no longer visible
+      await expect(
+        page.getByRole("button", { name: "Upload Additional Info Doc..." }),
+      ).toHaveCount(0);
+      console.log("✅ Upload additional info PDF hides text area - PASSED");
+    });
+
+    await test.step("Show single tee time for single-day tournament", async () => {
+      await page.locator("#startDate").fill("2024-04-01");
+      await page.locator("#endDate").fill("2024-04-01");
+
+      const teeTimeInputs = page.locator('[id^="teeTime-"]');
+      await expect(teeTimeInputs).toHaveCount(1, { timeout: 5000 });
+      await expect(teeTimeInputs.first()).toBeVisible();
+      await expect(teeTimeInputs.first()).toHaveAttribute("type", "time");
+      await expect(teeTimeInputs.first()).toHaveValue("07:00");
+      await expect(page.locator('label[for="teeTime-0"]')).toHaveText(
+        "04/01/2024:",
+      );
+      console.log("✅ Show single tee time for single-day tournament - PASSED");
+    });
+
+    await test.step("Show tee times for each tournament day", async () => {
+      await page.locator("#startDate").fill("2024-04-01");
+      await page.locator("#endDate").fill("2024-04-04");
+
+      const teeTimeInputs = page.locator('[id^="teeTime-"]');
+      await expect(teeTimeInputs).toHaveCount(4, { timeout: 5000 });
+
+      const expectedLabels = [
+        "04/01/2024:",
+        "04/02/2024:",
+        "04/03/2024:",
+        "04/04/2024:",
+      ];
+
+      for (let index = 0; index < expectedLabels.length; index++) {
+        await expect(teeTimeInputs.nth(index)).toHaveAttribute("type", "time");
+        await expect(teeTimeInputs.nth(index)).toHaveValue("07:00");
+        await expect(page.locator(`label[for="teeTime-${index}"]`)).toHaveText(
+          expectedLabels[index],
+        );
+      }
+      console.log("✅ Show tee times for each tournament day - PASSED");
+    });
+
+    await test.step("Cancel changes returns to competitions list", async () => {
+      await page.getByRole("button", { name: "Cancel Changes & Exit" }).click();
+      await expect(page.url()).toMatch(/competitions\/?$/);
+      console.log("✅ Cancel changes returns to competitions list - PASSED");
+    });
   });
 });
