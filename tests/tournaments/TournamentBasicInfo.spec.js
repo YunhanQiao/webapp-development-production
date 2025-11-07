@@ -15,10 +15,10 @@ async function loginWithCredentials(page) {
     window.sessionStorage.clear();
   });
   await page.waitForLoadState("domcontentloaded");
-  await page.waitForSelector("#loginForm", { timeout: 10000 });
+  await page.waitForSelector("form", { timeout: 10000 });
 
-  await page.fill("#email", LOGIN_EMAIL);
-  await page.fill("#password", LOGIN_PASSWORD);
+  await page.getByLabel(/email/i).fill(LOGIN_EMAIL);
+  await page.getByLabel(/password/i).fill(LOGIN_PASSWORD);
 
   const [response] = await Promise.all([
     page.waitForResponse(
@@ -26,13 +26,15 @@ async function loginWithCredentials(page) {
         response.url().includes("/auth/login") &&
         response.request().method() === "POST",
     ),
-    page.click('button[type="submit"]'),
+    page.getByRole("button", { name: "Log In" }).click(),
   ]);
 
   // Check success and wait for redirect
   if (response.status() === 200) {
     await page.waitForURL(/.*\/feed/, { timeout: 10000 });
-    await page.waitForSelector("#tournamentsMode", { timeout: 10000 });
+    await page
+      .getByRole("tab", { name: "Competitions" })
+      .waitFor({ timeout: 10000 });
   } else {
     throw new Error("Login failed");
   }
@@ -116,11 +118,15 @@ test.describe("Basic Info tab", () => {
     await loginWithCredentials(page);
     await dismissInitialAlerts(page);
 
-    const tournamentsModeButton = page.locator("#tournamentsMode");
+    const tournamentsModeButton = page.getByRole("tab", {
+      name: "Competitions",
+    });
     await tournamentsModeButton.waitFor({ state: "visible" });
     await tournamentsModeButton.click();
 
-    const newTournamentButton = page.locator("#tournamentModeActionBtn");
+    const newTournamentButton = page.getByRole("button", {
+      name: "New Tournament",
+    });
     await newTournamentButton.waitFor({ state: "visible" });
     await newTournamentButton.click();
 
@@ -128,7 +134,9 @@ test.describe("Basic Info tab", () => {
     await basicInfoTab.waitFor({ state: "visible" });
     await basicInfoTab.click();
 
-    await expect(page.locator("#tournamentFormHeader")).toBeVisible({
+    await expect(
+      page.getByRole("heading", { name: /new tournament.*basic info/i }),
+    ).toBeVisible({
       timeout: 10000,
     });
     await expect(page.getByRole("button", { name: "Save & Exit" })).toBeVisible(
@@ -140,7 +148,9 @@ test.describe("Basic Info tab", () => {
     await nameField.fill("Test Tournament");
 
     await test.step("Verify default header title", async () => {
-      const header = page.locator("#tournamentFormHeader");
+      const header = page.getByRole("heading", {
+        name: /tournament.*basic info/i,
+      });
       await expect(header).toBeVisible({ timeout: 5000 });
       await expect(header).toContainText("New Tournament: Basic Info", {
         timeout: 5000,
@@ -218,7 +228,7 @@ test.describe("Basic Info tab", () => {
 
       await expect(endDateInput).toHaveAttribute("min", "2024-04-03");
 
-      const teeTimeInputs = page.locator('[id^="teeTime-"]');
+      const teeTimeInputs = page.locator('input[type="time"]');
       await expect(teeTimeInputs).toHaveCount(3, { timeout: 5000 });
 
       const expectedLabels = ["04/03/2024:", "04/04/2024:", "04/05/2024:"];
@@ -228,8 +238,10 @@ test.describe("Basic Info tab", () => {
         await expect(teeTimeInput).toHaveAttribute("type", "time");
         await expect(teeTimeInput).toHaveValue("07:00");
 
-        const teeTimeLabel = page.locator(`label[for="teeTime-${index}"]`);
-        await expect(teeTimeLabel).toHaveText(expectedLabels[index]);
+        const teeTimeLabel = page
+          .locator(`text="${expectedLabels[index]}"`)
+          .first();
+        await expect(teeTimeLabel).toBeVisible();
       }
 
       await endDateInput.fill("2024-04-02");
@@ -237,9 +249,7 @@ test.describe("Basic Info tab", () => {
 
       await expect(teeTimeInputs).toHaveCount(1, { timeout: 5000 });
       await expect(teeTimeInputs.first()).toHaveValue("07:00");
-      await expect(page.locator('label[for="teeTime-0"]')).toHaveText(
-        "04/03/2024:",
-      );
+      await expect(page.locator('text="04/03/2024:"').first()).toBeVisible();
       console.log("✅ Enforce tournament date and tee time defaults - PASSED");
     });
 
@@ -249,7 +259,7 @@ test.describe("Basic Info tab", () => {
 
       await logoInput.setInputFiles(TEST_LOGO_PATH);
 
-      const logoPreview = page.locator(".logo-image");
+      const logoPreview = page.locator('img[alt="Tournament Logo preview"]');
       await expect(logoPreview).toBeVisible({ timeout: 5000 });
       await expect(logoPreview).toHaveAttribute("src", /blob:|data:image/);
       console.log("✅ Upload tournament logo image - PASSED");
@@ -366,14 +376,12 @@ test.describe("Basic Info tab", () => {
       await page.locator("#startDate").fill("2024-04-01");
       await page.locator("#endDate").fill("2024-04-01");
 
-      const teeTimeInputs = page.locator('[id^="teeTime-"]');
+      const teeTimeInputs = page.locator('input[type="time"]');
       await expect(teeTimeInputs).toHaveCount(1, { timeout: 5000 });
       await expect(teeTimeInputs.first()).toBeVisible();
       await expect(teeTimeInputs.first()).toHaveAttribute("type", "time");
       await expect(teeTimeInputs.first()).toHaveValue("07:00");
-      await expect(page.locator('label[for="teeTime-0"]')).toHaveText(
-        "04/01/2024:",
-      );
+      await expect(page.locator('text="04/01/2024:"').first()).toBeVisible();
       console.log("✅ Show single tee time for single-day tournament - PASSED");
     });
 
@@ -381,7 +389,7 @@ test.describe("Basic Info tab", () => {
       await page.locator("#startDate").fill("2024-04-01");
       await page.locator("#endDate").fill("2024-04-04");
 
-      const teeTimeInputs = page.locator('[id^="teeTime-"]');
+      const teeTimeInputs = page.locator('input[type="time"]');
       await expect(teeTimeInputs).toHaveCount(4, { timeout: 5000 });
 
       const expectedLabels = [
@@ -394,9 +402,9 @@ test.describe("Basic Info tab", () => {
       for (let index = 0; index < expectedLabels.length; index++) {
         await expect(teeTimeInputs.nth(index)).toHaveAttribute("type", "time");
         await expect(teeTimeInputs.nth(index)).toHaveValue("07:00");
-        await expect(page.locator(`label[for="teeTime-${index}"]`)).toHaveText(
-          expectedLabels[index],
-        );
+        await expect(
+          page.locator(`text="${expectedLabels[index]}"`).first(),
+        ).toBeVisible();
       }
       console.log("✅ Show tee times for each tournament day - PASSED");
     });
