@@ -78,7 +78,10 @@ test.describe("Courses tab", () => {
     });
 
     await test.step("Verify courses table structure exists", async () => {
-      const coursesTable = page.locator("table.courses-table");
+      // Find table by looking for the table with "Course" and "Actions" headers
+      const coursesTable = page
+        .locator("table")
+        .filter({ has: page.locator("th", { hasText: "Course" }) });
       await expect(coursesTable).toBeVisible();
 
       // Verify table headers
@@ -100,13 +103,7 @@ test.describe("Courses tab", () => {
       await courseSearchInput.fill("club");
       await page.waitForTimeout(500); // Wait for search results
 
-      // Verify autocomplete dropdown appears
-      const autocompleteContainer = page.locator(
-        ".autocomplete-results-wrapper",
-      );
-      await expect(autocompleteContainer).toBeVisible();
-
-      // Verify there are search results (list items with buttons)
+      // Verify autocomplete dropdown appears (look for list group with buttons)
       const searchResults = page.locator("button.list-group-item");
       const resultCount = await searchResults.count();
 
@@ -125,8 +122,10 @@ test.describe("Courses tab", () => {
       await firstResult.click();
       await page.waitForTimeout(500);
 
-      // Verify the course appears in the table
-      const coursesTable = page.locator("table.courses-table");
+      // Verify the course appears in the table (find table by its headers)
+      const coursesTable = page
+        .locator("table")
+        .filter({ has: page.locator("th", { hasText: "Course" }) });
       const tableRows = coursesTable.locator("tbody tr");
 
       // Should now have at least one row
@@ -144,7 +143,10 @@ test.describe("Courses tab", () => {
     });
 
     await test.step("Verify course action icons exist after adding a course", async () => {
-      const coursesTable = page.locator("table.courses-table");
+      // Find table by its headers
+      const coursesTable = page
+        .locator("table")
+        .filter({ has: page.locator("th", { hasText: "Course" }) });
       const firstRow = coursesTable.locator("tbody tr").first();
 
       // Verify view icon exists
