@@ -17,10 +17,10 @@ async function loginWithCredentials(page) {
     window.sessionStorage.clear();
   });
   await page.waitForLoadState("domcontentloaded");
-  await page.waitForSelector("#loginForm", { timeout: 10000 });
+  await page.waitForSelector("form", { timeout: 10000 });
 
-  await page.fill("#email", LOGIN_EMAIL);
-  await page.fill("#password", LOGIN_PASSWORD);
+  await page.getByLabel(/email/i).fill(LOGIN_EMAIL);
+  await page.getByLabel(/password/i).fill(LOGIN_PASSWORD);
 
   const [response] = await Promise.all([
     page.waitForResponse(
@@ -28,13 +28,15 @@ async function loginWithCredentials(page) {
         response.url().includes("/auth/login") &&
         response.request().method() === "POST",
     ),
-    page.click('button[type="submit"]'),
+    page.getByRole("button", { name: "Log In" }).click(),
   ]);
 
   // Check success and wait for redirect
   if (response.status() === 200) {
     await page.waitForURL(/.*\/feed/, { timeout: 10000 });
-    await page.waitForSelector("#tournamentsMode", { timeout: 10000 });
+    await page
+      .getByRole("tab", { name: "Competitions" })
+      .waitFor({ timeout: 10000 });
     console.log("✅ Login successful");
   } else {
     throw new Error("Login failed");
@@ -104,7 +106,9 @@ test.describe("TournamentColorTheme Component Tests", () => {
         waitUntil: "domcontentloaded",
       },
     );
-    await expect(page.locator("#tournamentFormHeader")).toBeVisible({
+    await expect(
+      page.getByRole("heading", { name: /tournament.*color theme/i }),
+    ).toBeVisible({
       timeout: 10000,
     });
 
