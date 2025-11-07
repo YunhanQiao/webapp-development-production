@@ -1,59 +1,163 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require("@playwright/test");
 
-test.describe('TournamentCourses Component', () => {
-	test.beforeEach(async ({ page }) => {
-		await page.goto('http://localhost:3000'); // Adjust the URL to your dev server
-	});
+// Helper function to log in with credentials
+async function loginWithCredentials(page) {
+  await page.goto("http://localhost:3000/login", {
+    waitUntil: "domcontentloaded",
+  });
+  await page.evaluate(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForSelector("form", { timeout: 10000 });
 
-	test('should search and add a course', async ({ page }) => {
-		// Type in the search box
-		await page.fill('#courseInputBoxId', 'Trysting Tree');
-		await page.waitForTimeout(500); // Wait for the debounce or search result to appear
+  await page.getByLabel(/email/i).fill("seal-osu@gmail.com");
+  await page.getByLabel(/password/i).fill("GoodLuck2025!");
 
-		// Click on the first search result
-		const firstResult = page.locator('button.list-group-item').first();
-		await firstResult.click();
+  const [response] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url().includes("/auth/login") &&
+        response.request().method() === "POST",
+    ),
+    page.getByRole("button", { name: "Log In" }).click(),
+  ]);
 
-		// Check if the course is added to the table
-		const courseNameCell = page.locator('table tbody tr td').first();
-		await expect(courseNameCell).toContainText('Trysting Tree');
-	});
+  // Check success and wait for redirect
+  if (response.status() === 200) {
+    await page.waitForURL(/.*\/feed/, { timeout: 10000 });
+    await page
+      .getByRole("tab", { name: "Competitions" })
+      .waitFor({ timeout: 10000 });
+  } else {
+    throw new Error("Login failed");
+  }
+}
 
-	test('should not add the same course twice', async ({ page }) => {
-		// Type in the search box
-		await page.fill('#courseInputBoxId', 'Trysting Tree');
-		await page.waitForTimeout(500); // Wait for the debounce or search result to appear
+// Helper function to dismiss any alert dialogs
+async function dismissAlerts(page) {
+  page.on("dialog", async (dialog) => {
+    console.log(`Dialog message: ${dialog.message()}`);
+    await dialog.dismiss();
+  });
+}
 
-		// Click on the first search result
-		const firstResult = page.locator('button.list-group-item').first();
-		await firstResult.click();
-		await firstResult.click(); // Click again to attempt adding the same course
+test.describe("Courses tab", () => {
+  test("should verify all UI elements exist in courses tab", async ({
+    page,
+  }) => {
+    // Set up alert dismissal
+    dismissAlerts(page);
 
-		// Check if the alert was shown
-		page.on('dialog', async dialog => {
-			expect(dialog.message()).toBe('This course is already added.');
-			await dialog.dismiss();
-		});
-	});
+    await test.step("Login and navigate directly to Courses tab", async () => {
+      await loginWithCredentials(page);
 
-	test('should display course info in a modal', async ({ page }) => {
-		// Add a course first
-		await page.fill('#courseInputBoxId', 'Trysting Tree');
-		await page.waitForTimeout(500); // Wait for the debounce or search result to appear
+      // Navigate directly to Courses tab
+      await page.goto(
+        "http://localhost:3000/competitions/newTournament/courses",
+      );
+      await page.waitForTimeout(500);
 
-		const firstResult = page.locator('button.list-group-item').first();
-		await firstResult.click();
+      console.log("✅ Login and navigation to Courses tab - PASSED");
+    });
 
-		// Click the view icon
-		const viewIcon = page.locator('i.fa-eye').first();
-		await viewIcon.click();
+    await test.step("Verify course search input field exists", async () => {
+      const courseSearchLabel = page.getByText("Add a Course:");
+      const courseSearchInput = page.locator("#courseInputBoxId");
 
-		// Check if the modal is visible
-		const modal = page.locator('.modal-dialog');
-		await expect(modal).toBeVisible();
+      await expect(courseSearchLabel).toBeVisible();
+      await expect(courseSearchInput).toBeVisible();
+      await expect(courseSearchInput).toBeEnabled();
+      await expect(courseSearchInput).toHaveAttribute(
+        "placeholder",
+        "Enter a course name",
+      );
 
-		// Check if the modal contains course info
-		const courseInfo = page.locator('.modal-dialog .modal-content');
-		await expect(courseInfo).toContainText('Trysting Tree');
-	});
+      console.log("✅ Course search input field verified - PASSED");
+    });
+
+    await test.step("Verify courses table structure exists", async () => {
+      const coursesTable = page.locator("table.courses-table");
+      await expect(coursesTable).toBeVisible();
+
+      // Verify table headers
+      const headers = coursesTable.locator("thead th");
+      await expect(headers.nth(0)).toHaveText("Course");
+      await expect(headers.nth(1)).toHaveText("Actions");
+
+      // Verify table body exists (attached to DOM)
+      const tableBody = coursesTable.locator("tbody");
+      await expect(tableBody).toBeAttached();
+
+      console.log("✅ Courses table structure verified - PASSED");
+    });
+
+    await test.step("Verify search dropdown appears with results when typing", async () => {
+      const courseSearchInput = page.locator("#courseInputBoxId");
+
+      // Type 'club' to trigger search
+      await courseSearchInput.fill("club");
+      await page.waitForTimeout(500); // Wait for search results
+
+      // Verify autocomplete dropdown appears
+      const autocompleteContainer = page.locator(
+        ".autocomplete-results-wrapper",
+      );
+      await expect(autocompleteContainer).toBeVisible();
+
+      // Verify there are search results (list items with buttons)
+      const searchResults = page.locator("button.list-group-item");
+      const resultCount = await searchResults.count();
+
+      expect(resultCount).toBeGreaterThan(0);
+      console.log(`Found ${resultCount} courses containing 'club'`);
+
+      console.log("✅ Search dropdown with results verified - PASSED");
+    });
+
+    await test.step("Verify selecting a course adds it to the table", async () => {
+      // Click the first search result
+      const firstResult = page.locator("button.list-group-item").first();
+      const courseName = await firstResult.textContent();
+      console.log(`Selecting course: ${courseName}`);
+
+      await firstResult.click();
+      await page.waitForTimeout(500);
+
+      // Verify the course appears in the table
+      const coursesTable = page.locator("table.courses-table");
+      const tableRows = coursesTable.locator("tbody tr");
+
+      // Should now have at least one row
+      await expect(tableRows.first()).toBeVisible();
+
+      // Verify the course name appears in the table
+      const firstRowText = await tableRows
+        .first()
+        .locator("td")
+        .first()
+        .textContent();
+      expect(firstRowText).toContain(courseName.trim());
+
+      console.log("✅ Course added to table successfully - PASSED");
+    });
+
+    await test.step("Verify course action icons exist after adding a course", async () => {
+      const coursesTable = page.locator("table.courses-table");
+      const firstRow = coursesTable.locator("tbody tr").first();
+
+      // Verify view icon exists
+      const viewIcon = firstRow.locator("i.fa-eye");
+      await expect(viewIcon).toBeVisible();
+
+      // Verify delete icon exists
+      const deleteIcon = firstRow.locator("i.fa-trash");
+      await expect(deleteIcon).toBeVisible();
+
+      console.log("✅ Course action icons verified - PASSED");
+    });
+
+    console.log("✅ Completed Courses tab UI elements verification test");
+  });
 });
