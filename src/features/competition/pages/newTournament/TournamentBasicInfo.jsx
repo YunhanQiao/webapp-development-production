@@ -13,7 +13,10 @@ import {
   wizardStateSelector,
   wizardTournamentIdSelector,
 } from "features/competition/competitionSelectors";
-import { generateUniqueTournamentName, getTournamentNameAbbr } from "features/competition/competitionServices";
+import {
+  generateUniqueTournamentName,
+  getTournamentNameAbbr,
+} from "features/competition/competitionServices";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllCompetitions } from "features/competition/competitionActions";
 import {
@@ -23,19 +26,28 @@ import {
   updateStartDate,
 } from "features/competition/competitionSlice";
 import { parseLocalDate } from "../../utils/dateUtils";
-import { convertDateToOffset, convertOffsetToDate } from "../../../../utils/dateOffsetUtils";
+import {
+  convertDateToOffset,
+  convertOffsetToDate,
+} from "../../../../utils/dateOffsetUtils";
 import { divisionRoundOffsetsSelector } from "features/competition/competitionSelectors";
 
 // 🎯 OFFSET-BASED TEE TIME INPUTS - Using startDate + offsets approach
 const TeeTimeInputs = () => {
   const dispatch = useDispatch();
   const wizardState = useSelector(wizardStateSelector);
-  const basicInfo = useMemo(() => wizardState?.basicInfo || {}, [wizardState?.basicInfo]);
+  const basicInfo = useMemo(
+    () => wizardState?.basicInfo || {},
+    [wizardState?.basicInfo],
+  );
 
   // Read offset-based data from wizard state
   const startDate = basicInfo.startDate;
   const endDateOffset = basicInfo.endDateOffset ?? 1;
-  const teeTimeOffsets = useMemo(() => basicInfo.teeTimeOffsets || [], [basicInfo.teeTimeOffsets]);
+  const teeTimeOffsets = useMemo(
+    () => basicInfo.teeTimeOffsets || [],
+    [basicInfo.teeTimeOffsets],
+  );
 
   // Calculate actual dates from offsets
   const calculatedEndDate = useMemo(() => {
@@ -44,7 +56,7 @@ const TeeTimeInputs = () => {
 
   const calculatedTeeTimes = useMemo(() => {
     if (!startDate || !teeTimeOffsets.length) return [];
-    return teeTimeOffsets.map(teeTimeOffset => ({
+    return teeTimeOffsets.map((teeTimeOffset) => ({
       date: convertOffsetToDate(teeTimeOffset.dayOffset, startDate),
       startTime: teeTimeOffset.startTime,
       dayOffset: teeTimeOffset.dayOffset,
@@ -57,7 +69,10 @@ const TeeTimeInputs = () => {
 
     // Validate that endDate is not before startDate
     if (new Date(calculatedEndDate) < new Date(startDate)) {
-      console.warn("End date is before start date, skipping tee time sync:", { startDate, calculatedEndDate });
+      console.warn("End date is before start date, skipping tee time sync:", {
+        startDate,
+        calculatedEndDate,
+      });
       return;
     }
 
@@ -68,14 +83,16 @@ const TeeTimeInputs = () => {
     }
 
     // Check if current tee time offsets match the expected range
-    const currentOffsets = teeTimeOffsets.map(t => t.dayOffset).sort((a, b) => a - b);
+    const currentOffsets = teeTimeOffsets
+      .map((t) => t.dayOffset)
+      .sort((a, b) => a - b);
     const expectedOffsetsStr = expectedOffsets.join(",");
     const currentOffsetsStr = currentOffsets.join(",");
 
     if (expectedOffsetsStr !== currentOffsetsStr) {
       // Update tee time offsets to match date range
-      const updatedTeeTimeOffsets = expectedOffsets.map(dayOffset => {
-        const existing = teeTimeOffsets.find(t => t.dayOffset === dayOffset);
+      const updatedTeeTimeOffsets = expectedOffsets.map((dayOffset) => {
+        const existing = teeTimeOffsets.find((t) => t.dayOffset === dayOffset);
         return existing || { startTime: "07:00", dayOffset };
       });
 
@@ -86,7 +103,7 @@ const TeeTimeInputs = () => {
   if (!startDate || calculatedTeeTimes.length === 0) return null;
 
   // Helper function to format date as MM/DD/YYYY
-  const formatDateForDisplay = dateStr => {
+  const formatDateForDisplay = (dateStr) => {
     const date = parseLocalDate(dateStr);
     if (!date) return dateStr;
     return date.toLocaleDateString("en-US", {
@@ -99,7 +116,10 @@ const TeeTimeInputs = () => {
   // Handle tee time changes
   const handleTeeTimeChange = (index, newStartTime) => {
     const updatedOffsets = [...teeTimeOffsets];
-    updatedOffsets[index] = { ...updatedOffsets[index], startTime: newStartTime };
+    updatedOffsets[index] = {
+      ...updatedOffsets[index],
+      startTime: newStartTime,
+    };
     dispatch(updateTeeTimeOffsets({ teeTimeOffsets: updatedOffsets }));
   };
 
@@ -112,14 +132,16 @@ const TeeTimeInputs = () => {
         {calculatedTeeTimes.map((teeTime, index) => (
           <Row key={`teeTime-${index}`} className="mb-2 align-items-center">
             <Col sm="4">
-              <label htmlFor={`teeTime-${index}`}>{`${formatDateForDisplay(teeTime.date)}:`}</label>
+              <label
+                htmlFor={`teeTime-${index}`}
+              >{`${formatDateForDisplay(teeTime.date)}:`}</label>
             </Col>
             <Col sm="4">
               <Form.Control
                 type="time"
                 id={`teeTime-${index}`}
                 value={teeTime.startTime}
-                onChange={e => handleTeeTimeChange(index, e.target.value)}
+                onChange={(e) => handleTeeTimeChange(index, e.target.value)}
               />
             </Col>
           </Row>
@@ -137,7 +159,7 @@ const TournamentBasicInfo = () => {
       updateWizardTab({
         tab: "basicInfo",
         data: { ...basicInfo, prizeDoc: null },
-      })
+      }),
     );
     const prizeTextInput = document.getElementById("prizeText");
     if (prizeTextInput) {
@@ -151,9 +173,10 @@ const TournamentBasicInfo = () => {
       updateWizardTab({
         tab: "basicInfo",
         data: { ...basicInfo, additionalInfoDoc: null },
-      })
+      }),
     );
-    const additionalInfoTextInput = document.getElementById("additionalInfoText");
+    const additionalInfoTextInput =
+      document.getElementById("additionalInfoText");
     if (additionalInfoTextInput) {
       additionalInfoTextInput.disabled = false;
     }
@@ -162,7 +185,10 @@ const TournamentBasicInfo = () => {
   const allTournaments = useSelector(tournamentsSelector);
   const wizardState = useSelector(wizardStateSelector);
   const divisionRoundOffsets = useSelector(divisionRoundOffsetsSelector);
-  const basicInfo = useMemo(() => wizardState?.basicInfo || {}, [wizardState?.basicInfo]);
+  const basicInfo = useMemo(
+    () => wizardState?.basicInfo || {},
+    [wizardState?.basicInfo],
+  );
 
   const [showFileSizeErrorModal, setShowFileSizeErrorModal] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
@@ -174,19 +200,24 @@ const TournamentBasicInfo = () => {
   const [additionalInfoDocName, setAdditionalInfoDocName] = useState("");
   const [hasPrizeText, setHasPrizeText] = useState(false);
   const [hasAdditionalInfoText, setHasAdditionalInfoText] = useState(false);
-  const user = useSelector(state => state.user.user);
+  const user = useSelector((state) => state.user.user);
   const [selectedAdmin, setSelectedAdmin] = useState({});
   // 🎯 CONTROLLED COMPONENT: Use wizard state as source of truth for admins
-  const adminList = useMemo(() => new Set(basicInfo?.admins || []), [basicInfo?.admins]);
+  const adminList = useMemo(
+    () => new Set(basicInfo?.admins || []),
+    [basicInfo?.admins],
+  );
   const setAdminList = useCallback(
-    newAdminSet => {
+    (newAdminSet) => {
       // Safety check: ensure basicInfo exists before updating
       if (!basicInfo) {
         console.warn("Cannot update admin list: basicInfo is not available");
         return;
       }
 
-      const newAdmins = Array.isArray(newAdminSet) ? newAdminSet : [...newAdminSet];
+      const newAdmins = Array.isArray(newAdminSet)
+        ? newAdminSet
+        : [...newAdminSet];
       dispatch(
         updateWizardTab({
           tab: "basicInfo",
@@ -203,17 +234,20 @@ const TournamentBasicInfo = () => {
   const wizardTournamentId = useSelector(wizardTournamentIdSelector);
 
   const hostEmail = user?.accountInfo?.email || "";
-  const hostName = `${user?.personalInfo?.firstName || ""} ${user?.personalInfo?.lastName || ""}`.trim();
+  const hostName =
+    `${user?.personalInfo?.firstName || ""} ${user?.personalInfo?.lastName || ""}`.trim();
 
   // 🎯 CALCULATE DISPLAY VALUES FROM OFFSET-BASED STATE
   const endDateOffset = basicInfo.endDateOffset ?? 1;
   const calculatedEndDate = useMemo(() => {
-    return basicInfo.startDate ? convertOffsetToDate(endDateOffset, basicInfo.startDate) : "";
+    return basicInfo.startDate
+      ? convertOffsetToDate(endDateOffset, basicInfo.startDate)
+      : "";
   }, [basicInfo.startDate, endDateOffset]);
 
   // 🎯 OFFSET-BASED DATE CHANGE HANDLERS - Clean implementation with validation
   const handleStartDateChange = useCallback(
-    e => {
+    (e) => {
       const newStartDate = e.target.value;
       const oldStartDate = basicInfo.startDate;
 
@@ -227,24 +261,29 @@ const TournamentBasicInfo = () => {
         // Get divisions data to map IDs to names
         const divisionsData = wizardState?.divisions || [];
         const divisionIdToName = {};
-        divisionsData.forEach(division => {
+        divisionsData.forEach((division) => {
           const divisionId = division.clientId || division._id || division.id;
           divisionIdToName[divisionId] = division.name || "Unknown Division";
         });
 
         // Calculate what the new end date would be (keeping same duration)
         const currentEndDate = calculatedEndDate;
-        const newEndDateOffset = currentEndDate ? convertDateToOffset(currentEndDate, newStartDate) : endDateOffset;
+        const newEndDateOffset = currentEndDate
+          ? convertDateToOffset(currentEndDate, newStartDate)
+          : endDateOffset;
 
         // Check if any existing division rounds would be outside the new tournament date range
         const conflictingRounds = [];
-        Object.keys(divisionRoundOffsets).forEach(divisionKey => {
-          Object.keys(divisionRoundOffsets[divisionKey]).forEach(roundKey => {
+        Object.keys(divisionRoundOffsets).forEach((divisionKey) => {
+          Object.keys(divisionRoundOffsets[divisionKey]).forEach((roundKey) => {
             const currentOffset = divisionRoundOffsets[divisionKey][roundKey];
             if (typeof currentOffset === "number") {
               // Check if this round would be outside the new tournament range
               if (currentOffset < 0 || currentOffset > newEndDateOffset) {
-                const currentAbsoluteDate = convertOffsetToDate(currentOffset, oldStartDate);
+                const currentAbsoluteDate = convertOffsetToDate(
+                  currentOffset,
+                  oldStartDate,
+                );
 
                 // Determine which day this round should move to
                 let suggestedDay;
@@ -255,7 +294,8 @@ const TournamentBasicInfo = () => {
                 }
 
                 // Create user-friendly names
-                const divisionName = divisionIdToName[divisionKey] || "Unknown Division";
+                const divisionName =
+                  divisionIdToName[divisionKey] || "Unknown Division";
                 const roundName = `Round ${parseInt(roundKey) + 1}`; // Convert 0-based index to 1-based
 
                 conflictingRounds.push({
@@ -282,17 +322,27 @@ const TournamentBasicInfo = () => {
       // If validation passes or no conflicts, update the start date
       dispatch(updateStartDate({ startDate: newStartDate }));
     },
-    [dispatch, basicInfo.startDate, calculatedEndDate, endDateOffset, divisionRoundOffsets, wizardState],
+    [
+      dispatch,
+      basicInfo.startDate,
+      calculatedEndDate,
+      endDateOffset,
+      divisionRoundOffsets,
+      wizardState,
+    ],
   );
 
   const handleEndDateChange = useCallback(
-    e => {
+    (e) => {
       const newEndDate = e.target.value;
       const currentStartDate = basicInfo.startDate;
 
       if (currentStartDate && newEndDate) {
         // Calculate new offset based on the selected endDate
-        const newEndDateOffset = convertDateToOffset(newEndDate, currentStartDate);
+        const newEndDateOffset = convertDateToOffset(
+          newEndDate,
+          currentStartDate,
+        );
 
         // Validation: Check if shortening tournament duration would conflict with existing division rounds
         // Get current division round offsets to check for conflicts
@@ -301,20 +351,22 @@ const TournamentBasicInfo = () => {
         if (Object.keys(currentDivisionRoundOffsets).length > 0) {
           // Collect all day offsets currently used by division rounds
           const allUsedDayOffsets = new Set();
-          Object.values(currentDivisionRoundOffsets).forEach(divisionOffsets => {
-            Object.values(divisionOffsets).forEach(offset => {
-              if (typeof offset === "number") {
-                allUsedDayOffsets.add(offset);
-              }
-            });
-          });
+          Object.values(currentDivisionRoundOffsets).forEach(
+            (divisionOffsets) => {
+              Object.values(divisionOffsets).forEach((offset) => {
+                if (typeof offset === "number") {
+                  allUsedDayOffsets.add(offset);
+                }
+              });
+            },
+          );
 
           // Check if any rounds are scheduled on days that would be removed
           if (allUsedDayOffsets.size > 0) {
             const maxUsedOffset = Math.max(...allUsedDayOffsets);
             if (newEndDateOffset < maxUsedOffset) {
               const daysToBeRemoved = [];
-              allUsedDayOffsets.forEach(offset => {
+              allUsedDayOffsets.forEach((offset) => {
                 if (offset > newEndDateOffset) {
                   daysToBeRemoved.push(offset + 1); // Convert to 1-based day numbers for user display
                 }
@@ -336,21 +388,21 @@ const TournamentBasicInfo = () => {
   );
 
   const handleNameChange = useCallback(
-    e => {
+    (e) => {
       const newName = e.target.value;
       if (basicInfo.name === newName) return;
       dispatch(
         updateWizardTab({
           tab: "basicInfo",
           data: { ...basicInfo, name: newName },
-        })
+        }),
       );
     },
     [dispatch, basicInfo],
   );
 
   const handlePrizeTextChange = useCallback(
-    e => {
+    (e) => {
       dispatch(
         updateWizardTab({
           tab: "basicInfo",
@@ -362,7 +414,7 @@ const TournamentBasicInfo = () => {
   );
 
   const handleAdditionalInfoTextChange = useCallback(
-    e => {
+    (e) => {
       dispatch(
         updateWizardTab({
           tab: "basicInfo",
@@ -402,12 +454,56 @@ const TournamentBasicInfo = () => {
     dispatch(fetchAllCompetitions());
   }, [dispatch]);
 
-  const getAdminNameFromId = id => {
+  // 🎯 AUTOMATIC UNIQUE NAME GENERATION - Generate tournament short name from name + year
+  useEffect(() => {
+    const tournamentName = basicInfo?.name;
+    const startDate = basicInfo?.startDate;
+
+    // Only generate uniqueName if we have a tournament name
+    if (!tournamentName || !tournamentName.trim()) {
+      return;
+    }
+
+    // Skip if we're editing an existing tournament (it already has a uniqueName)
+    if (wizardTournamentId && basicInfo?.uniqueName) {
+      return;
+    }
+
+    // Generate unique tournament name using the helper function
+    // If no startDate, it will use the current year
+    const generatedUniqueName = generateUniqueTournamentName(
+      tournamentName,
+      allTournaments || [],
+      startDate || null, // Pass null if no date, function will use current year
+    );
+
+    // Only update if the generated name is different from current
+    if (generatedUniqueName && generatedUniqueName !== basicInfo?.uniqueName) {
+      console.log(
+        `🎯 Generated unique tournament name: ${generatedUniqueName}`,
+      );
+      dispatch(
+        updateWizardTab({
+          tab: "basicInfo",
+          data: { ...basicInfo, uniqueName: generatedUniqueName },
+        }),
+      );
+    }
+  }, [
+    basicInfo?.name,
+    basicInfo?.startDate,
+    allTournaments,
+    wizardTournamentId,
+    dispatch,
+    basicInfo,
+  ]);
+
+  const getAdminNameFromId = (id) => {
     if (!allUserNamesAndIds || !allUserNamesAndIds.length) {
       // Gracefully handle when user list is not yet loaded
       return `User ID: ${id}`;
     }
-    const user = allUserNamesAndIds.find(user => user.id === id);
+    const user = allUserNamesAndIds.find((user) => user.id === id);
     return user ? user.name : `Unknown User (${id})`;
   };
 
@@ -474,7 +570,13 @@ const TournamentBasicInfo = () => {
           </label>
         </Col>
         <Col sm="3">
-          <input type="text" className="form-control" id="tournamentCreatorName" value={hostName} readOnly />
+          <input
+            type="text"
+            className="form-control"
+            id="tournamentCreatorName"
+            value={hostName}
+            readOnly
+          />
         </Col>
       </Form.Group>
 
@@ -485,7 +587,13 @@ const TournamentBasicInfo = () => {
           </label>
         </Col>
         <Col sm="3">
-          <input type="text" className="form-control" id="tournamentCreatorEmail" value={hostEmail} readOnly />
+          <input
+            type="text"
+            className="form-control"
+            id="tournamentCreatorEmail"
+            value={hostEmail}
+            readOnly
+          />
         </Col>
       </Form.Group>
 
@@ -509,10 +617,15 @@ const TournamentBasicInfo = () => {
               </Button>
             </Col>
           </Row>
-          {[...adminList].map(id => (
+          {[...adminList].map((id) => (
             <Row className="mb-3" key={id}>
               <Col sm="8">
-                <input type="text" className="form-control" value={getAdminNameFromId(id)} disabled />
+                <input
+                  type="text"
+                  className="form-control"
+                  value={getAdminNameFromId(id)}
+                  disabled
+                />
               </Col>
               <Col sm="4">
                 <button type="button" onClick={() => setAdminToDelete(id)}>
@@ -531,7 +644,13 @@ const TournamentBasicInfo = () => {
           </label>
         </Col>
         <Col sm="3">
-          {logo && <img alt="Tournament Logo preview" className="logo-image" src={logo} />}
+          {logo && (
+            <img
+              alt="Tournament Logo preview"
+              className="logo-image"
+              src={logo}
+            />
+          )}
           <CustomUpload
             inputId="logo"
             handleFile={handleTournamentLogoUpload}
@@ -577,7 +696,11 @@ const TournamentBasicInfo = () => {
         </Col>
         <Col sm="5">
           {!rulesDocName && (
-            <CustomUpload handleFile={handleTournamentRulesUpload} buttonText="Upload Rules Doc..." fileType=".pdf" />
+            <CustomUpload
+              handleFile={handleTournamentRulesUpload}
+              buttonText="Upload Rules Doc..."
+              fileType=".pdf"
+            />
           )}
         </Col>
       </Form.Group>
@@ -591,9 +714,17 @@ const TournamentBasicInfo = () => {
         <Col sm="5">
           {prizeDocName ? (
             <div className="d-flex align-items-center">
-              <input type="text" className="form-control" value={prizeDocName} disabled />
+              <input
+                type="text"
+                className="form-control"
+                value={prizeDocName}
+                disabled
+              />
               <button type="button" className="btn-transparent ms-2">
-                <i className="fa-solid fa-trash" onClick={handleClearPrizeDoc}></i>
+                <i
+                  className="fa-solid fa-trash"
+                  onClick={handleClearPrizeDoc}
+                ></i>
               </button>
             </div>
           ) : (
@@ -609,7 +740,11 @@ const TournamentBasicInfo = () => {
         </Col>
         <Col sm="5">
           {!hasPrizeText && !prizeDocName && (
-            <CustomUpload handleFile={handleTournamentPrizesUpload} buttonText="Upload Prizes Doc..." fileType=".pdf" />
+            <CustomUpload
+              handleFile={handleTournamentPrizesUpload}
+              buttonText="Upload Prizes Doc..."
+              fileType=".pdf"
+            />
           )}
         </Col>
       </Form.Group>
@@ -623,9 +758,17 @@ const TournamentBasicInfo = () => {
         <Col sm="5">
           {additionalInfoDocName ? (
             <div className="d-flex align-items-center">
-              <input type="text" className="form-control" value={additionalInfoDocName} disabled />
+              <input
+                type="text"
+                className="form-control"
+                value={additionalInfoDocName}
+                disabled
+              />
               <button type="button" className="btn-transparent ms-2">
-                <i className="fa-solid fa-trash" onClick={handleClearAdditionalInfoDoc}></i>
+                <i
+                  className="fa-solid fa-trash"
+                  onClick={handleClearAdditionalInfoDoc}
+                ></i>
               </button>
             </div>
           ) : (
@@ -703,7 +846,10 @@ const TournamentBasicInfo = () => {
       />
 
       {/* Date Conflict Modal */}
-      <Modal show={showDateConflictModal} onHide={() => setShowDateConflictModal(false)}>
+      <Modal
+        show={showDateConflictModal}
+        onHide={() => setShowDateConflictModal(false)}
+      >
         <Modal.Header closeButton>
           <Modal.Title>Division Round Date Conflict</Modal.Title>
         </Modal.Header>
@@ -711,7 +857,10 @@ const TournamentBasicInfo = () => {
           <p>{dateConflictMessage}</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="primary" onClick={() => setShowDateConflictModal(false)}>
+          <Button
+            variant="primary"
+            onClick={() => setShowDateConflictModal(false)}
+          >
             OK
           </Button>
         </Modal.Footer>

@@ -1,9 +1,20 @@
-import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import { Tab, Tabs, Form } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllUsers, fetchCompetitionByID, saveAndUpdate, cancelWizardChangesAction } from "../competitionActions";
+import {
+  fetchAllUsers,
+  fetchCompetitionByID,
+  saveAndUpdate,
+  cancelWizardChangesAction,
+} from "../competitionActions";
 import {
   activeTournamentSelector,
   availableStepsSelector,
@@ -29,14 +40,17 @@ import NewTournamentFooter from "./newTournament/shared/NewTournamentFooter";
 import ErrorBox from "../../shared/BaseFormComponents/ErrorBox";
 
 import { yupResolver } from "@hookform/resolvers/yup";
-import { getTournamentNameAbbr, objectIdGenerator } from "../competitionServices";
+import {
+  getTournamentNameAbbr,
+  objectIdGenerator,
+} from "../competitionServices";
 import { format } from "date-fns/format";
 import useTabHandlers from "../hooks/useTabHandlers";
 import { convertWizardStateToTournament } from "../utils/wizardStateConverter";
 import Modals from "./newTournament/shared/unsavedChangeModal";
 
 // Utility to serialize dates in form data to prevent Redux serialization errors
-const serializeDates = data => {
+const serializeDates = (data) => {
   if (data === null || data === undefined) return data;
 
   if (data instanceof Date) {
@@ -66,7 +80,7 @@ const AddTournament = () => {
   const { tab, id } = useParams();
 
   // Get user info from Redux (must be in component scope for use in handlers)
-  const user = useSelector(state => state.user.user);
+  const user = useSelector((state) => state.user.user);
 
   const dispatch = useDispatch();
   const availableSteps = useSelector(availableStepsSelector);
@@ -74,8 +88,10 @@ const AddTournament = () => {
   const wizardState = useSelector(wizardStateSelector);
   const wizardTournamentId = useSelector(wizardTournamentIdSelector);
   const dirtyTabs = useSelector(wizardDirtyTabsSelector);
-  const [isUnsavedChangesModalOpen, setUnsavedChangesModalOpen] = useState(false);
-  const [isExitConfirmationModalOpen, setExitConfirmationModalOpen] = useState(false);
+  const [isUnsavedChangesModalOpen, setUnsavedChangesModalOpen] =
+    useState(false);
+  const [isExitConfirmationModalOpen, setExitConfirmationModalOpen] =
+    useState(false);
 
   const [isDirty, setIsDirty] = useState(false);
   // Track which tabs have been modified to avoid resetting them with Redux data
@@ -89,7 +105,7 @@ const AddTournament = () => {
   const isSaving = useRef(false);
 
   // Function to mark a tab as dirty (modified) - now using Redux
-  const markTabAsDirty = useCallback(tabName => {
+  const markTabAsDirty = useCallback((tabName) => {
     // This is now handled automatically by updateWizardTab action
     // We only need this for form-based changes, not wizard state changes
     console.log("🏷️ Tab marked as dirty:", tabName);
@@ -129,10 +145,11 @@ const AddTournament = () => {
   const [tournamentYear, setTournamentYear] = useState(":");
 
   // const { setDataInLocalStorage } = useLocalStorageService();
-  const { moveTab, handleTabClose, handleNextTab, handlePrevTab } = useTabHandlers(tab, id);
+  const { moveTab, handleTabClose, handleNextTab, handlePrevTab } =
+    useTabHandlers(tab, id);
 
   const onSubmit = useCallback(
-    next => async data => {
+    (next) => async (data) => {
       try {
         console.log("🎯 onSubmit called with form data:", data);
         console.log("🎯 onSubmit - current tab:", tab);
@@ -146,13 +163,22 @@ const AddTournament = () => {
         let currentTabData;
         if (tab === "basicInfo" && data && data.endDate) {
           // For basicInfo, always use the API-formatted data if it has a calculated endDate
-          console.log(`🎯 Using API-formatted data for current tab (${tab})`, data);
+          console.log(
+            `🎯 Using API-formatted data for current tab (${tab})`,
+            data,
+          );
           currentTabData = { ...data };
         } else if (wizardState && wizardState[tab]) {
-          console.log(`🎯 Using wizard state data for current tab (${tab})`, wizardState[tab]);
+          console.log(
+            `🎯 Using wizard state data for current tab (${tab})`,
+            wizardState[tab],
+          );
           currentTabData = { ...wizardState[tab] };
         } else {
-          console.log(`⚠️ Fallback to form data for current tab (${tab})`, data);
+          console.log(
+            `⚠️ Fallback to form data for current tab (${tab})`,
+            data,
+          );
           currentTabData = serializeDates(data);
         }
 
@@ -164,7 +190,8 @@ const AddTournament = () => {
               : "";
           }
           if (!currentTabData.tournamentCreatorEmail) {
-            currentTabData.tournamentCreatorEmail = user?.accountInfo?.email || "";
+            currentTabData.tournamentCreatorEmail =
+              user?.accountInfo?.email || "";
           }
         }
 
@@ -172,10 +199,20 @@ const AddTournament = () => {
 
         // 2. Check for other modified tabs using dirty flags
         if (dirtyTabs.length > 0) {
-          const tabsToCheck = ["basicInfo", "divisions", "coursesInfo", "registrationInfo", "regPaymentInfo"];
+          const tabsToCheck = [
+            "basicInfo",
+            "divisions",
+            "coursesInfo",
+            "registrationInfo",
+            "regPaymentInfo",
+          ];
 
           for (const checkTab of tabsToCheck) {
-            if (checkTab !== tab && dirtyTabs.includes(checkTab) && wizardState[checkTab]) {
+            if (
+              checkTab !== tab &&
+              dirtyTabs.includes(checkTab) &&
+              wizardState[checkTab]
+            ) {
               // This tab has been marked as dirty and has data in wizard state
               tabsToSave.push({ tab: checkTab, data: wizardState[checkTab] });
             }
@@ -184,7 +221,7 @@ const AddTournament = () => {
 
         console.log(
           `💾 Saving ${tabsToSave.length} tab(s):`,
-          tabsToSave.map(t => t.tab),
+          tabsToSave.map((t) => t.tab),
         );
 
         // 3. Save all modified tabs
@@ -192,9 +229,16 @@ const AddTournament = () => {
           try {
             const schema = { [saveTab]: saveData };
             if (saveTab === "regPaymentInfo") {
-              console.log("[DEBUG] Attempting to save regPaymentInfo tab:", JSON.stringify(schema, null, 2));
+              console.log(
+                "[DEBUG] Attempting to save regPaymentInfo tab:",
+                JSON.stringify(schema, null, 2),
+              );
             }
-            console.log(`Saving tab: ${saveTab}`, { tournamentId, tab: saveTab, schema });
+            console.log(`Saving tab: ${saveTab}`, {
+              tournamentId,
+              tab: saveTab,
+              schema,
+            });
             const saveResult = await dispatch(
               saveAndUpdate({
                 id: tournamentId,
@@ -244,9 +288,11 @@ const AddTournament = () => {
 
   // 🎯 WIZARD STATE SAVE: Custom save function that validates wizard state instead of form state
   const saveWizardState = useCallback(
-    async next => {
+    async (next) => {
       try {
-        console.log("🎯 saveWizardState called, validating wizard state instead of form");
+        console.log(
+          "🎯 saveWizardState called, validating wizard state instead of form",
+        );
 
         // Set saving flag to prevent wizard state re-initialization during save
         isSaving.current = true;
@@ -263,14 +309,21 @@ const AddTournament = () => {
           if (!basicInfoData.startDate) {
             throw new Error("Start Date is a required field");
           }
-          if (basicInfoData.endDateOffset === undefined || basicInfoData.endDateOffset === null) {
+          if (
+            basicInfoData.endDateOffset === undefined ||
+            basicInfoData.endDateOffset === null
+          ) {
             throw new Error("Tournament duration is required");
           }
 
-          console.log("🎯 Wizard state validation passed, proceeding with save");
+          console.log(
+            "🎯 Wizard state validation passed, proceeding with save",
+          );
 
           // 🎯 CONVERT WIZARD STATE TO API FORMAT: Use converter to properly format dates
-          console.log("🎯 Converting wizard state to tournament format for API");
+          console.log(
+            "🎯 Converting wizard state to tournament format for API",
+          );
           console.log("🎯 INPUT - Full wizard state:", wizardState);
           console.log("🎯 INPUT - basicInfo from wizard state:", basicInfoData);
 
@@ -278,7 +331,10 @@ const AddTournament = () => {
           const apiFormattedBasicInfo = tournamentData.basicInfo;
 
           console.log("🎯 OUTPUT - Converted tournament data:", tournamentData);
-          console.log("🎯 OUTPUT - API formatted basicInfo:", apiFormattedBasicInfo);
+          console.log(
+            "🎯 OUTPUT - API formatted basicInfo:",
+            apiFormattedBasicInfo,
+          );
           console.log(
             "🎯 COMPARISON - startDate: wizard='%s' → api='%s'",
             basicInfoData.startDate,
@@ -302,9 +358,14 @@ const AddTournament = () => {
 
         // For other tabs, we need to handle them properly
         if (tab === "regPaymentInfo" && wizardState?.regPaymentInfo) {
-          console.log("🎯 Processing regPaymentInfo tab with wizard state data");
+          console.log(
+            "🎯 Processing regPaymentInfo tab with wizard state data",
+          );
           console.log("🎯 Wizard regPaymentInfo:", wizardState.regPaymentInfo);
-          console.log("🎯 Start date for transformation:", wizardState?.basicInfo?.startDate);
+          console.log(
+            "🎯 Start date for transformation:",
+            wizardState?.basicInfo?.startDate,
+          );
 
           // Use wizard state data directly - it will be transformed in the action layer
           await onSubmit(next)(wizardState.regPaymentInfo);
@@ -312,7 +373,9 @@ const AddTournament = () => {
         }
 
         // For other tabs, call onSubmit with empty data - this will use wizard state
-        console.log("🎯 Non-basicInfo/regPaymentInfo tab, calling onSubmit directly");
+        console.log(
+          "🎯 Non-basicInfo/regPaymentInfo tab, calling onSubmit directly",
+        );
         await onSubmit(next)({});
       } catch (error) {
         console.error("🎯 Wizard state validation failed:", error);
@@ -354,7 +417,7 @@ const AddTournament = () => {
 
   // Handle Escape key press globally
   useEffect(() => {
-    const handleEscape = event => {
+    const handleEscape = (event) => {
       if (event.key === "Escape") {
         if (isUnsavedChangesModalOpen || isExitConfirmationModalOpen) {
           setUnsavedChangesModalOpen(false);
@@ -386,7 +449,9 @@ const AddTournament = () => {
   };
 
   const handleDiscardChanges = async () => {
-    console.log("🚫 User chose to discard changes - restoring from last saved state");
+    console.log(
+      "🚫 User chose to discard changes - restoring from last saved state",
+    );
 
     try {
       // Restore wizard state from last saved activeTournament
@@ -432,7 +497,10 @@ const AddTournament = () => {
 
     if (startDate) {
       // Use a more timezone-safe approach for date parsing
-      const date = typeof startDate === "string" ? new Date(startDate + "T00:00:00") : startDate;
+      const date =
+        typeof startDate === "string"
+          ? new Date(startDate + "T00:00:00")
+          : startDate;
       setTournamentYear(`'${format(date, "yy")}:`);
     }
   }, [startDate, name]);
@@ -453,11 +521,19 @@ const AddTournament = () => {
 
     // Since we renamed divisionsInfo to divisions for consistency,
     // tab names now map directly to wizard state properties
-    if (wizardState && wizardState[tab] !== null && wizardState[tab] !== undefined) {
+    if (
+      wizardState &&
+      wizardState[tab] !== null &&
+      wizardState[tab] !== undefined
+    ) {
       dataToUse = wizardState[tab];
     }
     // Fall back to activeTournament if wizard state doesn't have the tab data (clean state)
-    else if (activeTournament && activeTournament[tab] !== null && activeTournament[tab] !== undefined) {
+    else if (
+      activeTournament &&
+      activeTournament[tab] !== null &&
+      activeTournament[tab] !== undefined
+    ) {
       dataToUse = activeTournament[tab];
     }
 
@@ -469,7 +545,9 @@ const AddTournament = () => {
         // Fix date format for HTML date inputs
         ...(dataToUse.startDate &&
           typeof dataToUse.startDate === "string" && {
-            startDate: dataToUse.startDate.includes("T") ? dataToUse.startDate.split("T")[0] : dataToUse.startDate,
+            startDate: dataToUse.startDate.includes("T")
+              ? dataToUse.startDate.split("T")[0]
+              : dataToUse.startDate,
           }),
         // For offset-based system, preserve endDateOffset instead of endDate
         ...(dataToUse.endDateOffset !== undefined && {
@@ -487,11 +565,21 @@ const AddTournament = () => {
     } else {
       reset(dataToUse);
     }
-  }, [activeTournament, wizardState, wizardTournamentId, tab, reset, defaultValues, id, modifiedTabs, savedFormValues]);
+  }, [
+    activeTournament,
+    wizardState,
+    wizardTournamentId,
+    tab,
+    reset,
+    defaultValues,
+    id,
+    modifiedTabs,
+    savedFormValues,
+  ]);
 
   // Custom tab handler that syncs Basic Info dates when navigating away
   const handleTabSelect = useCallback(
-    newTab => {
+    (newTab) => {
       // Continue with normal tab navigation
       moveTab(newTab);
     },
@@ -499,7 +587,7 @@ const AddTournament = () => {
   );
 
   const tabs = useMemo(() => {
-    return Object.keys(tabConfig).map(tab => {
+    return Object.keys(tabConfig).map((tab) => {
       const { component: TabComponent, name } = tabConfig[tab];
 
       return (
@@ -524,14 +612,23 @@ const AddTournament = () => {
         </Tab>
       );
     });
-  }, [availableSteps, errors, handlePrevTab, handleCancel, saveWizardState, handleNextTab]);
+  }, [
+    availableSteps,
+    errors,
+    handlePrevTab,
+    handleCancel,
+    saveWizardState,
+    handleNextTab,
+  ]);
 
   return (
     <>
       <Navbar />
       <div className="mode-page action-dialog" tabIndex="0">
         <h1 id="tournamentFormHeader" className="mode-page-header">
-          {`${activeTournament?.basicInfo?.uniqueName || watch("uniqueName") || "New Tournament"}: ${tabConfig[tab].name}`}
+          {activeTournament?.basicInfo?.uniqueName ||
+            wizardState?.basicInfo?.uniqueName ||
+            "New Tournament"}
         </h1>
         <FormProvider {...methods}>
           <Tabs

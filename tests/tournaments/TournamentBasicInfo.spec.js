@@ -134,28 +134,45 @@ test.describe("Basic Info tab", () => {
     await basicInfoTab.waitFor({ state: "visible" });
     await basicInfoTab.click();
 
-    await expect(
-      page.getByRole("heading", { name: /new tournament.*basic info/i }),
-    ).toBeVisible({
+    // Wait for the Basic Info tab content to load
+    await expect(page.locator("#tournamentFormHeader")).toBeVisible({
       timeout: 10000,
     });
     await expect(page.getByRole("button", { name: "Save & Exit" })).toBeVisible(
       { timeout: 10000 },
     );
 
-    const nameField = page.locator("#name");
-    await nameField.waitFor({ state: "visible", timeout: 10000 });
-    await nameField.fill("Test Tournament");
-
     await test.step("Verify default header title", async () => {
-      const header = page.getByRole("heading", {
-        name: /tournament.*basic info/i,
-      });
+      const header = page.locator("#tournamentFormHeader");
       await expect(header).toBeVisible({ timeout: 5000 });
-      await expect(header).toContainText("New Tournament: Basic Info", {
+      await expect(header).toHaveText("New Tournament", {
         timeout: 5000,
       });
-      console.log("✅ Verify default header title - PASSED");
+      console.log("✅ Test 1 - Verify default header title - PASSED");
+    });
+
+    await test.step("Verify header updates with tournament short name when name is entered", async () => {
+      const header = page.locator("#tournamentFormHeader");
+
+      // Initially should show "New Tournament" (already verified in Test 1)
+
+      // Fill in the tournament name
+      const nameField = page.locator("#name");
+      await nameField.fill("Test Tournament");
+
+      // Wait a moment for the uniqueName to be generated
+      await page.waitForTimeout(500);
+
+      // Header should now show the generated short name (TT + current year)
+      const currentYear = new Date().getFullYear().toString().slice(-2);
+      const expectedShortName = `TT${currentYear}`;
+
+      await expect(header).toContainText(expectedShortName, { timeout: 5000 });
+      await expect(header).not.toContainText("New Tournament");
+
+      console.log(
+        `✅ Test 2 - Verify header updates with tournament short name (${expectedShortName}) - PASSED`,
+      );
     });
 
     await test.step("Verify host name is prefilled", async () => {
@@ -188,7 +205,7 @@ test.describe("Basic Info tab", () => {
         expect(expectedHost).not.toEqual("");
         expect(hostValue).toEqual(expectedHost);
       }
-      console.log("✅ Verify host name is prefilled - PASSED");
+      console.log("✅ Test 3 - Verify host name is prefilled - PASSED");
     });
 
     await test.step("Verify host email is prefilled", async () => {
@@ -213,7 +230,7 @@ test.describe("Basic Info tab", () => {
       } else {
         expect(emailValue.toLowerCase()).toEqual(LOGIN_EMAIL.toLowerCase());
       }
-      console.log("✅ Verify host email is prefilled - PASSED");
+      console.log("✅ Test 4 - Verify host email is prefilled - PASSED");
     });
 
     await test.step("Enforce tournament date and tee time defaults", async () => {
@@ -250,7 +267,9 @@ test.describe("Basic Info tab", () => {
       await expect(teeTimeInputs).toHaveCount(1, { timeout: 5000 });
       await expect(teeTimeInputs.first()).toHaveValue("07:00");
       await expect(page.locator('text="04/03/2024:"').first()).toBeVisible();
-      console.log("✅ Enforce tournament date and tee time defaults - PASSED");
+      console.log(
+        "✅ Test 5 - Enforce tournament date and tee time defaults - PASSED",
+      );
     });
 
     await test.step("Upload tournament logo image", async () => {
@@ -262,7 +281,7 @@ test.describe("Basic Info tab", () => {
       const logoPreview = page.locator('img[alt="Tournament Logo preview"]');
       await expect(logoPreview).toBeVisible({ timeout: 5000 });
       await expect(logoPreview).toHaveAttribute("src", /blob:|data:image/);
-      console.log("✅ Upload tournament logo image - PASSED");
+      console.log("✅ Test 6 - Upload tournament logo image - PASSED");
     });
 
     await test.step("Upload tournament rules PDF", async () => {
@@ -280,7 +299,7 @@ test.describe("Basic Info tab", () => {
       await expect(
         page.getByRole("button", { name: "Upload Rules Doc..." }),
       ).toHaveCount(0);
-      console.log("✅ Upload tournament rules PDF - PASSED");
+      console.log("✅ Test 7 - Upload tournament rules PDF - PASSED");
     });
 
     await test.step("Allow entering prize descriptions", async () => {
@@ -294,7 +313,7 @@ test.describe("Basic Info tab", () => {
 
       await prizeTextInput.fill("");
       await expect(prizeTextInput).toHaveValue("");
-      console.log("✅ Allow entering prize descriptions - PASSED");
+      console.log("✅ Test 8 - Allow entering prize descriptions - PASSED");
     });
 
     await test.step("Upload prize PDF hides description field", async () => {
@@ -324,7 +343,9 @@ test.describe("Basic Info tab", () => {
       await expect(
         page.getByRole("button", { name: "Upload Prizes Doc..." }),
       ).toHaveCount(0);
-      console.log("✅ Upload prize PDF hides description field - PASSED");
+      console.log(
+        "✅ Test 9 - Upload prize PDF hides description field - PASSED",
+      );
     });
 
     await test.step("Allow entering additional info text", async () => {
@@ -340,7 +361,7 @@ test.describe("Basic Info tab", () => {
 
       await additionalInfoInput.fill("");
       await expect(additionalInfoInput).toHaveValue("");
-      console.log("✅ Allow entering additional info text - PASSED");
+      console.log("✅ Test 10 - Allow entering additional info text - PASSED");
     });
 
     await test.step("Upload additional info PDF hides text area", async () => {
@@ -369,7 +390,9 @@ test.describe("Basic Info tab", () => {
       await expect(
         page.getByRole("button", { name: "Upload Additional Info Doc..." }),
       ).toHaveCount(0);
-      console.log("✅ Upload additional info PDF hides text area - PASSED");
+      console.log(
+        "✅ Test 11 - Upload additional info PDF hides text area - PASSED",
+      );
     });
 
     await test.step("Show single tee time for single-day tournament", async () => {
@@ -382,7 +405,9 @@ test.describe("Basic Info tab", () => {
       await expect(teeTimeInputs.first()).toHaveAttribute("type", "time");
       await expect(teeTimeInputs.first()).toHaveValue("07:00");
       await expect(page.locator('text="04/01/2024:"').first()).toBeVisible();
-      console.log("✅ Show single tee time for single-day tournament - PASSED");
+      console.log(
+        "✅ Test 12 - Show single tee time for single-day tournament - PASSED",
+      );
     });
 
     await test.step("Show tee times for each tournament day", async () => {
@@ -406,13 +431,17 @@ test.describe("Basic Info tab", () => {
           page.locator(`text="${expectedLabels[index]}"`).first(),
         ).toBeVisible();
       }
-      console.log("✅ Show tee times for each tournament day - PASSED");
+      console.log(
+        "✅ Test 13 - Show tee times for each tournament day - PASSED",
+      );
     });
 
     await test.step("Cancel changes returns to competitions list", async () => {
       await page.getByRole("button", { name: "Cancel Changes & Exit" }).click();
       await expect(page.url()).toMatch(/competitions\/?$/);
-      console.log("✅ Cancel changes returns to competitions list - PASSED");
+      console.log(
+        "✅ Test 14 - Cancel changes returns to competitions list - PASSED",
+      );
     });
   });
 });

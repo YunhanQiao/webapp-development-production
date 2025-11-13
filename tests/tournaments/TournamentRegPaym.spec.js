@@ -77,7 +77,6 @@ test.describe("Registration & Payment tab", () => {
       },
     );
 
-    // Small delay to ensure page is fully stable
     await page.waitForTimeout(500);
 
     await expect(
@@ -90,7 +89,7 @@ test.describe("Registration & Payment tab", () => {
       await expect(
         page.getByRole("heading", { name: /registration.*payment/i }),
       ).toContainText("Registration & Payment");
-      console.log("✅ Verify page title - PASSED");
+      console.log("✅ Test 1 - Verify page title - PASSED");
     });
 
     await test.step("Verify registration window date fields exist and are required", async () => {
@@ -102,7 +101,9 @@ test.describe("Registration & Payment tab", () => {
       await expect(regStartDate).toHaveAttribute("type", "date");
       await expect(regEndDate).toHaveAttribute("type", "date");
 
-      console.log("✅ Registration window date fields verified - PASSED");
+      console.log(
+        "✅ Test 2 - Verify registration window date fields exist and are required - PASSED",
+      );
     });
 
     await test.step("Verify withdrawal deadline date field exists and is required", async () => {
@@ -111,19 +112,21 @@ test.describe("Registration & Payment tab", () => {
       await expect(withdrawalDate).toBeVisible();
       await expect(withdrawalDate).toHaveAttribute("type", "date");
 
-      console.log("✅ Withdrawal deadline field verified - PASSED");
+      console.log(
+        "✅ Test 3 - Verify withdrawal deadline date field exists and is required - PASSED",
+      );
     });
 
     await test.step("Verify cap registration checkbox and field behavior", async () => {
-      // Find input by placeholder text
       const capRegInput = page
         .locator('input[type="number"][placeholder*="limit"]')
         .first();
 
-      // Verify input exists
       await expect(capRegInput).toBeVisible();
 
-      console.log("✅ Cap registration field verified - PASSED");
+      console.log(
+        "✅ Test 4 - Verify cap registration checkbox and field behavior - PASSED",
+      );
     });
 
     await test.step("Verify currency type dropdown exists with USD default", async () => {
@@ -133,7 +136,7 @@ test.describe("Registration & Payment tab", () => {
       await expect(currencyDropdown).toHaveValue("USD");
 
       console.log(
-        "✅ Currency type dropdown with USD default verified - PASSED",
+        "✅ Test 5 - Verify currency type dropdown exists with USD default - PASSED",
       );
     });
 
@@ -142,39 +145,32 @@ test.describe("Registration & Payment tab", () => {
       const processingPercent = page.locator("#processingPercent");
       const processingFee = page.locator("#processingFee");
 
-      // By default, checkbox should be unchecked
       await expect(entryFeeCheckbox).not.toBeChecked();
 
-      // Check the checkbox
       await entryFeeCheckbox.check();
       await expect(entryFeeCheckbox).toBeChecked();
 
-      // Processing fee fields should be enabled
       await expect(processingPercent).toBeEnabled();
       await expect(processingFee).toBeEnabled();
 
-      // Fill in processing fees
       await processingPercent.fill("10");
       await processingFee.fill("2");
       await expect(processingPercent).toHaveValue("10.00");
       await expect(processingFee).toHaveValue("2.00");
 
       console.log(
-        "✅ Entry fee checkbox and processing fees verified - PASSED",
+        "✅ Test 6 - Verify entry fee checkbox and related fields behavior - PASSED",
       );
     });
 
     await test.step("Verify swag checkbox and related fields behavior", async () => {
       const swagCheckbox = page.locator("#askSwag");
 
-      // By default, checkbox should be unchecked
       await expect(swagCheckbox).not.toBeChecked();
 
-      // Check the checkbox
       await swagCheckbox.check();
       await expect(swagCheckbox).toBeChecked();
 
-      // Swag name and sizes fields should appear
       const swagName = page.locator("#swagName");
 
       if (await swagName.isVisible()) {
@@ -183,13 +179,14 @@ test.describe("Registration & Payment tab", () => {
         await expect(swagName).toHaveValue("Tournament T-Shirt");
       }
 
-      console.log("✅ Swag checkbox and related fields verified - PASSED");
+      console.log(
+        "✅ Test 7 - Verify swag checkbox and related fields behavior - PASSED",
+      );
     });
 
     await test.step("Verify swag size selection checkboxes", async () => {
       const swagSizes = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
 
-      // Verify all size checkboxes and labels are present
       for (const size of swagSizes) {
         const sizeCheckbox = page.locator(`#${size}`);
         const sizeLabel = page.locator(`label[for="${size}"]`);
@@ -199,20 +196,18 @@ test.describe("Registration & Payment tab", () => {
         await expect(sizeLabel).toHaveText(size);
       }
 
-      // Test selecting a few sizes by clicking their labels
       const sizesToSelect = ["M", "L", "XL"];
       for (const size of sizesToSelect) {
         const sizeCheckbox = page.locator(`#${size}`);
         const sizeLabel = page.locator(`label[for="${size}"]`);
 
-        // Check if not already checked (might be from previous state)
         if (!(await sizeCheckbox.isChecked())) {
-          await sizeLabel.click(); // Click the label instead of the hidden checkbox
+          await sizeLabel.click();
         }
         await expect(sizeCheckbox).toBeChecked();
       }
 
-      console.log("✅ Swag size selection checkboxes verified - PASSED");
+      console.log("✅ Test 8 - Verify swag size selection checkboxes - PASSED");
     });
 
     await test.step("Verify currency type dropdown exists", async () => {
@@ -222,11 +217,23 @@ test.describe("Registration & Payment tab", () => {
 
       await expect(currencyDropdown.first()).toBeVisible();
 
-      console.log("✅ Currency type dropdown verified - PASSED");
+      console.log("✅ Test 9 - Verify currency type dropdown exists - PASSED");
     });
 
-    console.log(
-      "✅ Completed Registration & Payment tab end-to-end workflow test",
-    );
+    await test.step("Previous button returns to Basic Info tab", async () => {
+      await page.getByRole("button", { name: "Previous" }).click();
+      await expect(page.url()).toMatch(/basicInfo\/?$/);
+      console.log(
+        "✅ Test 10 - Previous button returns to Basic Info tab - PASSED",
+      );
+    });
+
+    await test.step("Cancel changes returns to competitions list", async () => {
+      await page.getByRole("button", { name: "Cancel Changes & Exit" }).click();
+      await expect(page.url()).toMatch(/competitions\/?$/);
+      console.log(
+        "✅ Test 11 - Cancel changes returns to competitions list - PASSED",
+      );
+    });
   });
 });

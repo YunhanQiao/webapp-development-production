@@ -1,13 +1,8 @@
-import { test, expect } from "@playwright/test";
+const { test, expect } = require("@playwright/test");
 
-// Reuse login credentials
 const LOGIN_EMAIL = "seal-osu@gmail.com";
 const LOGIN_PASSWORD = "GoodLuck2025!";
 
-/**
- * Logs the user in.
- * This function now assumes the page is *already* on the login page.
- */
 async function loginWithCredentials(page) {
   await page.goto("http://localhost:3000/login", {
     waitUntil: "domcontentloaded",
@@ -37,49 +32,36 @@ async function loginWithCredentials(page) {
     await page
       .getByRole("tab", { name: "Competitions" })
       .waitFor({ timeout: 10000 });
-    console.log("✅ Login successful");
   } else {
     throw new Error("Login failed");
   }
 }
 
-/**
- * Robustly dismisses all visible alerts that have a close button.
- * Uses a loop to handle alerts disappearing from the DOM.
- */
 async function dismissInitialAlerts(page) {
+  try {
+    await page.waitForSelector(".alert", { timeout: 3000 });
+  } catch {
+    return;
+  }
+
   const alerts = page.locator(".alert");
+  const alertCount = await alerts.count();
 
-  // Loop 5 times max, just as a safeguard against infinite loops
-  for (let i = 0; i < 5; i++) {
-    const firstAlert = alerts.first();
-    try {
-      // Wait for an alert to be visible, with a short timeout.
-      // If this fails, no more alerts are visible, and we can break.
-      await firstAlert.waitFor({ state: "visible", timeout: 1000 });
-    } catch (e) {
-      // No alert found, we're done.
-      break;
-    }
+  for (let i = 0; i < alertCount; i++) {
+    const alert = alerts.nth(i);
+    if (!(await alert.isVisible())) continue;
 
-    const closeButton = firstAlert.locator(
+    const closeButton = alert.locator(
       '.btn-close, button[data-bs-dismiss="alert"]',
     );
-    try {
-      if (await closeButton.isVisible()) {
-        await closeButton.click();
-        // Wait for this specific alert to be gone
-        await expect(firstAlert).toBeHidden({ timeout: 3000 });
-      } else {
-        // Visible alert with no close button, break to avoid looping
-        break;
-      }
-    } catch (e) {
-      // The alert might have disappeared while we were working.
-      // Log it and continue the loop.
-      console.log("Alert disappeared before it could be closed, continuing.");
+
+    if (await closeButton.isVisible()) {
+      await closeButton.click();
+      await expect(alert).toBeHidden({ timeout: 3000 });
     }
   }
+
+  await page.waitForTimeout(500);
 }
 
 async function fillColorInput(page, selector, value) {
@@ -92,11 +74,10 @@ async function fillColorInput(page, selector, value) {
   await expect(input).toHaveValue(new RegExp(`^${value}$`, "i"));
 }
 
-test.describe("TournamentColorTheme Component Tests", () => {
+test.describe("Color Theme tab", () => {
   test("should verify default values and allow color input changes", async ({
     page,
   }) => {
-    // Login and navigate
     await loginWithCredentials(page);
     await dismissInitialAlerts(page);
 
@@ -112,65 +93,108 @@ test.describe("TournamentColorTheme Component Tests", () => {
       timeout: 10000,
     });
 
-    // Small delay to ensure page is fully stable
     await page.waitForTimeout(500);
 
-    // Step 1: Verify all inputs render correctly with default values
     await test.step("Verify all inputs render correctly with default values", async () => {
       const colorInputs = page.locator('input[type="text"]');
       await expect(colorInputs).toHaveCount(13);
 
-      // Verify required defaults per specification
       await expect(page.locator("#titleText")).toHaveValue(/^#000000$/i);
+      console.log("✅ Test 1 - titleText default value verified - PASSED");
+
       await expect(page.locator("#headerRowBg")).toHaveValue(/^#CC2127$/i);
+      console.log("✅ Test 2 - headerRowBg default value verified - PASSED");
+
       await expect(page.locator("#headerRowTxt")).toHaveValue(/^#FFFFFF$/i);
+      console.log("✅ Test 3 - headerRowTxt default value verified - PASSED");
+
       await expect(page.locator("#updateBtnBg")).toHaveValue(/^#13294E$/i);
+      console.log("✅ Test 4 - updateBtnBg default value verified - PASSED");
+
       await expect(page.locator("#updateBtnTxt")).toHaveValue(/^#FFFFFF$/i);
+      console.log("✅ Test 5 - updateBtnTxt default value verified - PASSED");
+
       await expect(page.locator("#tournNameBannerBg")).toHaveValue(
         /^#13294E$/i,
       );
+      console.log(
+        "✅ Test 6 - tournNameBannerBg default value verified - PASSED",
+      );
+
       await expect(page.locator("#tournNameBannerTxt")).toHaveValue(
         /^#FFFFFF$/i,
       );
+      console.log(
+        "✅ Test 7 - tournNameBannerTxt default value verified - PASSED",
+      );
+
       await expect(page.locator("#strParColBg")).toHaveValue(/^#13294E$/i);
+      console.log("✅ Test 8 - strParColBg default value verified - PASSED");
+
       await expect(page.locator("#strParColTxt")).toHaveValue(/^#FFFFFF$/i);
+      console.log("✅ Test 9 - strParColTxt default value verified - PASSED");
+
       await expect(page.locator("#timeParColBg")).toHaveValue(/^#13294E$/i);
+      console.log("✅ Test 10 - timeParColBg default value verified - PASSED");
+
       await expect(page.locator("#timeParColTxt")).toHaveValue(/^#FFFFFF$/i);
+      console.log("✅ Test 11 - timeParColTxt default value verified - PASSED");
+
       await expect(page.locator("#SGParColBg")).toHaveValue(/^#000000$/i);
+      console.log("✅ Test 12 - SGParColBg default value verified - PASSED");
+
       await expect(page.locator("#SGParColTxt")).toHaveValue(/^#FFFFFF$/i);
+      console.log("✅ Test 13 - SGParColTxt default value verified - PASSED");
 
       console.log(
-        "✅ All inputs render correctly with default values - PASSED",
+        "✅ Test 14 - Verify all inputs render correctly with default values - PASSED",
       );
     });
 
-    // Step 2: Test color input changes
-    await test.step("Allow color input changes and reflect those changes in state", async () => {
+    await test.step("Verify color input fields accept user input", async () => {
       await fillColorInput(page, "#titleText", "#FF0000");
       await expect(page.locator("#titleText")).toHaveValue(/^#FF0000$/i);
-      console.log("✅ Title Text color changed");
+      console.log("✅ Test 15 - Title Text color changed - PASSED");
 
       await fillColorInput(page, "#headerRowBg", "#00FF00");
       await expect(page.locator("#headerRowBg")).toHaveValue(/^#00FF00$/i);
-      console.log("✅ Header Row Bg color changed");
+      console.log("✅ Test 16 - Header Row Bg color changed - PASSED");
 
       await fillColorInput(page, "#updateBtnBg", "#0000FF");
       await expect(page.locator("#updateBtnBg")).toHaveValue(/^#0000FF$/i);
-      console.log("✅ Update Btn Bg color changed");
+      console.log("✅ Test 17 - Update Btn Bg color changed - PASSED");
 
       await fillColorInput(page, "#tournNameBannerBg", "#123456");
       await expect(page.locator("#tournNameBannerBg")).toHaveValue(
         /^#123456$/i,
       );
-      console.log("✅ Tournament Name Banner Bg color changed");
+      console.log(
+        "✅ Test 18 - Tournament Name Banner Bg color changed - PASSED",
+      );
 
       await fillColorInput(page, "#SGParColBg", "#101010");
       await expect(page.locator("#SGParColBg")).toHaveValue(/^#101010$/i);
-      console.log("✅ S.G Par Col Bg color changed");
+      console.log("✅ Test 19 - S.G Par Col Bg color changed - PASSED");
 
-      console.log("✅ All color input changes reflected in state - PASSED");
+      console.log(
+        "✅ Test 20 - Verify color input fields accept user input - PASSED",
+      );
     });
 
-    console.log("✅ Completed TournamentColorTheme component workflow test");
+    await test.step("Previous button returns to Registration & Payment tab", async () => {
+      await page.getByRole("button", { name: "Previous" }).click();
+      await expect(page.url()).toMatch(/regPaymentInfo\/?$/);
+      console.log(
+        "✅ Test 21 - Previous button returns to Registration & Payment tab - PASSED",
+      );
+    });
+
+    await test.step("Cancel changes returns to competitions list", async () => {
+      await page.getByRole("button", { name: "Cancel Changes & Exit" }).click();
+      await expect(page.url()).toMatch(/competitions\/?$/);
+      console.log(
+        "✅ Test 22 - Cancel changes returns to competitions list - PASSED",
+      );
+    });
   });
 });

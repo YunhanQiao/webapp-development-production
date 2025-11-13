@@ -1,6 +1,8 @@
 const { test, expect } = require("@playwright/test");
 
-// Helper function to log in with credentials
+const LOGIN_EMAIL = "seal-osu@gmail.com";
+const LOGIN_PASSWORD = "GoodLuck2025!";
+
 async function loginWithCredentials(page) {
   await page.goto("http://localhost:3000/login", {
     waitUntil: "domcontentloaded",
@@ -12,8 +14,8 @@ async function loginWithCredentials(page) {
   await page.waitForLoadState("domcontentloaded");
   await page.waitForSelector("form", { timeout: 10000 });
 
-  await page.getByLabel(/email/i).fill("seal-osu@gmail.com");
-  await page.getByLabel(/password/i).fill("GoodLuck2025!");
+  await page.getByLabel(/email/i).fill(LOGIN_EMAIL);
+  await page.getByLabel(/password/i).fill(LOGIN_PASSWORD);
 
   const [response] = await Promise.all([
     page.waitForResponse(
@@ -35,41 +37,54 @@ async function loginWithCredentials(page) {
   }
 }
 
-// Helper function to dismiss any alert dialogs
-async function dismissAlerts(page) {
-  page.on("dialog", async (dialog) => {
-    console.log(`Dialog message: ${dialog.message()}`);
-    await dialog.dismiss();
-  });
+async function dismissInitialAlerts(page) {
+  try {
+    await page.waitForSelector(".alert", { timeout: 3000 });
+  } catch {
+    return;
+  }
+
+  const alerts = page.locator(".alert");
+  const alertCount = await alerts.count();
+
+  for (let i = 0; i < alertCount; i++) {
+    const alert = alerts.nth(i);
+    if (!(await alert.isVisible())) continue;
+
+    const closeButton = alert.locator(
+      '.btn-close, button[data-bs-dismiss="alert"]',
+    );
+
+    if (await closeButton.isVisible()) {
+      await closeButton.click();
+      await expect(alert).toBeHidden({ timeout: 3000 });
+    }
+  }
+
+  await page.waitForTimeout(500);
 }
 
 test.describe("Divisions tab", () => {
   test("should verify all UI elements exist in divisions tab", async ({
     page,
   }) => {
-    // Set up alert dismissal
-    dismissAlerts(page);
+    await loginWithCredentials(page);
+    await dismissInitialAlerts(page);
 
-    await test.step("Login and navigate directly to Divisions tab", async () => {
-      await loginWithCredentials(page);
-
-      // Navigate directly to Divisions tab
-      await page.goto(
-        "http://localhost:3000/competitions/newTournament/divisions",
-      );
-      await page.waitForTimeout(500);
-
-      console.log("✅ Login and navigation to Divisions tab - PASSED");
-    });
+    await page.goto(
+      "http://localhost:3000/competitions/newTournament/divisions",
+      {
+        waitUntil: "domcontentloaded",
+      },
+    );
+    await page.waitForTimeout(500);
 
     await test.step("Verify divisions table structure exists", async () => {
-      // Find table by looking for the table with "Division Name" header
       const divisionsTable = page.locator("table").filter({
         has: page.locator("th", { hasText: "Division Name" }),
       });
       await expect(divisionsTable).toBeVisible();
 
-      // Verify table headers
       const headers = divisionsTable.locator("thead th");
       await expect(headers.nth(0)).toHaveText("Division Name");
       await expect(headers.nth(1)).toHaveText("Fee");
@@ -79,29 +94,28 @@ test.describe("Divisions tab", () => {
       await expect(headers.nth(5)).toHaveText("Rounds & Courses");
       await expect(headers.nth(6)).toHaveText("Actions");
 
-      // Verify table body exists (attached to DOM)
       const tableBody = divisionsTable.locator("tbody");
       await expect(tableBody).toBeAttached();
 
-      console.log("✅ Divisions table structure verified - PASSED");
+      console.log(
+        "✅ Test 1 - Verify divisions table structure exists - PASSED",
+      );
     });
 
     await test.step("Verify table shows 'No Data' when empty", async () => {
-      // Find table by looking for the table with "Division Name" header
       const divisionsTable = page.locator("table").filter({
         has: page.locator("th", { hasText: "Division Name" }),
       });
 
-      // Check if table body shows "No Data"
       const tableBody = divisionsTable.locator("tbody");
       const noDataCell = tableBody.locator("td", { hasText: /no data/i });
 
       await expect(noDataCell).toBeVisible();
-
-      // Verify it spans all columns (7 columns total)
       await expect(noDataCell).toHaveAttribute("colspan", "7");
 
-      console.log("✅ Empty table shows 'No Data' message - PASSED");
+      console.log(
+        "✅ Test 2 - Verify table shows 'No Data' when empty - PASSED",
+      );
     });
 
     await test.step("Verify 'Add Division to Tournament' button exists", async () => {
@@ -112,7 +126,9 @@ test.describe("Divisions tab", () => {
       await expect(addDivisionButton).toBeVisible();
       await expect(addDivisionButton).toBeEnabled();
 
-      console.log("✅ Add Division button verified - PASSED");
+      console.log(
+        "✅ Test 3 - Verify 'Add Division to Tournament' button exists - PASSED",
+      );
     });
 
     await test.step("Verify clicking 'Add Division to Tournament' opens modal", async () => {
@@ -123,13 +139,14 @@ test.describe("Divisions tab", () => {
       await addDivisionButton.click();
       await page.waitForTimeout(300);
 
-      // Verify modal is visible (look for modal with "Add Division" text)
       const modal = page.locator(".modal-dialog").filter({
         hasText: /add division/i,
       });
       await expect(modal).toBeVisible();
 
-      console.log("✅ Add Division modal opens - PASSED");
+      console.log(
+        "✅ Test 4 - Verify clicking 'Add Division to Tournament' opens modal - PASSED",
+      );
     });
 
     await test.step("Verify modal contains division form fields", async () => {
@@ -137,61 +154,50 @@ test.describe("Divisions tab", () => {
         hasText: /add division/i,
       });
 
-      // Check for modal title/header
       const modalHeader = modal.locator(".modal-header, .modal-title");
       await expect(modalHeader.first()).toBeVisible();
 
-      // Check for modal body with form content
       const modalBody = modal.locator(".modal-body");
       await expect(modalBody).toBeVisible();
 
-      console.log("✅ Division modal structure verified - PASSED");
+      console.log(
+        "✅ Test 5 - Verify modal contains division form fields - PASSED",
+      );
     });
 
     await test.step("Verify all required fields exist and are auto-filled with default values", async () => {
-      const modal = page.locator(".modal-dialog").filter({
-        hasText: /add division/i,
-      });
-
-      // Verify Division Name field (default: "Open")
-      const divisionNameField = modal.locator("#name");
+      const divisionNameField = page.locator("#name");
       await expect(divisionNameField).toBeVisible();
       await expect(divisionNameField).toHaveValue("Open");
 
-      // Verify Entry Fee field (default: "200")
-      const entryFeeField = modal.locator("#entryFee");
+      const entryFeeField = page.locator("#entryFee");
       await expect(entryFeeField).toBeVisible();
       await expect(entryFeeField).toHaveValue("200");
 
-      // Verify Gender dropdown (default: "Male")
-      const genderField = modal.locator("#gender");
+      const genderField = page.locator("#gender");
       await expect(genderField).toBeVisible();
       await expect(genderField).toHaveValue("Male");
 
-      // Verify Min Age field (default: "18")
-      const minAgeField = modal.locator("#minAge");
+      const minAgeField = page.locator("#minAge");
       await expect(minAgeField).toBeVisible();
       await expect(minAgeField).toHaveValue("18");
 
-      // Verify Max Age field (default: "39")
-      const maxAgeField = modal.locator("#maxAge");
+      const maxAgeField = page.locator("#maxAge");
       await expect(maxAgeField).toBeVisible();
       await expect(maxAgeField).toHaveValue("39");
 
-      // Verify Rounds field shows "1" by default
-      const roundsCountText = modal
+      const roundsCountText = page
         .getByText(/rounds in division/i)
         .locator("..")
         .getByText("1");
       await expect(roundsCountText).toBeVisible();
 
       console.log(
-        "✅ All required fields verified with default values - PASSED",
+        "✅ Test 6 - Verify all required fields exist and are auto-filled with default values - PASSED",
       );
     });
 
     await test.step("Verify modal can be closed", async () => {
-      // Look for close button in the Add Division modal
       const addDivisionModal = page.locator(".modal-dialog").filter({
         hasText: /add division/i,
       });
@@ -205,12 +211,25 @@ test.describe("Divisions tab", () => {
       await closeButton.click();
       await page.waitForTimeout(300);
 
-      // Verify Add Division modal is no longer visible
       await expect(addDivisionModal).not.toBeVisible();
 
-      console.log("✅ Modal close functionality verified - PASSED");
+      console.log("✅ Test 7 - Verify modal can be closed - PASSED");
     });
 
-    console.log("✅ Completed Divisions tab UI elements verification test");
+    await test.step("Previous button returns to Courses tab", async () => {
+      await page.getByRole("button", { name: "Previous" }).click();
+      await expect(page.url()).toMatch(/courses\/?$/);
+      console.log(
+        "✅ Test 8 - Previous button returns to Courses tab - PASSED",
+      );
+    });
+
+    await test.step("Cancel changes returns to competitions list", async () => {
+      await page.getByRole("button", { name: "Cancel Changes & Exit" }).click();
+      await expect(page.url()).toMatch(/competitions\/?$/);
+      console.log(
+        "✅ Test 9 - Cancel changes returns to competitions list - PASSED",
+      );
+    });
   });
 });

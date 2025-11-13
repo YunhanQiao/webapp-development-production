@@ -1,6 +1,8 @@
 const { test, expect } = require("@playwright/test");
 
-// Helper function to log in with credentials
+const LOGIN_EMAIL = "seal-osu@gmail.com";
+const LOGIN_PASSWORD = "GoodLuck2025!";
+
 async function loginWithCredentials(page) {
   await page.goto("http://localhost:3000/login", {
     waitUntil: "domcontentloaded",
@@ -12,8 +14,8 @@ async function loginWithCredentials(page) {
   await page.waitForLoadState("domcontentloaded");
   await page.waitForSelector("form", { timeout: 10000 });
 
-  await page.getByLabel(/email/i).fill("seal-osu@gmail.com");
-  await page.getByLabel(/password/i).fill("GoodLuck2025!");
+  await page.getByLabel(/email/i).fill(LOGIN_EMAIL);
+  await page.getByLabel(/password/i).fill(LOGIN_PASSWORD);
 
   const [response] = await Promise.all([
     page.waitForResponse(
@@ -35,32 +37,47 @@ async function loginWithCredentials(page) {
   }
 }
 
-// Helper function to dismiss any alert dialogs
-async function dismissAlerts(page) {
-  page.on("dialog", async (dialog) => {
-    console.log(`Dialog message: ${dialog.message()}`);
-    await dialog.dismiss();
-  });
+async function dismissInitialAlerts(page) {
+  try {
+    await page.waitForSelector(".alert", { timeout: 3000 });
+  } catch {
+    return;
+  }
+
+  const alerts = page.locator(".alert");
+  const alertCount = await alerts.count();
+
+  for (let i = 0; i < alertCount; i++) {
+    const alert = alerts.nth(i);
+    if (!(await alert.isVisible())) continue;
+
+    const closeButton = alert.locator(
+      '.btn-close, button[data-bs-dismiss="alert"]',
+    );
+
+    if (await closeButton.isVisible()) {
+      await closeButton.click();
+      await expect(alert).toBeHidden({ timeout: 3000 });
+    }
+  }
+
+  await page.waitForTimeout(500);
 }
 
 test.describe("Courses tab", () => {
   test("should verify all UI elements exist in courses tab", async ({
     page,
   }) => {
-    // Set up alert dismissal
-    dismissAlerts(page);
+    await loginWithCredentials(page);
+    await dismissInitialAlerts(page);
 
-    await test.step("Login and navigate directly to Courses tab", async () => {
-      await loginWithCredentials(page);
-
-      // Navigate directly to Courses tab
-      await page.goto(
-        "http://localhost:3000/competitions/newTournament/courses",
-      );
-      await page.waitForTimeout(500);
-
-      console.log("✅ Login and navigation to Courses tab - PASSED");
-    });
+    await page.goto(
+      "http://localhost:3000/competitions/newTournament/courses",
+      {
+        waitUntil: "domcontentloaded",
+      },
+    );
+    await page.waitForTimeout(500);
 
     await test.step("Verify course search input field exists", async () => {
       const courseSearchLabel = page.getByText("Add a Course:");
@@ -74,47 +91,45 @@ test.describe("Courses tab", () => {
         "Enter a course name",
       );
 
-      console.log("✅ Course search input field verified - PASSED");
+      console.log(
+        "✅ Test 1 - Verify course search input field exists - PASSED",
+      );
     });
 
     await test.step("Verify courses table structure exists", async () => {
-      // Find table by looking for the table with "Course" and "Actions" headers
       const coursesTable = page
         .locator("table")
         .filter({ has: page.locator("th", { hasText: "Course" }) });
       await expect(coursesTable).toBeVisible();
 
-      // Verify table headers
       const headers = coursesTable.locator("thead th");
       await expect(headers.nth(0)).toHaveText("Course");
       await expect(headers.nth(1)).toHaveText("Actions");
 
-      // Verify table body exists (attached to DOM)
       const tableBody = coursesTable.locator("tbody");
       await expect(tableBody).toBeAttached();
 
-      console.log("✅ Courses table structure verified - PASSED");
+      console.log("✅ Test 2 - Verify courses table structure exists - PASSED");
     });
 
     await test.step("Verify search dropdown appears with results when typing", async () => {
       const courseSearchInput = page.locator("#courseInputBoxId");
 
-      // Type 'club' to trigger search
       await courseSearchInput.fill("club");
-      await page.waitForTimeout(500); // Wait for search results
+      await page.waitForTimeout(500);
 
-      // Verify autocomplete dropdown appears (look for list group with buttons)
       const searchResults = page.locator("button.list-group-item");
       const resultCount = await searchResults.count();
 
       expect(resultCount).toBeGreaterThan(0);
       console.log(`Found ${resultCount} courses containing 'club'`);
 
-      console.log("✅ Search dropdown with results verified - PASSED");
+      console.log(
+        "✅ Test 3 - Verify search dropdown appears with results when typing - PASSED",
+      );
     });
 
     await test.step("Verify selecting a course adds it to the table", async () => {
-      // Click the first search result
       const firstResult = page.locator("button.list-group-item").first();
       const courseName = await firstResult.textContent();
       console.log(`Selecting course: ${courseName}`);
@@ -122,16 +137,13 @@ test.describe("Courses tab", () => {
       await firstResult.click();
       await page.waitForTimeout(500);
 
-      // Verify the course appears in the table (find table by its headers)
       const coursesTable = page
         .locator("table")
         .filter({ has: page.locator("th", { hasText: "Course" }) });
       const tableRows = coursesTable.locator("tbody tr");
 
-      // Should now have at least one row
       await expect(tableRows.first()).toBeVisible();
 
-      // Verify the course name appears in the table
       const firstRowText = await tableRows
         .first()
         .locator("td")
@@ -139,27 +151,42 @@ test.describe("Courses tab", () => {
         .textContent();
       expect(firstRowText).toContain(courseName.trim());
 
-      console.log("✅ Course added to table successfully - PASSED");
+      console.log(
+        "✅ Test 4 - Verify selecting a course adds it to the table - PASSED",
+      );
     });
 
     await test.step("Verify course action icons exist after adding a course", async () => {
-      // Find table by its headers
       const coursesTable = page
         .locator("table")
         .filter({ has: page.locator("th", { hasText: "Course" }) });
       const firstRow = coursesTable.locator("tbody tr").first();
 
-      // Verify view icon exists
       const viewIcon = firstRow.locator("i.fa-eye");
       await expect(viewIcon).toBeVisible();
 
-      // Verify delete icon exists
       const deleteIcon = firstRow.locator("i.fa-trash");
       await expect(deleteIcon).toBeVisible();
 
-      console.log("✅ Course action icons verified - PASSED");
+      console.log(
+        "✅ Test 5 - Verify course action icons exist after adding a course - PASSED",
+      );
     });
 
-    console.log("✅ Completed Courses tab UI elements verification test");
+    await test.step("Previous button returns to Color Theme tab", async () => {
+      await page.getByRole("button", { name: "Previous" }).click();
+      await expect(page.url()).toMatch(/colorTheme\/?$/);
+      console.log(
+        "✅ Test 6 - Previous button returns to Color Theme tab - PASSED",
+      );
+    });
+
+    await test.step("Cancel changes returns to competitions list", async () => {
+      await page.getByRole("button", { name: "Cancel Changes & Exit" }).click();
+      await expect(page.url()).toMatch(/competitions\/?$/);
+      console.log(
+        "✅ Test 7 - Cancel changes returns to competitions list - PASSED",
+      );
+    });
   });
 });
