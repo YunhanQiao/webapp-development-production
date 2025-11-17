@@ -355,6 +355,30 @@ async function verifyDivisionsInDB(
   }
 }
 
+async function cleanupTestTournament(tournamentName) {
+  try {
+    console.log(`🧹 Cleaning up test tournament: "${tournamentName}"`);
+
+    const TestCompetition = global.TestCompetition;
+    const result = await TestCompetition.deleteOne({
+      "basicInfo.name": tournamentName,
+    });
+
+    if (result.deletedCount > 0) {
+      console.log(
+        `✅ Test tournament deleted from database: "${tournamentName}"`,
+      );
+    } else {
+      console.log(
+        `⚠️ Test tournament not found for cleanup: "${tournamentName}"`,
+      );
+    }
+  } catch (error) {
+    console.error(`❌ Error cleaning up test tournament: ${error.message}`);
+    // Don't throw - cleanup failure shouldn't fail the test
+  }
+}
+
 test.describe("✅ WORKING Tournament Creation End-to-End", () => {
   test.beforeAll(async () => {
     // Connect to database before tests
@@ -377,581 +401,620 @@ test.describe("✅ WORKING Tournament Creation End-to-End", () => {
 
     const tournamentName = `E2E Test Tournament ${Date.now()}`;
 
-    // Listen for network requests to track API calls
-    page.on("request", (request) => {
-      if (
-        request.url().includes("tournament") ||
-        request.url().includes("competition")
-      ) {
-        console.log(`🌐 REQUEST: ${request.method()} ${request.url()}`);
-      }
-    });
-
-    page.on("response", async (response) => {
-      if (
-        response.url().includes("tournament") ||
-        response.url().includes("competition")
-      ) {
-        console.log(`🌐 RESPONSE: ${response.status()} ${response.url()}`);
-
-        // Log error responses
-        if (response.status() >= 400) {
-          try {
-            const responseBody = await response.text();
-            console.log(`❌ Error response body: ${responseBody}`);
-          } catch (e) {
-            console.log(`❌ Could not read error response: ${e.message}`);
-          }
+    try {
+      // Listen for network requests to track API calls
+      page.on("request", (request) => {
+        if (
+          request.url().includes("tournament") ||
+          request.url().includes("competition")
+        ) {
+          console.log(`🌐 REQUEST: ${request.method()} ${request.url()}`);
         }
-      }
-    });
-
-    // ============================================
-    // ✅ Authentication - Safer Login Method (FIXED)
-    // ============================================
-    await page.goto("http://localhost:3000/login");
-    await page.waitForLoadState("networkidle");
-
-    // Wait for login form
-    await page.waitForSelector("form", { timeout: 10000 });
-
-    // Fill login form using semantic selectors
-    await page.getByLabel(/email/i).fill("seal-osu@gmail.com");
-    await page.getByLabel(/password/i).fill("GoodLuck2025!");
-
-    // Submit login form using button role with exact name
-    const [response] = await Promise.all([
-      page.waitForResponse(
-        (response) =>
-          response.url().includes("/auth/login") &&
-          response.request().method() === "POST",
-      ),
-      page.getByRole("button", { name: "Log In" }).click(),
-    ]);
-
-    // Check success and wait for redirect
-    if (response.status() === 200) {
-      await page.waitForURL(/.*\/feed/, { timeout: 10000 });
-      await page
-        .getByRole("tab", { name: "Competitions" })
-        .waitFor({ timeout: 10000 });
-      console.log("✅ Login successful");
-    } else {
-      throw new Error("Login failed");
-    }
-
-    // ============================================
-    // ✅ Pre-Test: Navigate to New Tournament (WORKING)
-    // ============================================
-
-    // Wait for any alerts/notifications to disappear or dismiss them
-    try {
-      await page.waitForSelector(".alert", { timeout: 3000 });
-      // If alert exists, try to dismiss it
-      const closeButton = page.locator(
-        '.alert .btn-close, .alert button[data-bs-dismiss="alert"]',
-      );
-      if (await closeButton.isVisible()) {
-        await closeButton.click();
-        await page.waitForTimeout(1000); // Wait for alert to disappear
-      }
-    } catch (error) {
-      // No alert found, continue
-    }
-
-    // Click on tournaments mode button using semantic selector
-    await page.getByRole("tab", { name: "Competitions" }).click();
-    await expect(
-      page.getByRole("button", { name: /new tournament/i }),
-    ).toBeVisible();
-
-    // Click Create New Tournament
-    await page.getByRole("button", { name: /new tournament/i }).click();
-    await expect(
-      page.getByRole("heading", { name: /tournament.*basic info/i }),
-    ).toBeVisible({
-      timeout: 10000,
-    });
-    console.log("✅ Pre-test completed:Tournament creation wizard opened");
-
-    // ============================================
-    // Test 1: Basic Info - Fill and Save + DATABASE VERIFICATION
-    // ============================================
-    console.log("\n📝 TEST 1: Basic Info - Fill Required Fields and Save");
-
-    // Fill Basic Info - using semantic selectors where possible, IDs for date fields
-    const startDate = "2025-10-01";
-    const endDate = "2025-10-12";
-
-    await page.getByLabel(/tournament name/i).fill(tournamentName);
-
-    // Use type-based selectors for date inputs (first two date inputs on Basic Info page)
-    const dateInputs = page.locator('input[type="date"]');
-    await dateInputs.nth(0).fill(startDate); // First date input is start date
-    await dateInputs.nth(1).fill(endDate); // Second date input is end date
-
-    // console.log("✅ Basic info fields filled");
-
-    // Save Basic Info and go directly to database verification
-    await page.getByRole("button", { name: "Save & Next" }).click();
-
-    // Wait for the UI to move to next step to ensure save completed
-    await expect(
-      page.getByRole("heading", { name: /registration.*payment/i }),
-    ).toBeVisible();
-
-    // Wait longer for API call to complete and database to be updated
-    console.log("� Waiting for database write to complete...");
-    await page.waitForTimeout(5000); // Wait 5 seconds
-
-    // �🔥 DATABASE VERIFICATION - Check if filled information exists in database
-    console.log("🔍 Verifying Basic Info was saved to database...");
-    await verifyBasicInfoInDB(tournamentName, startDate, endDate);
-
-    // ============================================
-    // ✅ Test 2: Registration & Payment - Fill and Save + DATABASE VERIFICATION
-    // ============================================
-    // console.log(
-    //   "\n💰 STEP 3: Registration & Payment - Fill Required Fields and Save",
-    // );
-
-    // Fill Registration & Payment Info - using correct field IDs
-    const regStartDate = "2024-05-01";
-    const regEndDate = "2024-05-31";
-    const processingPercent = 2.9;
-    const processingFee = 0.3;
-
-    try {
-      // console.log("🔍 Filling registration dates with proper events...");
-
-      // Use type-based selectors for registration date inputs (on Reg/Payment page)
-      const regDateInputs = page.locator('input[type="date"]');
-
-      // Fill registration start date (first date input on this page) with proper React events
-      await regDateInputs.nth(0).click();
-      await regDateInputs.nth(0).fill("");
-      await regDateInputs.nth(0).type(regStartDate);
-      await regDateInputs.nth(0).dispatchEvent("change");
-      await regDateInputs.nth(0).dispatchEvent("blur");
-      await page.waitForTimeout(500);
-
-      // Fill registration end date (second date input) with proper React events
-      await regDateInputs.nth(1).click();
-      await regDateInputs.nth(1).fill("");
-      await regDateInputs.nth(1).type(regEndDate);
-      await regDateInputs.nth(1).dispatchEvent("change");
-      await regDateInputs.nth(1).dispatchEvent("blur");
-      await page.waitForTimeout(500);
-
-      // Debug: Check if the dates were filled correctly after events
-      const regStartValue = await regDateInputs.nth(0).inputValue();
-      const regEndValue = await regDateInputs.nth(1).inputValue();
-      console.log("🔍 Registration date values after events:", {
-        regStartValue,
-        regEndValue,
       });
 
-      // CRITICAL: Enable "payThroughApp" checkbox FIRST before processing fees can be filled
-      // console.log(
-      //   "🔄 Enabling payThroughApp (required for processing fees)...",
-      // );
+      page.on("response", async (response) => {
+        if (
+          response.url().includes("tournament") ||
+          response.url().includes("competition")
+        ) {
+          console.log(`🌐 RESPONSE: ${response.status()} ${response.url()}`);
 
-      // Find the payThroughApp checkbox - it's the first checkbox on the Reg/Payment page
-      const payThroughAppCheckbox = page
-        .locator('input[type="checkbox"]')
-        .first();
+          // Log error responses
+          if (response.status() >= 400) {
+            try {
+              const responseBody = await response.text();
+              console.log(`❌ Error response body: ${responseBody}`);
+            } catch (e) {
+              console.log(`❌ Could not read error response: ${e.message}`);
+            }
+          }
+        }
+      });
 
-      // Check if payThroughApp is already checked
-      const isPayThroughAppChecked = await payThroughAppCheckbox.isChecked();
-      // console.log("� PayThroughApp checkbox status:", isPayThroughAppChecked);
+      // ============================================
+      // ✅ Authentication - Safer Login Method (FIXED)
+      // ============================================
+      await page.goto("http://localhost:3000/login");
+      await page.waitForLoadState("networkidle");
 
-      if (!isPayThroughAppChecked) {
-        await payThroughAppCheckbox.check();
-        await page.waitForTimeout(1000); // Wait for UI to update and enable processing fee fields
-        console.log("✅ PayThroughApp checkbox enabled");
+      // Wait for login form
+      await page.waitForSelector("form", { timeout: 10000 });
+
+      // Fill login form using semantic selectors
+      await page.getByLabel(/email/i).fill("seal-osu@gmail.com");
+      await page.getByLabel(/password/i).fill("GoodLuck2025!");
+
+      // Submit login form using button role with exact name
+      const [response] = await Promise.all([
+        page.waitForResponse(
+          (response) =>
+            response.url().includes("/auth/login") &&
+            response.request().method() === "POST",
+        ),
+        page.getByRole("button", { name: "Log In" }).click(),
+      ]);
+
+      // Check success and wait for redirect
+      if (response.status() === 200) {
+        await page.waitForURL(/.*\/feed/, { timeout: 10000 });
+        await page
+          .getByRole("tab", { name: "Competitions" })
+          .waitFor({ timeout: 10000 });
+        console.log("✅ Login successful");
       } else {
-        console.log("✅ PayThroughApp already enabled");
+        throw new Error("Login failed");
       }
 
-      // console.log(
-      //   "🔍 Filling processing fees (after enabling payThroughApp)...",
-      // );
-      // Use label-based selectors for processing fee inputs
+      // ============================================
+      // ✅ Pre-Test: Navigate to New Tournament (WORKING)
+      // ============================================
 
-      // Clear and fill processing percent with proper events
-      const processingPercentInput = page.getByLabel(
-        /percentage of transaction/i,
-      );
-      await processingPercentInput.click();
-      await processingPercentInput.fill("");
-      await processingPercentInput.type(processingPercent.toString());
-      await processingPercentInput.dispatchEvent("blur"); // Trigger onBlur event
-      await page.waitForTimeout(500);
-      console.log("✅ Processing percent filled with events");
-
-      // Clear and fill processing fee with proper events
-      const processingFeeInput = page.getByLabel(/flat transaction fee/i);
-      await processingFeeInput.click();
-      await processingFeeInput.fill("");
-      await processingFeeInput.type(processingFee.toString());
-      await processingFeeInput.dispatchEvent("blur"); // Trigger onBlur event
-      await page.waitForTimeout(500);
-      console.log("✅ Processing fee filled with events");
-
-      // Debug: Let's verify the form values after events
-      const percentValue = await processingPercentInput.inputValue();
-      const feeValue = await processingFeeInput.inputValue();
-      // console.log("🔍 Form values after events:", { percentValue, feeValue });
-
-      // Skip the registration cap for now to isolate the processing fees issue
-      // console.log(
-      //   "⏭️ Skipping registration cap to focus on processing fees issue",
-      // );
-    } catch (error) {
-      console.error(
-        "❌ TEST 2 FAILED: Error during form filling:",
-        error.message,
-      );
-
-      // Take a screenshot for debugging
-      await page.screenshot({ path: "/tmp/reg-payment-form-error.png" });
-      throw error;
-    }
-
-    // console.log("✅ Registration & payment fields filled");
-
-    // Wait longer for React state to fully update before saving
-    // console.log("⏳ Waiting for React state to stabilize...");
-    await page.waitForTimeout(2000);
-
-    // Save Registration & Payment and go directly to database verification
-    await page.click('button:has-text("Save & Next")');
-
-    // Wait for the UI to move to next step to ensure save completed
-    await expect(
-      page.getByRole("heading", { name: /color theme/i }),
-    ).toBeVisible();
-
-    // 🔥 DATABASE VERIFICATION - Check if filled information exists in database
-    // console.log(
-    //   "🔍 Verifying Registration & Payment info was saved to database...",
-    // );
-    await verifyRegPaymentInfoInDB(tournamentName, {
-      processingPercent: processingPercent,
-      processingFee: processingFee,
-    });
-
-    // ============================================
-    // ✅ Test 3: Color Theme - Fill and Save + DATABASE VERIFICATION
-    // ============================================
-    console.log("\n🎨 TEST 3: Color Theme - Fill Color Fields and Save");
-
-    // Define specific color values to test
-    const testColorTheme = {
-      titleText: "#FF5733", // Custom orange for title
-      headerRowBg: "#3498DB", // Custom blue for header background
-      headerRowTxt: "#FFFFFF", // White for header text
-      updateBtnBg: "#2ECC71", // Custom green for update button
-      updateBtnTxt: "#000000", // Black for update button text
-    };
-
-    // Wait for color theme form to be ready (use first color input field)
-    await page
-      .locator('input[type="color"]')
-      .first()
-      .waitFor({ timeout: 5000 });
-    console.log("✅ Color theme form loaded");
-
-    // Fill color theme fields using the hex text inputs (more reliable than color pickers)
-    // Each color field has a label and a text input with placeholder #000000
-    const colorFieldMappings = {
-      titleText: "Title Text",
-      headerRowBg: "Header Row Bg",
-      headerRowTxt: "Header Row Txt",
-      updateBtnBg: "Update Btn Bg",
-      updateBtnTxt: "Update Btn Txt",
-    };
-
-    for (const [fieldName, labelText] of Object.entries(colorFieldMappings)) {
-      const colorValue = testColorTheme[fieldName];
-      console.log(`🎨 Setting ${fieldName} to ${colorValue}`);
-
-      // Find the text input by its placeholder (all hex inputs have placeholder="#000000")
-      // and is next to the label text
-      const fieldRow = page
-        .locator(`label:has-text("${labelText}")`)
-        .locator("..");
-      const textInput = fieldRow.locator(
-        'input[type="text"][placeholder="#000000"]',
-      );
-
-      // Clear and type the hex value
-      await textInput.click();
-      await textInput.fill("");
-      await textInput.type(colorValue);
-      await textInput.dispatchEvent("blur");
-
-      // Add a small delay to ensure React state updates
-      await page.waitForTimeout(200);
-
-      // Verify the value was set correctly
-      const actualValue = await textInput.inputValue();
-      if (actualValue.toLowerCase() !== colorValue.toLowerCase()) {
-        console.log(
-          `⚠️ Warning: ${fieldName} expected ${colorValue}, got ${actualValue}`,
+      // Wait for any alerts/notifications to disappear or dismiss them
+      try {
+        await page.waitForSelector(".alert", { timeout: 3000 });
+        // If alert exists, try to dismiss it
+        const closeButton = page.locator(
+          '.alert .btn-close, .alert button[data-bs-dismiss="alert"]',
         );
+        if (await closeButton.isVisible()) {
+          await closeButton.click();
+          await page.waitForTimeout(1000); // Wait for alert to disappear
+        }
+      } catch (error) {
+        // No alert found, continue
       }
-    }
 
-    console.log("✅ Color theme fields filled with test values");
+      // Click on tournaments mode button using semantic selector
+      await page.getByRole("tab", { name: "Competitions" }).click();
+      await expect(
+        page.getByRole("button", { name: /new tournament/i }),
+      ).toBeVisible();
 
-    // Wait for React state to stabilize
-    await page.waitForTimeout(1000);
+      // Click Create New Tournament
+      console.log("🔍 Clicking 'New Tournament' button...");
+      await page.getByRole("button", { name: /new tournament/i }).click();
 
-    // Save Color Theme and go directly to database verification
-    await page.getByRole("button", { name: "Save & Next" }).click();
+      // Wait for React to process the click and scripts to load
+      await page.waitForTimeout(3000);
 
-    // Wait for the UI to move to next step to ensure save completed
-    await expect(page.getByRole("heading", { name: /courses/i })).toBeVisible();
+      console.log("🔍 Waiting for tournament wizard to open...");
 
-    // 🔥 DATABASE VERIFICATION - Check if color theme was saved with correct values
-    console.log("🔍 Verifying Color Theme was saved to database...");
-    await verifyColorThemeInDB(tournamentName, testColorTheme);
+      // The wizard header now shows tournament name or "New Tournament"
+      // Look for either the default "New Tournament" or a heading with "Tournament" in it
+      try {
+        await expect(
+          page.getByRole("heading", { name: /new tournament|tournament/i }),
+        ).toBeVisible({
+          timeout: 10000,
+        });
+        console.log(`✅ Tournament wizard opened`);
+      } catch (e) {
+        // List all visible headings for debugging
+        const allHeadings = await page
+          .locator("h1, h2, h3, h4, h5, h6")
+          .allTextContents();
+        console.log("🔍 All visible headings on page:", allHeadings);
 
-    // ============================================
-    // Test 4: Courses - Fill and Save + DATABASE VERIFICATION
-    // ============================================
+        // Take a screenshot
+        await page.screenshot({ path: "/tmp/wizard-failed-to-open.png" });
+        console.log("📸 Screenshot saved to /tmp/wizard-failed-to-open.png");
 
-    // Use the actual Course wizard interface: search input + dropdown selection
-    // console.log("🔍 Using course search functionality...");
+        throw new Error("Tournament creation wizard did not open");
+      }
 
-    // Fill the course search input by placeholder instead of ID
-    const courseSearchInput = page.getByPlaceholder(/enter a course name/i);
-    await courseSearchInput.fill("Golf");
-    await page.waitForTimeout(1000); // Wait for search to complete
+      console.log("✅ Pre-test completed: Tournament creation wizard opened");
 
-    // Wait for search results dropdown to appear
-    try {
-      await page.waitForSelector(
-        ".autocomplete-results-wrapper .list-group-item",
-        { timeout: 5000 },
-      );
-      console.log("✅ Course search results appeared");
+      // ============================================
+      // Test 1: Basic Info - Fill and Save + DATABASE VERIFICATION
+      // ============================================
+      console.log("\n📝 TEST 1: Basic Info - Fill Required Fields and Save");
 
-      // Click on the first course result to add it
+      // Fill Basic Info - using semantic selectors where possible, IDs for date fields
+      const startDate = "2025-10-01";
+      const endDate = "2025-10-12";
+
+      await page.getByLabel(/tournament name/i).fill(tournamentName);
+
+      // Use type-based selectors for date inputs (first two date inputs on Basic Info page)
+      const dateInputs = page.locator('input[type="date"]');
+      await dateInputs.nth(0).fill(startDate); // First date input is start date
+      await dateInputs.nth(1).fill(endDate); // Second date input is end date
+
+      // console.log("✅ Basic info fields filled");
+
+      // Save Basic Info - Save & Next should automatically navigate to next tab
+      console.log("💾 Clicking 'Save & Next' button...");
+      await page.getByRole("button", { name: "Save & Next" }).click();
+
+      // Wait for automatic navigation to Registration & Payment tab
+      // Check for a field unique to that tab
+      await expect(page.getByLabel(/percentage of transaction/i)).toBeVisible({
+        timeout: 10000,
+      });
+      console.log("✅ Automatically navigated to Registration & Payment tab");
+
+      // Wait longer for API call to complete and database to be updated
+      console.log("⏳ Waiting for database write to complete...");
+      await page.waitForTimeout(5000); // Wait 5 seconds
+
+      // 🔥 DATABASE VERIFICATION - Check if filled information exists in database
+      console.log("🔍 Verifying Basic Info was saved to database...");
+      await verifyBasicInfoInDB(tournamentName, startDate, endDate);
+
+      // ============================================
+      // ✅ Test 2: Registration & Payment - Fill and Save + DATABASE VERIFICATION
+      // ============================================
+      // console.log(
+      //   "\n💰 STEP 3: Registration & Payment - Fill Required Fields and Save",
+      // );
+
+      // Fill Registration & Payment Info - using correct field IDs
+      const regStartDate = "2024-05-01";
+      const regEndDate = "2024-05-31";
+      const processingPercent = 2.9;
+      const processingFee = 0.3;
+
+      try {
+        // console.log("🔍 Filling registration dates with proper events...");
+
+        // Use type-based selectors for registration date inputs (on Reg/Payment page)
+        const regDateInputs = page.locator('input[type="date"]');
+
+        // Fill registration start date (first date input on this page) with proper React events
+        await regDateInputs.nth(0).click();
+        await regDateInputs.nth(0).fill("");
+        await regDateInputs.nth(0).type(regStartDate);
+        await regDateInputs.nth(0).dispatchEvent("change");
+        await regDateInputs.nth(0).dispatchEvent("blur");
+        await page.waitForTimeout(500);
+
+        // Fill registration end date (second date input) with proper React events
+        await regDateInputs.nth(1).click();
+        await regDateInputs.nth(1).fill("");
+        await regDateInputs.nth(1).type(regEndDate);
+        await regDateInputs.nth(1).dispatchEvent("change");
+        await regDateInputs.nth(1).dispatchEvent("blur");
+        await page.waitForTimeout(500);
+
+        // Debug: Check if the dates were filled correctly after events
+        const regStartValue = await regDateInputs.nth(0).inputValue();
+        const regEndValue = await regDateInputs.nth(1).inputValue();
+        console.log("🔍 Registration date values after events:", {
+          regStartValue,
+          regEndValue,
+        });
+
+        // CRITICAL: Enable "payThroughApp" checkbox FIRST before processing fees can be filled
+        // console.log(
+        //   "🔄 Enabling payThroughApp (required for processing fees)...",
+        // );
+
+        // Find the payThroughApp checkbox - it's the first checkbox on the Reg/Payment page
+        const payThroughAppCheckbox = page
+          .locator('input[type="checkbox"]')
+          .first();
+
+        // Check if payThroughApp is already checked
+        const isPayThroughAppChecked = await payThroughAppCheckbox.isChecked();
+        // console.log("� PayThroughApp checkbox status:", isPayThroughAppChecked);
+
+        if (!isPayThroughAppChecked) {
+          await payThroughAppCheckbox.check();
+          await page.waitForTimeout(1000); // Wait for UI to update and enable processing fee fields
+          console.log("✅ PayThroughApp checkbox enabled");
+        } else {
+          console.log("✅ PayThroughApp already enabled");
+        }
+
+        // console.log(
+        //   "🔍 Filling processing fees (after enabling payThroughApp)...",
+        // );
+        // Use label-based selectors for processing fee inputs
+
+        // Clear and fill processing percent with proper events
+        const processingPercentInput = page.getByLabel(
+          /percentage of transaction/i,
+        );
+        await processingPercentInput.click();
+        await processingPercentInput.fill("");
+        await processingPercentInput.type(processingPercent.toString());
+        await processingPercentInput.dispatchEvent("blur"); // Trigger onBlur event
+        await page.waitForTimeout(500);
+        console.log("✅ Processing percent filled with events");
+
+        // Clear and fill processing fee with proper events
+        const processingFeeInput = page.getByLabel(/flat transaction fee/i);
+        await processingFeeInput.click();
+        await processingFeeInput.fill("");
+        await processingFeeInput.type(processingFee.toString());
+        await processingFeeInput.dispatchEvent("blur"); // Trigger onBlur event
+        await page.waitForTimeout(500);
+        console.log("✅ Processing fee filled with events");
+
+        // Debug: Let's verify the form values after events
+        const percentValue = await processingPercentInput.inputValue();
+        const feeValue = await processingFeeInput.inputValue();
+        // console.log("🔍 Form values after events:", { percentValue, feeValue });
+
+        // Skip the registration cap for now to isolate the processing fees issue
+        // console.log(
+        //   "⏭️ Skipping registration cap to focus on processing fees issue",
+        // );
+      } catch (error) {
+        console.error(
+          "❌ TEST 2 FAILED: Error during form filling:",
+          error.message,
+        );
+
+        // Take a screenshot for debugging
+        await page.screenshot({ path: "/tmp/reg-payment-form-error.png" });
+        throw error;
+      }
+
+      // console.log("✅ Registration & payment fields filled");
+
+      // Wait longer for React state to fully update before saving
+      // console.log("⏳ Waiting for React state to stabilize...");
+      await page.waitForTimeout(2000);
+
+      // Save Registration & Payment - should automatically navigate to Color Theme tab
+      await page.click('button:has-text("Save & Next")');
+
+      // Wait for automatic navigation to Color Theme tab
+      // Check for a field unique to that tab (color input)
+      await expect(page.locator('input[type="color"]').first()).toBeVisible({
+        timeout: 10000,
+      });
+      console.log("✅ Automatically navigated to Color Theme tab");
+
+      // 🔥 DATABASE VERIFICATION - Check if filled information exists in database
+      await verifyRegPaymentInfoInDB(tournamentName, {
+        processingPercent: processingPercent,
+        processingFee: processingFee,
+      });
+
+      // ============================================
+      // ✅ Test 3: Color Theme - Fill and Save + DATABASE VERIFICATION
+      // ============================================
+      console.log("\n🎨 TEST 3: Color Theme - Fill Color Fields and Save");
+
+      // Define specific color values to test
+      const testColorTheme = {
+        titleText: "#FF5733", // Custom orange for title
+        headerRowBg: "#3498DB", // Custom blue for header background
+        headerRowTxt: "#FFFFFF", // White for header text
+        updateBtnBg: "#2ECC71", // Custom green for update button
+        updateBtnTxt: "#000000", // Black for update button text
+      };
+
+      // Wait for color theme form to be ready (use first color input field)
       await page
-        .locator(".autocomplete-results-wrapper .list-group-item")
+        .locator('input[type="color"]')
         .first()
-        .click();
-      console.log("✅ Course selected from search results");
+        .waitFor({ timeout: 5000 });
+      console.log("✅ Color theme form loaded");
 
-      // Wait for course to be added to the table
-      const coursesTable = page
-        .locator("table")
-        .filter({ has: page.locator("th", { hasText: "Course" }) });
-      await coursesTable.locator("tbody tr").first().waitFor({ timeout: 3000 });
-      console.log("✅ Course added to tournament courses table");
-    } catch (error) {
-      console.log("⚠️ Course search failed, trying alternative approach...");
+      // Fill color theme fields using the hex text inputs (more reliable than color pickers)
+      // Each color field has a label and a text input with placeholder #000000
+      const colorFieldMappings = {
+        titleText: "Title Text",
+        headerRowBg: "Header Row Bg",
+        headerRowTxt: "Header Row Txt",
+        updateBtnBg: "Update Btn Bg",
+        updateBtnTxt: "Update Btn Txt",
+      };
 
-      // Alternative: Try typing a specific course name that might exist
-      await courseSearchInput.fill("Arrowhead Golf Club");
+      for (const [fieldName, labelText] of Object.entries(colorFieldMappings)) {
+        const colorValue = testColorTheme[fieldName];
+        console.log(`🎨 Setting ${fieldName} to ${colorValue}`);
+
+        // Find the text input by its placeholder (all hex inputs have placeholder="#000000")
+        // and is next to the label text
+        const fieldRow = page
+          .locator(`label:has-text("${labelText}")`)
+          .locator("..");
+        const textInput = fieldRow.locator(
+          'input[type="text"][placeholder="#000000"]',
+        );
+
+        // Clear and type the hex value
+        await textInput.click();
+        await textInput.fill("");
+        await textInput.type(colorValue);
+        await textInput.dispatchEvent("blur");
+
+        // Add a small delay to ensure React state updates
+        await page.waitForTimeout(200);
+
+        // Verify the value was set correctly
+        const actualValue = await textInput.inputValue();
+        if (actualValue.toLowerCase() !== colorValue.toLowerCase()) {
+          console.log(
+            `⚠️ Warning: ${fieldName} expected ${colorValue}, got ${actualValue}`,
+          );
+        }
+      }
+
+      console.log("✅ Color theme fields filled with test values");
+
+      // Wait for React state to stabilize
       await page.waitForTimeout(1000);
 
+      // Save Color Theme - should automatically navigate to Courses tab
+      await page.getByRole("button", { name: "Save & Next" }).click();
+
+      // Wait for automatic navigation to Courses tab
+      // Check for course search input field
+      await expect(page.getByPlaceholder(/enter a course name/i)).toBeVisible({
+        timeout: 10000,
+      });
+      console.log("✅ Automatically navigated to Courses tab");
+
+      // 🔥 DATABASE VERIFICATION - Check if color theme was saved with correct values
+      console.log("🔍 Verifying Color Theme was saved to database...");
+      await verifyColorThemeInDB(tournamentName, testColorTheme);
+
+      // ============================================
+      // Test 4: Courses - Fill and Save + DATABASE VERIFICATION
+      // ============================================
+
+      // Use the actual Course wizard interface: search input + dropdown selection
+      // console.log("🔍 Using course search functionality...");
+
+      // Fill the course search input by placeholder instead of ID
+      const courseSearchInput = page.getByPlaceholder(/enter a course name/i);
+      await courseSearchInput.fill("Golf");
+      await page.waitForTimeout(1000); // Wait for search to complete
+
+      // Wait for search results dropdown to appear
       try {
         await page.waitForSelector(
           ".autocomplete-results-wrapper .list-group-item",
-          { timeout: 3000 },
+          { timeout: 5000 },
         );
+        console.log("✅ Course search results appeared");
+
+        // Click on the first course result to add it
         await page
           .locator(".autocomplete-results-wrapper .list-group-item")
           .first()
           .click();
-      } catch (altError) {
-        console.log(
-          "❌ TEST 4 FAILED: Course search not working, may need courses in database",
-        );
-        // Clear the search field since course addition failed
-        await courseSearchInput.fill("");
-      }
-    }
+        console.log("✅ Course selected from search results");
 
-    // Save Courses and go directly to database verification
-    await page.getByRole("button", { name: "Save & Next" }).click();
+        // Wait for course to be added to the table
+        const coursesTable = page
+          .locator("table")
+          .filter({ has: page.locator("th", { hasText: "Course" }) });
+        await coursesTable
+          .locator("tbody tr")
+          .first()
+          .waitFor({ timeout: 3000 });
+        console.log("✅ Course added to tournament courses table");
+      } catch (error) {
+        console.log("⚠️ Course search failed, trying alternative approach...");
 
-    // Wait for the UI to move to next step to ensure save completed
-    await expect(
-      page.getByRole("heading", { name: /divisions/i }),
-    ).toBeVisible();
-    console.log("✅ Courses saved, navigated to Divisions step");
+        // Alternative: Try typing a specific course name that might exist
+        await courseSearchInput.fill("Arrowhead Golf Club");
+        await page.waitForTimeout(1000);
 
-    // 🔥 DATABASE VERIFICATION - Check if courses were saved to database
-    console.log("🔍 Verifying Courses were saved to database...");
-    await verifyCoursesInDB(tournamentName);
-
-    // ============================================
-    // Test 5: Divisions - Fill and Save + DATABASE VERIFICATION
-    // ============================================
-    const divisionName = "Test Division";
-    const entryFee = 50;
-
-    // Add a division - click the "Add Division to Tournament" button to open modal
-    await page
-      .getByRole("button", { name: /add division to tournament/i })
-      .click();
-    await expect(
-      page.locator(".modal-title").filter({ hasText: "Add Division" }),
-    ).toBeVisible();
-
-    console.log("✅ Division modal opened");
-
-    // Wait for the modal to fully load
-    await page.waitForTimeout(1000);
-
-    // Fill division name (clear and fill to ensure it's set)
-    const nameField = page.locator('input[placeholder="Open"]');
-    if (await nameField.isVisible()) {
-      await nameField.clear();
-      await nameField.fill(divisionName);
-    }
-
-    // Fill entry fee (clear and fill to ensure it's set)
-    const entryFeeField = page.locator('input[placeholder="200"]');
-    if (await entryFeeField.isVisible()) {
-      await entryFeeField.clear();
-      await entryFeeField.fill(entryFee.toString());
-    }
-
-    // Handle round information - the error suggests we need round data
-    // Look for round-related fields and fill them if they exist
-    try {
-      const roundField = page.locator(
-        'input[placeholder*="Round"], input[name*="round"], input[id*="round"]',
-      );
-      if (await roundField.first().isVisible()) {
-        await roundField.first().fill("Round 1");
-        console.log("✅ Round information filled");
-      }
-    } catch (roundError) {
-      console.log("⚠️ No specific round field found, continuing...");
-    }
-
-    // Look for any other required fields that might be empty
-    const requiredFields = page.locator("input[required], select[required]");
-    const fieldCount = await requiredFields.count();
-    for (let i = 0; i < fieldCount; i++) {
-      const field = requiredFields.nth(i);
-      const fieldValue = await field.inputValue();
-      if (!fieldValue || fieldValue.trim() === "") {
-        const placeholder = await field.getAttribute("placeholder");
-        const name = await field.getAttribute("name");
-        console.log(`🔍 Found empty required field: ${name || placeholder}`);
-
-        // Fill with appropriate default values
-        if (placeholder?.includes("Round") || name?.includes("round")) {
-          await field.fill("Round 1");
-        } else if (placeholder?.includes("18") || name?.includes("hole")) {
-          await field.fill("18");
-        } else {
-          await field.fill("Default Value");
+        try {
+          await page.waitForSelector(
+            ".autocomplete-results-wrapper .list-group-item",
+            { timeout: 3000 },
+          );
+          await page
+            .locator(".autocomplete-results-wrapper .list-group-item")
+            .first()
+            .click();
+        } catch (altError) {
+          console.log(
+            "❌ TEST 4 FAILED: Course search not working, may need courses in database",
+          );
+          // Clear the search field since course addition failed
+          await courseSearchInput.fill("");
         }
       }
-    }
 
-    console.log("🔄 Submitting division form...");
-    // Find the primary submit button in the modal footer
-    const modalSaveButton = page.locator('.modal-footer button[type="submit"]');
-    await modalSaveButton.click();
+      // Save Courses - should automatically navigate to Divisions tab
+      await page.getByRole("button", { name: "Save & Next" }).click();
 
-    // Wait for the modal to close with better error handling
-    try {
+      // Wait for automatic navigation to Divisions tab
+      // Check for "Add Division to Tournament" button
+      await expect(
+        page.getByRole("button", { name: /add division to tournament/i }),
+      ).toBeVisible({ timeout: 10000 });
+      console.log("✅ Automatically navigated to Divisions tab");
+
+      // 🔥 DATABASE VERIFICATION - Check if courses were saved to database
+      console.log("🔍 Verifying Courses were saved to database...");
+      await verifyCoursesInDB(tournamentName);
+
+      // ============================================
+      // Test 5: Divisions - Fill and Save + DATABASE VERIFICATION
+      // ============================================
+      const divisionName = "Test Division";
+      const entryFee = 50;
+
+      // Add a division - click the "Add Division to Tournament" button to open modal
+      await page
+        .getByRole("button", { name: /add division to tournament/i })
+        .click();
       await expect(
         page.locator(".modal-title").filter({ hasText: "Add Division" }),
-      ).not.toBeVisible({ timeout: 10000 });
-      console.log("✅ Division modal closed successfully");
-    } catch (error) {
-      console.log("Division modal did not close, checking for errors...");
+      ).toBeVisible();
 
-      // Check if there are validation errors visible
-      const errorBox = page.locator(".alert-danger, .error-message");
-      if (await errorBox.first().isVisible()) {
-        const errorText = await errorBox.first().textContent();
-        console.log("❌ Form validation errors:", errorText);
+      console.log("✅ Division modal opened");
 
-        // Try to force close the modal
-        const closeButton = page.locator(
-          'button[data-bs-dismiss="modal"], .modal-header .btn-close',
+      // Wait for the modal to fully load
+      await page.waitForTimeout(1000);
+
+      // Fill division name (clear and fill to ensure it's set)
+      const nameField = page.locator('input[placeholder="Open"]');
+      if (await nameField.isVisible()) {
+        await nameField.clear();
+        await nameField.fill(divisionName);
+      }
+
+      // Fill entry fee (clear and fill to ensure it's set)
+      const entryFeeField = page.locator('input[placeholder="200"]');
+      if (await entryFeeField.isVisible()) {
+        await entryFeeField.clear();
+        await entryFeeField.fill(entryFee.toString());
+      }
+
+      // Handle round information - the error suggests we need round data
+      // Look for round-related fields and fill them if they exist
+      try {
+        const roundField = page.locator(
+          'input[placeholder*="Round"], input[name*="round"], input[id*="round"]',
         );
-        if (await closeButton.first().isVisible()) {
-          await closeButton.first().click();
-        } else {
-          await page.keyboard.press("Escape");
+        if (await roundField.first().isVisible()) {
+          await roundField.first().fill("Round 1");
+          console.log("✅ Round information filled");
+        }
+      } catch (roundError) {
+        console.log("⚠️ No specific round field found, continuing...");
+      }
+
+      // Look for any other required fields that might be empty
+      const requiredFields = page.locator("input[required], select[required]");
+      const fieldCount = await requiredFields.count();
+      for (let i = 0; i < fieldCount; i++) {
+        const field = requiredFields.nth(i);
+        const fieldValue = await field.inputValue();
+        if (!fieldValue || fieldValue.trim() === "") {
+          const placeholder = await field.getAttribute("placeholder");
+          const name = await field.getAttribute("name");
+          console.log(`🔍 Found empty required field: ${name || placeholder}`);
+
+          // Fill with appropriate default values
+          if (placeholder?.includes("Round") || name?.includes("round")) {
+            await field.fill("Round 1");
+          } else if (placeholder?.includes("18") || name?.includes("hole")) {
+            await field.fill("18");
+          } else {
+            await field.fill("Default Value");
+          }
         }
       }
 
-      await page.waitForTimeout(1000);
-    }
+      console.log("🔄 Submitting division form...");
+      // Find the primary submit button in the modal footer
+      const modalSaveButton = page.locator(
+        '.modal-footer button[type="submit"]',
+      );
+      await modalSaveButton.click();
 
-    // Now save the divisions step and go directly to database verification
-    await page.getByRole("button", { name: "Save & Exit" }).click(); // Final step uses "Save & Exit"
+      // Wait for the modal to close with better error handling
+      try {
+        await expect(
+          page.locator(".modal-title").filter({ hasText: "Add Division" }),
+        ).not.toBeVisible({ timeout: 10000 });
+        console.log("✅ Division modal closed successfully");
+      } catch (error) {
+        console.log("Division modal did not close, checking for errors...");
 
-    // 🔥 DATABASE VERIFICATION - Check if division was saved to database
-    await verifyDivisionsInDB(tournamentName, divisionName, entryFee);
+        // Check if there are validation errors visible
+        const errorBox = page.locator(".alert-danger, .error-message");
+        if (await errorBox.first().isVisible()) {
+          const errorText = await errorBox.first().textContent();
+          console.log("❌ Form validation errors:", errorText);
 
-    // ============================================
-    // Test 6: Return to Competition Mode
-    // ============================================
-    // After divisions step, should automatically return to competitions page
-    // or we might need to navigate back
-    try {
-      // Check if we're already on competitions page using semantic selector
+          // Try to force close the modal
+          const closeButton = page.locator(
+            'button[data-bs-dismiss="modal"], .modal-header .btn-close',
+          );
+          if (await closeButton.first().isVisible()) {
+            await closeButton.first().click();
+          } else {
+            await page.keyboard.press("Escape");
+          }
+        }
+
+        await page.waitForTimeout(1000);
+      }
+
+      // Now save the divisions step and go directly to database verification
+      await page.getByRole("button", { name: "Save & Exit" }).click(); // Final step uses "Save & Exit"
+
+      // 🔥 DATABASE VERIFICATION - Check if division was saved to database
+      await verifyDivisionsInDB(tournamentName, divisionName, entryFee);
+
+      // ============================================
+      // Test 6: Return to Competition Mode
+      // ============================================
+      // After divisions step, should automatically return to competitions page
+      // or we might need to navigate back
+      try {
+        // Check if we're already on competitions page using semantic selector
+        await expect(
+          page.getByRole("button", { name: /new tournament/i }),
+        ).toBeVisible({
+          timeout: 5000,
+        });
+        console.log(
+          "✅ TEST 6 PASSED: Automatically returned to competitions page",
+        );
+      } catch {
+        // If not, navigate back manually
+        console.log("🔄 Manually navigating back to competitions page");
+        await page.getByRole("tab", { name: "Competitions" }).click();
+        await expect(
+          page.getByRole("button", { name: /new tournament/i }),
+        ).toBeVisible();
+      }
+
+      // ============================================
+      // Test 7: Verify New Tournament UI State
+      // ============================================
+
+      // The tournament has been successfully created and verified in the database (Tests 1-6).
+      // Just verify we're on the competitions list page with the ability to create new tournaments.
       await expect(
         page.getByRole("button", { name: /new tournament/i }),
       ).toBeVisible({
         timeout: 5000,
       });
+
       console.log(
-        "✅ TEST 6 PASSED: Automatically returned to competitions page",
+        `✅ TEST 7 PASSED: Returned to competitions list page successfully. Tournament "${tournamentName}" created and verified in database.`,
       );
-    } catch {
-      // If not, navigate back manually
-      console.log("🔄 Manually navigating back to competitions page");
-      await page.getByRole("tab", { name: "Competitions" }).click();
-      await expect(
-        page.getByRole("button", { name: /new tournament/i }),
-      ).toBeVisible();
-    }
 
-    // ============================================
-    // Test 7: Verify New Tournament UI State
-    // ============================================
+      // Mark test as explicitly successful
+      console.log("🏁 Test marked as SUCCESSFUL - all requirements verified!");
 
-    // The tournament has been successfully created and verified in the database (Tests 1-6).
-    // Just verify we're on the competitions list page with the ability to create new tournaments.
-    await expect(
-      page.getByRole("button", { name: /new tournament/i }),
-    ).toBeVisible({
-      timeout: 5000,
-    });
+      // Explicit assertion to mark test as passed
+      expect(true).toBe(true);
+    } finally {
+      // 🧹 CLEANUP - Always delete the test tournament from database, even if test fails
+      await cleanupTestTournament(tournamentName);
 
-    console.log(
-      `✅ TEST 7 PASSED: Returned to competitions list page successfully. Tournament "${tournamentName}" created and verified in database.`,
-    );
-
-    // Ensure clean test completion with explicit success assertion
-    expect(true).toBe(true); // Explicit assertion to mark test as passed
-
-    // Ensure clean test completion
-    await page.waitForTimeout(500); // Brief wait before test ends
-
-    // Mark test as explicitly successful
-    console.log("🏁 Test marked as SUCCESSFUL - all requirements verified!");
-
-    // Explicit cleanup to prevent browser context issues
-    try {
-      await disconnectFromDatabase();
-    } catch (e) {
-      console.log("⚠️ Database already disconnected");
+      // Explicit cleanup to prevent browser context issues
+      try {
+        await disconnectFromDatabase();
+      } catch (e) {
+        console.log("⚠️ Database already disconnected");
+      }
     }
   });
 });
