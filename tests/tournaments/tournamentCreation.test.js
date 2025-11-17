@@ -4,7 +4,7 @@ const path = require("path");
 
 // ===========================================
 // Use the following command to run this specific test file:
-// npx playwright test tests/tournaments/tournamentCreation.test.js --project=ChromeDesktop --grep "should create a complete tournament"
+// npx playwright test tests/tournaments/tournamentCreation.test.js
 // ===========================================
 
 // Import backend database configuration
