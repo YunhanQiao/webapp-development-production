@@ -6,7 +6,7 @@ const LOGIN_EMAIL = "seal-osu@gmail.com";
 const LOGIN_PASSWORD = "GoodLuck2025!";
 
 // Generate unique tournament name for this test run
-const generateUniqueName = () => `E2E RegPay Save Test ${Date.now()}`;
+const generateUniqueName = () => `Seal Lab Tournament`;
 
 // Database configuration - use production DB since frontend calls production API
 const dbConfig = {
