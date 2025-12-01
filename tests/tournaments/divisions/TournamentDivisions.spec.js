@@ -373,11 +373,17 @@ test.describe("Divisions Save Buttons - Combined Test", () => {
 
       // Should return to competitions list
       await expect(page.url()).toMatch(/competitions\/?$/);
+      console.log("✅ TEST 2-a PASSED: Navigated back to competitions list");
+
+      // Verify tournament does NOT appear in the list (was not saved)
+      await page.waitForTimeout(2000);
+      const tournamentRow = page.locator(`text="${createdTournamentName}"`);
+      await expect(tournamentRow).toHaveCount(0);
       console.log(
-        "✅ TEST 2 PASSED: Cancel returns to competitions list without saving Divisions changes",
+        "✅ TEST 2-b PASSED: Tournament not in list - Cancel did not save changes",
       );
 
-      // Clean up this tournament
+      // Clean up this tournament (in case it was partially saved)
       await cleanupTestTournament(createdTournamentName);
       createdTournamentName = null;
 
