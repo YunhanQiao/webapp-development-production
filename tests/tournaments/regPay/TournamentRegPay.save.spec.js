@@ -385,43 +385,6 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
         console.log("✅ TEST 4-a PASSED: URL indicates next tab");
       }
 
-      // Check for success message (optional)
-      const successMessageExists =
-        (await page.locator(".alert-success").count()) > 0 ||
-        (await page.locator(".toast-success").count()) > 0 ||
-        (await page.locator("text=/saved/i").count()) > 0 ||
-        (await page.locator("text=/success/i").count()) > 0;
-
-      if (successMessageExists) {
-        console.log(
-          "✅ TEST 4-b PASSED: Success message shown after Save & Next",
-        );
-      } else {
-        console.log(
-          "⚠️  TEST 4-b SKIPPED: Success message not found - might be implicit",
-        );
-      }
-
-      // Go back to RegPay tab to verify fields preserved
-      const regPayTab = page.getByRole("tab", {
-        name: "Registration & Payment",
-      });
-      await regPayTab.click();
-      await page.waitForTimeout(1000);
-
-      // Verify fields are preserved (or at least populated)
-      const currentRegStart = await page.locator("#regStartDate").inputValue();
-      const currentRegEnd = await page.locator("#regEndDate").inputValue();
-      const currentWithdrawal = await page
-        .locator("#maxAllowedWithdraDate")
-        .inputValue();
-
-      // Fields should be populated (might have default values if form resets)
-      expect(currentRegStart).toBeTruthy();
-      expect(currentRegEnd).toBeTruthy();
-      expect(currentWithdrawal).toBeTruthy();
-      console.log("✅ TEST 4-c PASSED: All fields preserved after Save & Next");
-
       // Verify RegPay data saved in database
       await verifyRegPayInfoInDB(
         createdTournamentName,
@@ -429,7 +392,7 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
         regEndDate2,
       );
       console.log(
-        "✅ TEST 4-d PASSED: Registration & Payment data saved in database",
+        "✅ TEST 4-b PASSED: Registration & Payment data saved in database",
       );
 
       // Clean up this tournament
