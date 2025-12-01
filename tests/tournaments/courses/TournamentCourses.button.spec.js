@@ -334,11 +334,17 @@ test.describe("Courses Save Buttons - Combined Test", () => {
 
       // Should return to competitions list
       await expect(page.url()).toMatch(/competitions\/?$/);
+      console.log("✅ TEST 2-a PASSED: Navigated back to competitions list");
+
+      // Verify tournament does NOT appear in the list (was not saved)
+      await page.waitForTimeout(2000);
+      const tournamentRow = page.locator(`text="${createdTournamentName}"`);
+      await expect(tournamentRow).toHaveCount(0);
       console.log(
-        "✅ TEST 2 PASSED: Cancel returns to competitions list without saving Courses changes",
+        "✅ TEST 2-b PASSED: Tournament not in list - Cancel did not save changes",
       );
 
-      // Clean up this tournament
+      // Clean up this tournament (in case it was partially saved)
       await cleanupTestTournament(createdTournamentName);
       createdTournamentName = null;
 
@@ -377,8 +383,8 @@ test.describe("Courses Save Buttons - Combined Test", () => {
 
       // Verify tournament appears in list
       await page.waitForTimeout(2000);
-      const tournamentRow = page.locator(`text="${createdTournamentName}"`);
-      await expect(tournamentRow.first()).toBeVisible({ timeout: 5000 });
+      const tournamentRow3 = page.locator(`text="${createdTournamentName}"`);
+      await expect(tournamentRow3.first()).toBeVisible({ timeout: 5000 });
       console.log("✅ TEST 3-b PASSED: Tournament appears in list after save");
 
       // Verify Courses data saved in database
