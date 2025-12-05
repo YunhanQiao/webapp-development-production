@@ -469,8 +469,157 @@ test.describe("Registration & Payment Checkboxes", () => {
         `✅ TEST 6-c PASSED: Withdrawal deadline (${withdrawalValue}) is on or after registration end (${regEndValue})`,
       );
 
+      // ==========================================
+      // TEST 7: Registration Window Maintains Offset When Tournament Dates Change
+      // ==========================================
       console.log(
-        "\n🎉 ALL TESTS COMPLETED: Checkboxes and Date Validation - All constraints satisfied!",
+        "\n🧪 TEST 7: Testing Registration Window Offset Persistence",
+      );
+
+      // Store initial offsets
+      const initialTournamentStart = new Date("2026-06-01");
+      const initialRegStartOffset = Math.ceil(
+        (initialTournamentStart - regStartDate) / (1000 * 60 * 60 * 24),
+      );
+      const initialRegEndOffset = Math.ceil(
+        (initialTournamentStart - regEndDate) / (1000 * 60 * 60 * 24),
+      );
+
+      console.log(
+        `   Initial offsets: Registration opens ${initialRegStartOffset} days before, closes ${initialRegEndOffset} days before tournament`,
+      );
+
+      // Navigate back to Basic Info to change tournament dates
+      const basicInfoTab = page.getByRole("tab", { name: "Basic Info" });
+      await basicInfoTab.click();
+      await page.waitForTimeout(1000);
+
+      // Change tournament start date to 2026-07-01 (one month later)
+      await page.locator("#startDate").fill("2026-07-01");
+      await page.locator("#endDate").fill("2026-07-05");
+
+      // Click Save & Next to update and go back to RegPay tab
+      const saveNextButton = page.getByRole("button", { name: "Save & Next" });
+      await saveNextButton.click();
+      await page.waitForTimeout(2000);
+
+      // Verify we're on Registration & Payment tab
+      const regPayTab = page.getByRole("tab", {
+        name: "Registration & Payment",
+      });
+      await regPayTab.waitFor({ state: "visible" });
+
+      // Wait for fields to be updated
+      await page.waitForTimeout(1000);
+
+      // TEST 7-a: Verify registration dates were updated
+      const updatedRegStartValue = await regStartDateInput.inputValue();
+      const updatedRegEndValue = await regEndDateInput.inputValue();
+
+      expect(updatedRegStartValue).toBeTruthy();
+      expect(updatedRegEndValue).toBeTruthy();
+      expect(updatedRegStartValue).not.toBe(regStartValue);
+      expect(updatedRegEndValue).not.toBe(regEndValue);
+
+      console.log(
+        `✅ TEST 7-a PASSED: Registration dates updated (start: ${updatedRegStartValue}, end: ${updatedRegEndValue})`,
+      );
+
+      // Calculate new offsets
+      const newTournamentStart = new Date("2026-07-01");
+      const newRegStartDate = new Date(updatedRegStartValue);
+      const newRegEndDate = new Date(updatedRegEndValue);
+
+      const newRegStartOffset = Math.ceil(
+        (newTournamentStart - newRegStartDate) / (1000 * 60 * 60 * 24),
+      );
+      const newRegEndOffset = Math.ceil(
+        (newTournamentStart - newRegEndDate) / (1000 * 60 * 60 * 24),
+      );
+
+      console.log(
+        `   New offsets: Registration opens ${newRegStartOffset} days before, closes ${newRegEndOffset} days before tournament`,
+      );
+
+      // TEST 7-b: Verify registration open offset is preserved
+      expect(newRegStartOffset).toBe(initialRegStartOffset);
+      console.log(
+        `✅ TEST 7-b PASSED: Registration open offset preserved (${newRegStartOffset} days)`,
+      );
+
+      // TEST 7-c: Verify registration close offset is preserved
+      expect(newRegEndOffset).toBe(initialRegEndOffset);
+      console.log(
+        `✅ TEST 7-c PASSED: Registration close offset preserved (${newRegEndOffset} days)`,
+      );
+
+      // TEST 7-d: Verify dates still satisfy constraint
+      expect(newRegEndDate.getTime()).toBeLessThanOrEqual(
+        newTournamentStart.getTime(),
+      );
+      console.log(
+        `✅ TEST 7-d PASSED: Updated registration end (${updatedRegEndValue}) still on or before tournament start (2026-07-01)`,
+      );
+
+      // ==========================================
+      // TEST 8: Withdrawal Deadline Maintains Offset When Tournament Dates Change
+      // ==========================================
+      console.log(
+        "\n🧪 TEST 8: Testing Withdrawal Deadline Offset Persistence",
+      );
+
+      // Store initial withdrawal offset (from previous tournament start)
+      const initialWithdrawalOffset = Math.ceil(
+        (initialTournamentStart - withdrawalDate) / (1000 * 60 * 60 * 24),
+      );
+
+      console.log(
+        `   Initial offset: Withdrawal deadline ${initialWithdrawalOffset} day(s) before tournament`,
+      );
+
+      // TEST 8-a: Verify withdrawal deadline was updated
+      const updatedWithdrawalValue = await withdrawalDateInput.inputValue();
+      expect(updatedWithdrawalValue).toBeTruthy();
+      expect(updatedWithdrawalValue).not.toBe(withdrawalValue);
+
+      console.log(
+        `✅ TEST 8-a PASSED: Withdrawal deadline updated (${updatedWithdrawalValue})`,
+      );
+
+      // Calculate new withdrawal offset
+      const newWithdrawalDate = new Date(updatedWithdrawalValue);
+      const newWithdrawalOffset = Math.ceil(
+        (newTournamentStart - newWithdrawalDate) / (1000 * 60 * 60 * 24),
+      );
+
+      console.log(
+        `   New offset: Withdrawal deadline ${newWithdrawalOffset} day(s) before tournament`,
+      );
+
+      // TEST 8-b: Verify offset is preserved
+      expect(newWithdrawalOffset).toBe(initialWithdrawalOffset);
+      console.log(
+        `✅ TEST 8-b PASSED: Withdrawal deadline offset preserved (${newWithdrawalOffset} day(s))`,
+      );
+
+      // TEST 8-c: Verify date still satisfies constraint (before tournament start)
+      expect(newWithdrawalDate.getTime()).toBeLessThanOrEqual(
+        newTournamentStart.getTime(),
+      );
+      console.log(
+        `✅ TEST 8-c PASSED: Updated withdrawal deadline (${updatedWithdrawalValue}) still on or before tournament start (2026-07-01)`,
+      );
+
+      // TEST 8-d: Verify withdrawal still after registration end
+      expect(newWithdrawalDate.getTime()).toBeGreaterThanOrEqual(
+        newRegEndDate.getTime(),
+      );
+      console.log(
+        `✅ TEST 8-d PASSED: Updated withdrawal deadline (${updatedWithdrawalValue}) still on or after registration end (${updatedRegEndValue})`,
+      );
+
+      console.log(
+        "\n🎉 ALL TESTS COMPLETED: Checkboxes, Date Validation, and Offset Persistence - All constraints satisfied!",
       );
 
       // Wait a moment for database writes to complete
