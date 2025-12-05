@@ -30,6 +30,7 @@ import {
   clearWizardState,
   setWizardTournamentId,
   clearDirtyTabs,
+  setWizardActive,
 } from "../competitionSlice";
 
 import { tabConfig } from "features/competition/tabConfig.js";
@@ -118,6 +119,9 @@ const AddTournament = () => {
 
   // On mount we check if there's an Id in the URL. If it exists, we add the tournament as active.
   useEffect(() => {
+    // Set wizard as active to hide mode tabs
+    dispatch(setWizardActive(true));
+
     if (id) {
       dispatch(fetchCompetitionByID(id));
       // After fetching, the tournament will be set as active and we'll initialize wizard state
@@ -133,6 +137,7 @@ const AddTournament = () => {
       dispatch(setActiveTournamentAction(null));
       dispatch(resetAvailableSteps());
       dispatch(clearWizardState());
+      dispatch(setWizardActive(false)); // Clear wizard active flag
     };
   }, [id, dispatch]); // Added id and dispatch to dependencies
 

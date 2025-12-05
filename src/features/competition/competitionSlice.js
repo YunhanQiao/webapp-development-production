@@ -2,7 +2,10 @@ import { createSlice } from "@reduxjs/toolkit";
 import { TOURNAMENT_STEPS, TOURNAMENT_STRUCTURE } from "./constants";
 import { omit } from "lodash";
 import { formatDateForInput } from "./utils/dateUtils";
-import { convertDateToOffset, convertOffsetToDate } from "../../utils/dateOffsetUtils";
+import {
+  convertDateToOffset,
+  convertOffsetToDate,
+} from "../../utils/dateOffsetUtils";
 import { tabConfig } from "./tabConfig";
 
 const initState = {
@@ -10,6 +13,7 @@ const initState = {
   activeTournament: null,
   availableSteps: [TOURNAMENT_STEPS.BASIC_INFO],
   allUsers: [],
+  isWizardActive: false, // Track if tournament wizard is open
   // Wizard state for tournament creation/editing
   wizardState: {
     tournamentId: null,
@@ -59,13 +63,17 @@ export const competitionSlice = createSlice({
           const endDate = formatDateForInput(basicInfo.endDate);
 
           // Calculate endDateOffset from existing dates (allow 0 for same-day tournaments)
-          const endDateOffset = endDate && startDate ? convertDateToOffset(endDate, startDate) : 1;
+          const endDateOffset =
+            endDate && startDate ? convertDateToOffset(endDate, startDate) : 1;
 
           // Calculate teeTimeOffsets from existing teeTimes
           const teeTimeOffsets = basicInfo.teeTimes
-            ? basicInfo.teeTimes.map(teeTime => ({
+            ? basicInfo.teeTimes.map((teeTime) => ({
                 startTime: teeTime.startTime,
-                dayOffset: convertDateToOffset(formatDateForInput(teeTime.date), startDate),
+                dayOffset: convertDateToOffset(
+                  formatDateForInput(teeTime.date),
+                  startDate,
+                ),
               }))
             : [
                 { startTime: "07:00", dayOffset: 0 },
@@ -94,39 +102,48 @@ export const competitionSlice = createSlice({
 
           // Convert API dates to offsets if they exist
           if (regPaymentInfo.regStartDate) {
-            processedRegPaymentInfo.registrationOpenOffset = convertDateToOffset(
-              formatDateForInput(regPaymentInfo.regStartDate),
-              processedBasicInfo.startDate,
-            );
+            processedRegPaymentInfo.registrationOpenOffset =
+              convertDateToOffset(
+                formatDateForInput(regPaymentInfo.regStartDate),
+                processedBasicInfo.startDate,
+              );
             delete processedRegPaymentInfo.regStartDate;
           }
 
           if (regPaymentInfo.regEndDate) {
-            processedRegPaymentInfo.registrationCloseOffset = convertDateToOffset(
-              formatDateForInput(regPaymentInfo.regEndDate),
-              processedBasicInfo.startDate,
-            );
+            processedRegPaymentInfo.registrationCloseOffset =
+              convertDateToOffset(
+                formatDateForInput(regPaymentInfo.regEndDate),
+                processedBasicInfo.startDate,
+              );
             delete processedRegPaymentInfo.regEndDate;
           }
 
           if (regPaymentInfo.maxAllowedWithdraDate) {
-            processedRegPaymentInfo.withdrawalDeadlineOffset = convertDateToOffset(
-              formatDateForInput(regPaymentInfo.maxAllowedWithdraDate),
-              processedBasicInfo.startDate,
-            );
+            processedRegPaymentInfo.withdrawalDeadlineOffset =
+              convertDateToOffset(
+                formatDateForInput(regPaymentInfo.maxAllowedWithdraDate),
+                processedBasicInfo.startDate,
+              );
             delete processedRegPaymentInfo.maxAllowedWithdraDate;
           }
         } else if (tournament.regPaymentInfo) {
           // If no start date available, use as-is but log warning
           processedRegPaymentInfo = tournament.regPaymentInfo;
-          console.warn("🚀 WIZARD STATE INIT - Cannot convert regPaymentInfo to offsets, no start date available");
+          console.warn(
+            "🚀 WIZARD STATE INIT - Cannot convert regPaymentInfo to offsets, no start date available",
+          );
         }
 
         // Initialize division round offsets from stored tournament data
         const initialDivisionRoundOffsets = {};
 
-        if (tournament.divisions && Array.isArray(tournament.divisions) && processedBasicInfo?.startDate) {
-          tournament.divisions.forEach(division => {
+        if (
+          tournament.divisions &&
+          Array.isArray(tournament.divisions) &&
+          processedBasicInfo?.startDate
+        ) {
+          tournament.divisions.forEach((division) => {
             if (!division.rounds || !Array.isArray(division.rounds)) return;
 
             const divisionOffsets = {};
@@ -139,7 +156,9 @@ export const competitionSlice = createSlice({
                 try {
                   const roundDate = new Date(round.date);
                   const startDate = new Date(processedBasicInfo.startDate);
-                  const calculatedOffset = Math.floor((roundDate - startDate) / (1000 * 60 * 60 * 24));
+                  const calculatedOffset = Math.floor(
+                    (roundDate - startDate) / (1000 * 60 * 60 * 24),
+                  );
 
                   // Use calculated offset if it's reasonable (0-6 days), otherwise fall back to index
                   if (calculatedOffset >= 0 && calculatedOffset <= 6) {
@@ -158,7 +177,8 @@ export const competitionSlice = createSlice({
 
             if (Object.keys(divisionOffsets).length > 0) {
               // Use the same ID priority as modal lookup: id || clientId || _id
-              const divisionKey = division.id || division.clientId || division._id;
+              const divisionKey =
+                division.id || division.clientId || division._id;
               initialDivisionRoundOffsets[divisionKey] = divisionOffsets;
             }
           });
@@ -184,7 +204,11 @@ export const competitionSlice = createSlice({
         Also check whether there's anything else present in the field, if it's empty then that is the current tab.
         */
         // Omit irrelevant fields
-        const tournamentData = omit(action.payload, ["_id", "__v", "published"]);
+        const tournamentData = omit(action.payload, [
+          "_id",
+          "__v",
+          "published",
+        ]);
 
         let completedSteps = [];
         let activeStep = "";
@@ -194,7 +218,8 @@ export const competitionSlice = createSlice({
           // Map wizard step names to API property names where they differ
           let stepData;
           if (step === "courses") {
-            stepData = tournamentData["courses"] || tournamentData["coursesInfo"]; // API may use either
+            stepData =
+              tournamentData["courses"] || tournamentData["coursesInfo"]; // API may use either
           } else {
             stepData = tournamentData[step]; // Most steps have consistent naming now
           }
@@ -204,14 +229,17 @@ export const competitionSlice = createSlice({
             stepData === undefined ||
             stepData === "" ||
             (Array.isArray(stepData) && stepData.length === 0) ||
-            (typeof stepData === "object" && Object.keys(stepData).length === 0);
+            (typeof stepData === "object" &&
+              Object.keys(stepData).length === 0);
 
           console.log(`🔍 Step validation - ${step}:`, {
             stepData: stepData,
             isEmpty: isEmpty,
             dataType: typeof stepData,
             isArray: Array.isArray(stepData),
-            dataLength: Array.isArray(stepData) ? stepData.length : Object.keys(stepData || {}).length,
+            dataLength: Array.isArray(stepData)
+              ? stepData.length
+              : Object.keys(stepData || {}).length,
           });
 
           if (isEmpty && !activeStep) {
@@ -226,11 +254,14 @@ export const competitionSlice = createSlice({
 
         // Set the active step to the first incomplete one, or the last completed if all are filled
         if (!activeStep) {
-          activeStep = completedSteps[completedSteps.length - 1] || TOURNAMENT_STEPS.BASIC_INFO;
+          activeStep =
+            completedSteps[completedSteps.length - 1] ||
+            TOURNAMENT_STEPS.BASIC_INFO;
         }
 
         // Add the next step to the completed steps if it exists
-        const nextStep = TOURNAMENT_STRUCTURE[completedSteps[completedSteps.length - 1]]?.next;
+        const nextStep =
+          TOURNAMENT_STRUCTURE[completedSteps[completedSteps.length - 1]]?.next;
         if (nextStep) {
           completedSteps.push(nextStep);
         }
@@ -264,7 +295,7 @@ export const competitionSlice = createSlice({
       }
     },
     // To reset the available tabs.
-    resetAvailableSteps: state => {
+    resetAvailableSteps: (state) => {
       state.availableSteps = [TOURNAMENT_STEPS.BASIC_INFO];
     },
     // To initialize all tournaments on the tournaments page.
@@ -293,13 +324,17 @@ export const competitionSlice = createSlice({
           const endDate = formatDateForInput(basicInfo.endDate);
 
           // Calculate endDateOffset from existing dates (allow 0 for same-day tournaments)
-          const endDateOffset = endDate && startDate ? convertDateToOffset(endDate, startDate) : 1;
+          const endDateOffset =
+            endDate && startDate ? convertDateToOffset(endDate, startDate) : 1;
 
           // Calculate teeTimeOffsets from existing teeTimes
           const teeTimeOffsets = basicInfo.teeTimes
-            ? basicInfo.teeTimes.map(teeTime => ({
+            ? basicInfo.teeTimes.map((teeTime) => ({
                 startTime: teeTime.startTime,
-                dayOffset: convertDateToOffset(formatDateForInput(teeTime.date), startDate),
+                dayOffset: convertDateToOffset(
+                  formatDateForInput(teeTime.date),
+                  startDate,
+                ),
               }))
             : [
                 { startTime: "07:00", dayOffset: 0 },
@@ -328,26 +363,29 @@ export const competitionSlice = createSlice({
 
           // Convert API dates to offsets if they exist
           if (regPaymentInfo.regStartDate) {
-            processedRegPaymentInfo.registrationOpenOffset = convertDateToOffset(
-              formatDateForInput(regPaymentInfo.regStartDate),
-              processedBasicInfo.startDate,
-            );
+            processedRegPaymentInfo.registrationOpenOffset =
+              convertDateToOffset(
+                formatDateForInput(regPaymentInfo.regStartDate),
+                processedBasicInfo.startDate,
+              );
             delete processedRegPaymentInfo.regStartDate;
           }
 
           if (regPaymentInfo.regEndDate) {
-            processedRegPaymentInfo.registrationCloseOffset = convertDateToOffset(
-              formatDateForInput(regPaymentInfo.regEndDate),
-              processedBasicInfo.startDate,
-            );
+            processedRegPaymentInfo.registrationCloseOffset =
+              convertDateToOffset(
+                formatDateForInput(regPaymentInfo.regEndDate),
+                processedBasicInfo.startDate,
+              );
             delete processedRegPaymentInfo.regEndDate;
           }
 
           if (regPaymentInfo.maxAllowedWithdraDate) {
-            processedRegPaymentInfo.withdrawalDeadlineOffset = convertDateToOffset(
-              formatDateForInput(regPaymentInfo.maxAllowedWithdraDate),
-              processedBasicInfo.startDate,
-            );
+            processedRegPaymentInfo.withdrawalDeadlineOffset =
+              convertDateToOffset(
+                formatDateForInput(regPaymentInfo.maxAllowedWithdraDate),
+                processedBasicInfo.startDate,
+              );
             delete processedRegPaymentInfo.maxAllowedWithdraDate;
           }
         } else if (tournament.regPaymentInfo) {
@@ -358,8 +396,12 @@ export const competitionSlice = createSlice({
         // 🎯 INITIALIZE DIVISION ROUND OFFSETS: Always recalculate from stored tournament data
         const initialDivisionRoundOffsets = {};
 
-        if (tournament.divisions && Array.isArray(tournament.divisions) && processedBasicInfo.startDate) {
-          tournament.divisions.forEach(division => {
+        if (
+          tournament.divisions &&
+          Array.isArray(tournament.divisions) &&
+          processedBasicInfo.startDate
+        ) {
+          tournament.divisions.forEach((division) => {
             if (!division.rounds || !Array.isArray(division.rounds)) return;
 
             const divisionOffsets = {};
@@ -372,7 +414,9 @@ export const competitionSlice = createSlice({
                 try {
                   const roundDate = new Date(round.date);
                   const startDate = new Date(processedBasicInfo.startDate);
-                  const calculatedOffset = Math.floor((roundDate - startDate) / (1000 * 60 * 60 * 24));
+                  const calculatedOffset = Math.floor(
+                    (roundDate - startDate) / (1000 * 60 * 60 * 24),
+                  );
 
                   // Use calculated offset if it's reasonable (0-6 days), otherwise fall back to index
                   if (calculatedOffset >= 0 && calculatedOffset <= 6) {
@@ -392,7 +436,8 @@ export const competitionSlice = createSlice({
             });
 
             if (Object.keys(divisionOffsets).length > 0) {
-              initialDivisionRoundOffsets[division.clientId || division.id] = divisionOffsets;
+              initialDivisionRoundOffsets[division.clientId || division.id] =
+                divisionOffsets;
             }
           });
         }
@@ -413,7 +458,8 @@ export const competitionSlice = createSlice({
           divisions: tournament.divisions || null,
           registrationInfo: tournament.registrationInfo || null,
           regPayment: processedRegPaymentInfo, // Map from API regPaymentInfo to wizard regPayment
-          colorTheme: tournament.colorTheme || tabConfig.colorTheme.defaultValues, // Initialize with defaults if no existing colorTheme
+          colorTheme:
+            tournament.colorTheme || tabConfig.colorTheme.defaultValues, // Initialize with defaults if no existing colorTheme
           dirtyTabs: [], // Initialize dirtyTabs as empty array
           // 🔥 INITIALIZE WITH STORED OFFSETS: Convert division round dates to offsets on first load
           divisionRoundOffsets: initialDivisionRoundOffsets,
@@ -484,12 +530,17 @@ export const competitionSlice = createSlice({
       }
 
       // Update the day offset
-      state.wizardState.divisionRoundOffsets[divisionId][roundIndex] = dayOffset;
+      state.wizardState.divisionRoundOffsets[divisionId][roundIndex] =
+        dayOffset;
 
-      console.log("💾 ROUND OFFSET UPDATED:", { divisionId, roundIndex, dayOffset });
+      console.log("💾 ROUND OFFSET UPDATED:", {
+        divisionId,
+        roundIndex,
+        dayOffset,
+      });
     },
 
-    clearDirtyTabs: state => {
+    clearDirtyTabs: (state) => {
       state.wizardState.dirtyTabs = [];
     },
 
@@ -521,19 +572,23 @@ export const competitionSlice = createSlice({
 
     // Smart update: Update a round's offset and recalculate all options with constraints
     updateDivisionRoundWithConstraints: (state, action) => {
-      const { divisionId, roundIndex, dayOffset, minDate, maxDate, allRounds } = action.payload;
+      const { divisionId, roundIndex, dayOffset, minDate, maxDate, allRounds } =
+        action.payload;
 
       // 1. Update the offset
       if (!state.wizardState.divisionRoundOffsets[divisionId]) {
         state.wizardState.divisionRoundOffsets[divisionId] = {};
       }
-      state.wizardState.divisionRoundOffsets[divisionId][roundIndex] = dayOffset;
+      state.wizardState.divisionRoundOffsets[divisionId][roundIndex] =
+        dayOffset;
 
       // 2. Recalculate all dropdown options for this division with constraints
       if (minDate && maxDate && allRounds) {
         // Import generateDayOptions here (we'll need to move this or make it available)
         // For now, we'll handle the option generation in the component and pass it to the reducer
-        console.log(`🔄 Updated Round ${roundIndex + 1} for division ${divisionId} to dayOffset ${dayOffset}`);
+        console.log(
+          `🔄 Updated Round ${roundIndex + 1} for division ${divisionId} to dayOffset ${dayOffset}`,
+        );
       }
     },
 
@@ -568,7 +623,8 @@ export const competitionSlice = createSlice({
       if (!state.wizardState.regPaymentInfo) {
         state.wizardState.regPaymentInfo = {};
       }
-      state.wizardState.regPaymentInfo.registrationOpenOffset = registrationOpenOffset;
+      state.wizardState.regPaymentInfo.registrationOpenOffset =
+        registrationOpenOffset;
     },
 
     updateRegistrationCloseOffset: (state, action) => {
@@ -576,7 +632,8 @@ export const competitionSlice = createSlice({
       if (!state.wizardState.regPaymentInfo) {
         state.wizardState.regPaymentInfo = {};
       }
-      state.wizardState.regPaymentInfo.registrationCloseOffset = registrationCloseOffset;
+      state.wizardState.regPaymentInfo.registrationCloseOffset =
+        registrationCloseOffset;
     },
 
     updateWithdrawalDeadlineOffset: (state, action) => {
@@ -584,10 +641,11 @@ export const competitionSlice = createSlice({
       if (!state.wizardState.regPaymentInfo) {
         state.wizardState.regPaymentInfo = {};
       }
-      state.wizardState.regPaymentInfo.withdrawalDeadlineOffset = withdrawalDeadlineOffset;
+      state.wizardState.regPaymentInfo.withdrawalDeadlineOffset =
+        withdrawalDeadlineOffset;
     },
 
-    clearWizardState: state => {
+    clearWizardState: (state) => {
       state.wizardState = {
         tournamentId: null,
         basicInfo: null,
@@ -600,6 +658,12 @@ export const competitionSlice = createSlice({
         divisionRoundOptions: {},
       };
     },
+
+    // Set wizard active state (hide mode tabs when true)
+    setWizardActive: (state, action) => {
+      state.isWizardActive = action.payload;
+    },
+
     // Update division round dates when tournament dates change
     updateDivisionRoundDates: (state, action) => {
       const { newStartDate, newEndDate } = action.payload;
@@ -610,9 +674,9 @@ export const competitionSlice = createSlice({
 
       // Collect all existing round dates to determine the actual date range being used
       const allRoundDates = [];
-      state.activeTournament.divisions.forEach(division => {
+      state.activeTournament.divisions.forEach((division) => {
         if (division.rounds && division.rounds.length > 0) {
-          division.rounds.forEach(round => {
+          division.rounds.forEach((round) => {
             if (round.date) {
               allRoundDates.push(new Date(round.date));
             }
@@ -633,7 +697,7 @@ export const competitionSlice = createSlice({
       const newDurationMs = newTournamentEnd - newTournamentStart;
 
       // Helper function to format date as YYYY-MM-DD
-      const formatDate = date => {
+      const formatDate = (date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
         const day = String(date.getDate()).padStart(2, "0");
@@ -641,44 +705,52 @@ export const competitionSlice = createSlice({
       };
 
       // Update all divisions
-      const updatedDivisions = state.activeTournament.divisions.map(division => {
-        if (!division.rounds || division.rounds.length === 0) return division;
+      const updatedDivisions = state.activeTournament.divisions.map(
+        (division) => {
+          if (!division.rounds || division.rounds.length === 0) return division;
 
-        // Update rounds with proportional mapping
-        const updatedRounds = division.rounds.map(round => {
-          if (!round.date) return round;
+          // Update rounds with proportional mapping
+          const updatedRounds = division.rounds.map((round) => {
+            if (!round.date) return round;
 
-          const oldRoundDate = new Date(round.date);
+            const oldRoundDate = new Date(round.date);
 
-          // Calculate the relative position of this round in the actual round date range (0 to 1)
-          const relativePosition =
-            actualOldDurationMs === 0 ? 0 : (oldRoundDate - actualOldStart) / actualOldDurationMs;
+            // Calculate the relative position of this round in the actual round date range (0 to 1)
+            const relativePosition =
+              actualOldDurationMs === 0
+                ? 0
+                : (oldRoundDate - actualOldStart) / actualOldDurationMs;
 
-          // Map to the new tournament timeline
-          const newRoundDateMs = newTournamentStart.getTime() + relativePosition * newDurationMs;
-          const newRoundDate = new Date(newRoundDateMs);
+            // Map to the new tournament timeline
+            const newRoundDateMs =
+              newTournamentStart.getTime() + relativePosition * newDurationMs;
+            const newRoundDate = new Date(newRoundDateMs);
 
-          // Round to the nearest day
-          newRoundDate.setHours(0, 0, 0, 0);
+            // Round to the nearest day
+            newRoundDate.setHours(0, 0, 0, 0);
 
-          // Ensure the new date is within bounds
-          const boundedDate = new Date(
-            Math.max(newTournamentStart.getTime(), Math.min(newRoundDate.getTime(), newTournamentEnd.getTime())),
-          );
+            // Ensure the new date is within bounds
+            const boundedDate = new Date(
+              Math.max(
+                newTournamentStart.getTime(),
+                Math.min(newRoundDate.getTime(), newTournamentEnd.getTime()),
+              ),
+            );
 
-          const newDateString = formatDate(boundedDate);
+            const newDateString = formatDate(boundedDate);
+
+            return {
+              ...round,
+              date: newDateString,
+            };
+          });
 
           return {
-            ...round,
-            date: newDateString,
+            ...division,
+            rounds: updatedRounds,
           };
-        });
-
-        return {
-          ...division,
-          rounds: updatedRounds,
-        };
-      });
+        },
+      );
 
       // Explicitly assign the updated divisions array
       state.activeTournament.divisions = updatedDivisions;
@@ -694,7 +766,7 @@ export const competitionSlice = createSlice({
     },
 
     // Cancel wizard changes by restoring from last saved activeTournament state
-    cancelWizardChanges: state => {
+    cancelWizardChanges: (state) => {
       if (state.activeTournament) {
         // Re-initialize wizard state from the last saved activeTournament
         // This effectively "cancels" any unsaved changes by restoring clean state
@@ -708,13 +780,17 @@ export const competitionSlice = createSlice({
           const endDate = formatDateForInput(basicInfo.endDate);
 
           // Calculate endDateOffset from existing dates (allow 0 for same-day tournaments)
-          const endDateOffset = endDate && startDate ? convertDateToOffset(endDate, startDate) : 1;
+          const endDateOffset =
+            endDate && startDate ? convertDateToOffset(endDate, startDate) : 1;
 
           // Calculate teeTimeOffsets from existing teeTimes
           const teeTimeOffsets = basicInfo.teeTimes
-            ? basicInfo.teeTimes.map(teeTime => ({
+            ? basicInfo.teeTimes.map((teeTime) => ({
                 startTime: teeTime.startTime,
-                dayOffset: convertDateToOffset(formatDateForInput(teeTime.date), startDate),
+                dayOffset: convertDateToOffset(
+                  formatDateForInput(teeTime.date),
+                  startDate,
+                ),
               }))
             : [
                 { startTime: "07:00", dayOffset: 0 },
@@ -742,26 +818,29 @@ export const competitionSlice = createSlice({
 
           // Convert API dates to offsets if they exist
           if (regPaymentInfo.regStartDate) {
-            processedRegPaymentInfo.registrationOpenOffset = convertDateToOffset(
-              formatDateForInput(regPaymentInfo.regStartDate),
-              processedBasicInfo.startDate,
-            );
+            processedRegPaymentInfo.registrationOpenOffset =
+              convertDateToOffset(
+                formatDateForInput(regPaymentInfo.regStartDate),
+                processedBasicInfo.startDate,
+              );
             delete processedRegPaymentInfo.regStartDate;
           }
 
           if (regPaymentInfo.regEndDate) {
-            processedRegPaymentInfo.registrationCloseOffset = convertDateToOffset(
-              formatDateForInput(regPaymentInfo.regEndDate),
-              processedBasicInfo.startDate,
-            );
+            processedRegPaymentInfo.registrationCloseOffset =
+              convertDateToOffset(
+                formatDateForInput(regPaymentInfo.regEndDate),
+                processedBasicInfo.startDate,
+              );
             delete processedRegPaymentInfo.regEndDate;
           }
 
           if (regPaymentInfo.maxAllowedWithdraDate) {
-            processedRegPaymentInfo.withdrawalDeadlineOffset = convertDateToOffset(
-              formatDateForInput(regPaymentInfo.maxAllowedWithdraDate),
-              processedBasicInfo.startDate,
-            );
+            processedRegPaymentInfo.withdrawalDeadlineOffset =
+              convertDateToOffset(
+                formatDateForInput(regPaymentInfo.maxAllowedWithdraDate),
+                processedBasicInfo.startDate,
+              );
             delete processedRegPaymentInfo.maxAllowedWithdraDate;
           }
         } else if (tournament.regPaymentInfo) {
@@ -781,10 +860,14 @@ export const competitionSlice = createSlice({
           divisionRoundOptions: {},
         };
 
-        console.log("✅ cancelWizardChanges: Wizard state restored from activeTournament");
+        console.log(
+          "✅ cancelWizardChanges: Wizard state restored from activeTournament",
+        );
         console.log("✅ Restored wizard state:", state.wizardState);
       } else {
-        console.log("⚠️ cancelWizardChanges: No activeTournament to restore from");
+        console.log(
+          "⚠️ cancelWizardChanges: No activeTournament to restore from",
+        );
       }
     },
   },
@@ -816,6 +899,7 @@ export const {
   clearWizardState,
   setWizardTournamentId,
   cancelWizardChanges,
+  setWizardActive,
 } = competitionSlice.actions;
 
 export default competitionSlice.reducer;

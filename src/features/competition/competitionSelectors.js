@@ -1,42 +1,54 @@
 import { createSelector } from "@reduxjs/toolkit";
 
-export const tournamentsSelector = state => state.competitions.tournaments;
+export const tournamentsSelector = (state) => state.competitions.tournaments;
 
-export const availableStepsSelector = state => state.competitions.availableSteps;
+export const availableStepsSelector = (state) =>
+  state.competitions.availableSteps;
 
-export const activeTournamentSelector = state => state.competitions.activeTournament;
+export const activeTournamentSelector = (state) =>
+  state.competitions.activeTournament;
 
-export const allUserNamesSelector = state => state.competitions.allUsers;
+export const allUserNamesSelector = (state) => state.competitions.allUsers;
 
-export const teesetsSelector = createSelector([state => state.competitions.teesets], teesets => {
-  return teesets || [];
-});
+export const isWizardActiveSelector = (state) =>
+  state.competitions.isWizardActive;
+
+export const teesetsSelector = createSelector(
+  [(state) => state.competitions.teesets],
+  (teesets) => {
+    return teesets || [];
+  },
+);
 
 // Wizard state selectors
-export const wizardStateSelector = state => state.competitions.wizardState;
+export const wizardStateSelector = (state) => state.competitions.wizardState;
 
-export const wizardTournamentIdSelector = state => state.competitions.wizardState.tournamentId;
+export const wizardTournamentIdSelector = (state) =>
+  state.competitions.wizardState.tournamentId;
 
 export const wizardDirtyTabsSelector = createSelector(
-  [state => state.competitions.wizardState.dirtyTabs],
-  dirtyTabs => {
+  [(state) => state.competitions.wizardState.dirtyTabs],
+  (dirtyTabs) => {
     // Always return a new array to ensure proper memoization
     return Array.isArray(dirtyTabs) ? [...dirtyTabs] : [];
   },
 );
 
-export const wizardTabSelector = tab => state => state.competitions.wizardState[tab];
+export const wizardTabSelector = (tab) => (state) =>
+  state.competitions.wizardState[tab];
 
-export const divisionRoundOffsetsSelector = state => state.competitions.wizardState.divisionRoundOffsets;
+export const divisionRoundOffsetsSelector = (state) =>
+  state.competitions.wizardState.divisionRoundOffsets;
 
-export const divisionRoundOptionsSelector = state => state.competitions.wizardState.divisionRoundOptions;
+export const divisionRoundOptionsSelector = (state) =>
+  state.competitions.wizardState.divisionRoundOptions;
 
 // Memoized selector for divisions with calculated dates
 export const divisionsWithDatesSelector = createSelector(
   [
-    state => state.competitions.wizardState.basicInfo,
-    state => state.competitions.wizardState.divisions,
-    state => state.competitions.wizardState.divisionRoundOffsets,
+    (state) => state.competitions.wizardState.basicInfo,
+    (state) => state.competitions.wizardState.divisions,
+    (state) => state.competitions.wizardState.divisionRoundOffsets,
   ],
   (basicInfo, divisions, offsets) => {
     if (!basicInfo?.startDate || !divisions) {
@@ -57,7 +69,7 @@ export const divisionsWithDatesSelector = createSelector(
       return `${newYear}-${newMonth}-${newDay}`;
     };
 
-    const result = divisions.map(division => {
+    const result = divisions.map((division) => {
       const divisionId = division.clientId || division._id || division.id;
       const divisionOffsets = offsets[divisionId] || {};
 
@@ -87,11 +99,17 @@ export const divisionsWithDatesSelector = createSelector(
 );
 
 // Memoized selector for activeTournament with courses fallback
-export const activeTournamentWithCoursesSelector = createSelector([activeTournamentSelector], activeTournament => {
-  return activeTournament || { courses: [] };
-});
+export const activeTournamentWithCoursesSelector = createSelector(
+  [activeTournamentSelector],
+  (activeTournament) => {
+    return activeTournament || { courses: [] };
+  },
+);
 
 // Memoized selector for courses array
-export const coursesArraySelector = createSelector([state => state.courses], courses => {
-  return Array.isArray(courses) ? courses : [];
-});
+export const coursesArraySelector = createSelector(
+  [(state) => state.courses],
+  (courses) => {
+    return Array.isArray(courses) ? courses : [];
+  },
+);

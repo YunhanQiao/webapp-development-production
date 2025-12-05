@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 const Tabs = () => {
   // const { user } = useUserContext();
-  const user = useSelector(state => state.user.user);
+  const user = useSelector((state) => state.user.user);
   const navigate = useNavigate();
   const location = useLocation();
   // let userAuthenticated = user.authenticated;
@@ -13,7 +13,10 @@ const Tabs = () => {
   // if (JSON.stringify(user) !== "{}") {
   //   userAuthenticated = user.accountInfo.authenticated;
   // }
-  const userAuthenticated = useSelector(state => state.user.authenticated);
+  const userAuthenticated = useSelector((state) => state.user.authenticated);
+  const isWizardActive = useSelector(
+    (state) => state.competitions?.isWizardActive || false,
+  );
 
   const tabsOriginal = {
     feedActive: true,
@@ -85,19 +88,31 @@ const Tabs = () => {
       });
     } else if (path === "/rounds" || path.startsWith("/rounds/")) {
       setTabStatus(() => {
-        return cloneDeep({ ...tabsOriginal, ...{ roundsActive: true, feedActive: false } });
+        return cloneDeep({
+          ...tabsOriginal,
+          ...{ roundsActive: true, feedActive: false },
+        });
       });
     } else if (path === "/courses" || path.startsWith("/courses/")) {
       setTabStatus(() => {
-        return cloneDeep({ ...tabsOriginal, ...{ courseActive: true, feedActive: false } });
+        return cloneDeep({
+          ...tabsOriginal,
+          ...{ courseActive: true, feedActive: false },
+        });
       });
     } else if (path === "/buddies" || path.startsWith("/buddies/")) {
       setTabStatus(() => {
-        return cloneDeep({ ...tabsOriginal, ...{ buddiesActive: true, feedActive: false } });
+        return cloneDeep({
+          ...tabsOriginal,
+          ...{ buddiesActive: true, feedActive: false },
+        });
       });
     } else if (path === "/competitions" || path.startsWith("/competitions/")) {
       setTabStatus(() => {
-        return cloneDeep({ ...tabsOriginal, ...{ tournamentsActive: true, feedActive: false } });
+        return cloneDeep({
+          ...tabsOriginal,
+          ...{ tournamentsActive: true, feedActive: false },
+        });
       });
     }
   }, [location.pathname]);
@@ -105,7 +120,7 @@ const Tabs = () => {
   return (
     <div
       id="modeTabs"
-      className={`modetab-container ${userAuthenticated ? "" : "hidden"}`}
+      className={`modetab-container ${userAuthenticated && !isWizardActive ? "" : "hidden"}`}
       role="tablist"
       aria-label="App Modes"
     >
