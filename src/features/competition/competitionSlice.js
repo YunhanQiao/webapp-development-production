@@ -620,28 +620,28 @@ export const competitionSlice = createSlice({
     // 🎯 REGISTRATION DATE OFFSET ACTIONS - Negative offsets for dates before tournament start
     updateRegistrationOpenOffset: (state, action) => {
       const { registrationOpenOffset } = action.payload;
-      if (!state.wizardState.regPaymentInfo) {
-        state.wizardState.regPaymentInfo = {};
+      if (!state.wizardState.regPayment) {
+        state.wizardState.regPayment = {};
       }
-      state.wizardState.regPaymentInfo.registrationOpenOffset =
+      state.wizardState.regPayment.registrationOpenOffset =
         registrationOpenOffset;
     },
 
     updateRegistrationCloseOffset: (state, action) => {
       const { registrationCloseOffset } = action.payload;
-      if (!state.wizardState.regPaymentInfo) {
-        state.wizardState.regPaymentInfo = {};
+      if (!state.wizardState.regPayment) {
+        state.wizardState.regPayment = {};
       }
-      state.wizardState.regPaymentInfo.registrationCloseOffset =
+      state.wizardState.regPayment.registrationCloseOffset =
         registrationCloseOffset;
     },
 
     updateWithdrawalDeadlineOffset: (state, action) => {
       const { withdrawalDeadlineOffset } = action.payload;
-      if (!state.wizardState.regPaymentInfo) {
-        state.wizardState.regPaymentInfo = {};
+      if (!state.wizardState.regPayment) {
+        state.wizardState.regPayment = {};
       }
-      state.wizardState.regPaymentInfo.withdrawalDeadlineOffset =
+      state.wizardState.regPayment.withdrawalDeadlineOffset =
         withdrawalDeadlineOffset;
     },
 
