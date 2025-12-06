@@ -371,14 +371,14 @@ test.describe("Division Round Dates Update When Tournament Dates Change", () => 
       // TEST: Verify the offset is still "2" (Day 3)
       expect(updatedRoundValue).toBe("2");
       console.log(
-        "✅ TEST 3-a PASSED: Round offset preserved (still Day 3 = offset 2)",
+        "✅ TEST 1 PASSED: Round offset preserved (still Day 3 = offset 2)",
       );
 
       // TEST: Verify the date text shows the new tournament date (July 3)
       // Note: Date format is M/D/YYYY not MM/DD/YYYY
       expect(updatedRoundText).toContain("7/3/2026");
       console.log(
-        "✅ TEST 3-b PASSED: Round date updated to new tournament timeline (7/3/2026)",
+        "✅ TEST 2 PASSED: Round date updated to new tournament timeline (7/3/2026)",
       );
 
       // Close the modal
