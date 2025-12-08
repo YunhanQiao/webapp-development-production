@@ -92,11 +92,11 @@ async function navigateToBasicInfoTab(page) {
   });
 }
 
-test.describe("Tournament Upload - Combined Test", () => {
-  test("Upload Tests: Logo, Rules, Prizes, and Additional Info", async ({
+test.describe("Tournament UI Test - Combined Test", () => {
+  test("should upload logos, docs and search and add admins from database", async ({
     page,
   }) => {
-    // Login once for all upload tests
+    // Login and navigate to Basic Info tab
     await loginWithCredentials(page);
     await dismissInitialAlerts(page);
     await navigateToBasicInfoTab(page);
@@ -186,5 +186,131 @@ test.describe("Tournament Upload - Combined Test", () => {
     }
 
     console.log("\n🎉 ALL UPLOAD TESTS COMPLETED: Logo, Rules, and Prizes!");
+
+    console.log("\n🧪 TEST 4: Admin Field Search and Selection");
+
+    // ==========================================
+    // TEST 4-a: Search for Test User One
+    // ==========================================
+    console.log("\n🔍 TEST 4-a: Searching for 'Test User One'");
+
+    // Click the "Add Admin..." button to open the modal
+    const addAdminButton = page.getByRole("button", { name: "Add Admin..." });
+    await addAdminButton.waitFor({ state: "visible", timeout: 5000 });
+    await addAdminButton.click();
+    await page.waitForTimeout(500);
+
+    // Wait for the modal to appear
+    const adminModal = page.locator(".modal.show, .admin-modal");
+    await adminModal.waitFor({ state: "visible", timeout: 3000 });
+
+    // Find the search input in the modal with placeholder "Type name of user"
+    const adminSearchInput = page.locator(
+      'input[placeholder="Type name of user"]',
+    );
+    await adminSearchInput.waitFor({ state: "visible", timeout: 5000 });
+
+    // Type the first test user's name
+    await adminSearchInput.fill("Test User One");
+    await page.waitForTimeout(1000); // Wait for search results
+
+    // Look for the user in the dropdown/results
+    const testUser1Option = page.getByText("Test User One", { exact: false });
+
+    const isUser1Visible = await testUser1Option
+      .isVisible({ timeout: 3000 })
+      .catch(() => false);
+
+    if (isUser1Visible) {
+      // Click to select the user
+      await testUser1Option.click();
+      await page.waitForTimeout(500);
+
+      // Click "Add admin" button in modal (use exact match and within modal)
+      const addAdminModalButton = adminModal.getByRole("button", {
+        name: "Add admin",
+        exact: true,
+      });
+      await addAdminModalButton.click();
+      await page.waitForTimeout(1000);
+
+      // Verify the user appears below the "Add Admin" field (in the main form)
+      const addedAdmin1 = page
+        .locator('input[value*="Test User One"]')
+        .or(page.locator('input[value*="User One"]'));
+
+      const isAdminAdded = await addedAdmin1
+        .isVisible({ timeout: 3000 })
+        .catch(() => false);
+
+      expect(isAdminAdded).toBe(true);
+      console.log(
+        "✅ TEST 4-a PASSED: User 'Test User One' appears below Add Admin field",
+      );
+    } else {
+      console.log(
+        "❌ TEST 4-a FAILED: 'Test User One' not found in search results",
+      );
+      expect(isUser1Visible).toBe(true); // This will fail the test
+    }
+
+    // ==========================================
+    // TEST 4-b: Search for Test User Two
+    // ==========================================
+    console.log("\n🔍 TEST 4-b: Searching for 'Test User Two'");
+
+    // Click the "Add Admin..." button again to open the modal
+    await addAdminButton.click();
+    await page.waitForTimeout(500);
+
+    // Wait for modal and search input
+    await adminModal.waitFor({ state: "visible", timeout: 3000 });
+    await adminSearchInput.waitFor({ state: "visible", timeout: 5000 });
+
+    // Clear and search for second user
+    await adminSearchInput.clear();
+    await adminSearchInput.fill("Test User Two");
+    await page.waitForTimeout(1000);
+
+    const testUser2Option = page.getByText("Test User Two", { exact: false });
+
+    const isUser2Visible = await testUser2Option
+      .isVisible({ timeout: 3000 })
+      .catch(() => false);
+
+    if (isUser2Visible) {
+      // Click to select the user
+      await testUser2Option.click();
+      await page.waitForTimeout(500);
+
+      // Click "Add admin" button in modal (use exact match and within modal)
+      const addAdminModalButton = adminModal.getByRole("button", {
+        name: "Add admin",
+        exact: true,
+      });
+      await addAdminModalButton.click();
+      await page.waitForTimeout(1000);
+
+      // Verify the user appears below the "Add Admin" field
+      const addedAdmin2 = page
+        .locator('input[value*="Test User Two"]')
+        .or(page.locator('input[value*="User Two"]'));
+
+      const isAdmin2Added = await addedAdmin2
+        .isVisible({ timeout: 3000 })
+        .catch(() => false);
+
+      expect(isAdmin2Added).toBe(true);
+      console.log(
+        "✅ TEST 4-b PASSED: User 'Test User Two' appears below Add Admin field",
+      );
+    } else {
+      console.log(
+        "❌ TEST 4-b FAILED: 'Test User Two' not found in search results",
+      );
+      expect(isUser2Visible).toBe(true); // This will fail the test
+    }
+
+    console.log("\n🎉 ADMIN FIELD TEST COMPLETED!");
   });
 });
