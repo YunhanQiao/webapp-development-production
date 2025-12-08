@@ -353,6 +353,14 @@ test.describe("Divisions Save Buttons - Combined Test", () => {
       await expect(page.url()).toMatch(/courses/i);
       console.log("✅ TEST 1 PASSED: Previous returns to Courses tab");
 
+      // Exit the wizard by clicking Cancel to get back to competitions list
+      const cancelButtonTest1 = page.getByRole("button", {
+        name: "Cancel Changes & Exit",
+      });
+      await cancelButtonTest1.click();
+      await page.waitForTimeout(1000);
+      await expect(page.url()).toMatch(/competitions\/?$/);
+
       // Clean up this tournament
       await cleanupTestTournament(createdTournamentName);
       createdTournamentName = null;
@@ -364,26 +372,78 @@ test.describe("Divisions Save Buttons - Combined Test", () => {
 
       createdTournamentName = await navigateToDivisionsTab(page);
 
+      // Add a division (but don't save)
+      const addDivisionButtonTest2 = page.getByRole("button", {
+        name: "Add Division to Tournament",
+      });
+      await addDivisionButtonTest2.click();
+      await page.waitForTimeout(1000);
+
+      // Fill division form
+      await page.locator("#name").fill("Test Division");
+      await page.locator("#entryFee").fill("50");
+
+      // Select gender (All)
+      const genderSelectTest2 = page.locator("#gender");
+      await genderSelectTest2.selectOption("All");
+
+      // Fill age range
+      await page.locator("#minAge").fill("18");
+      await page.locator("#maxAge").fill("99");
+
+      // Click the modal Save button to add division to UI
+      await page.waitForTimeout(2000);
+      const modalTest2 = page.locator(".modal:visible").first();
+      const addDivisionSubmitButtonTest2 = modalTest2.locator(
+        'button[type="submit"]',
+      );
+      await addDivisionSubmitButtonTest2.click();
+      await page.waitForTimeout(2000);
+
+      // Verify division appears in table (UI only, not saved yet)
+      const divisionRowTest2 = page.locator("tbody tr").first();
+      await expect(divisionRowTest2).toContainText("Test Division");
+      // console.log("✅ Division added to UI (not saved yet)");
+
       // Click Cancel button
       const cancelButton = page.getByRole("button", {
         name: "Cancel Changes & Exit",
       });
       await cancelButton.click();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(2000);
 
       // Should return to competitions list
       await expect(page.url()).toMatch(/competitions\/?$/);
       console.log("✅ TEST 2-a PASSED: Navigated back to competitions list");
 
-      // Verify tournament does NOT appear in the list (was not saved)
-      await page.waitForTimeout(2000);
-      const tournamentRow = page.locator(`text="${createdTournamentName}"`);
-      await expect(tournamentRow).toHaveCount(0);
+      // Verify tournament DOES appear in list (previous tabs were saved)
+      await page.waitForTimeout(1000);
+      const tournamentRowTest2 = page.locator(
+        `text="${createdTournamentName}"`,
+      );
+      await expect(tournamentRowTest2.first()).toBeVisible({ timeout: 5000 });
       console.log(
-        "✅ TEST 2-b PASSED: Tournament not in list - Cancel did not save changes",
+        "✅ TEST 2-b PASSED: Tournament appears in list (previous tabs saved)",
       );
 
-      // Clean up this tournament (in case it was partially saved)
+      // Verify Divisions changes were NOT saved in database (should be empty array)
+      const TestCompetition = global.TestCompetition;
+      const tournamentAfter = await TestCompetition.findOne({
+        "basicInfo.name": createdTournamentName,
+      });
+      const savedDivisions = tournamentAfter.divisions || [];
+
+      if (savedDivisions.length === 0) {
+        console.log(
+          "✅ TEST 2-c PASSED: Divisions not saved in database (Cancel worked correctly)",
+        );
+      } else {
+        throw new Error(
+          `Divisions were saved despite clicking Cancel. Found ${savedDivisions.length} division(s) in database`,
+        );
+      }
+
+      // Clean up this tournament
       await cleanupTestTournament(createdTournamentName);
       createdTournamentName = null;
 
@@ -435,12 +495,12 @@ test.describe("Divisions Save Buttons - Combined Test", () => {
           if (method === "POST" || method === "PUT") {
             const url = request.url();
             const postData = request.postData ? request.postData() : null;
-            console.log(
-              "CAPTURED REQUEST ->",
-              method,
-              url,
-              postData ? postData.slice(0, 1000) : null,
-            );
+            // console.log(
+            //   "CAPTURED REQUEST ->",
+            //   method,
+            //   url,
+            //   postData ? postData.slice(0, 1000) : null,
+            // );
             capturedRequests.push({ method, url, postData });
           }
         } catch (e) {
@@ -460,7 +520,7 @@ test.describe("Divisions Save Buttons - Combined Test", () => {
       // Unregister listener
       page.off("requestfinished", onRequestFinished);
 
-      console.log("Captured requests count:", capturedRequests.length);
+      // console.log("Captured requests count:", capturedRequests.length);
 
       // Should return to competitions list
       await expect(page.url()).toMatch(/competitions\/?$/, { timeout: 10000 });
@@ -482,9 +542,9 @@ test.describe("Divisions Save Buttons - Combined Test", () => {
             );
             if (m && m[1]) {
               const competitionId = m[1];
-              console.log(
-                `🔎 Verifying divisions by competition id: ${competitionId}`,
-              );
+              // console.log(
+              //   `🔎 Verifying divisions by competition id: ${competitionId}`,
+              // );
               await verifyDivisionsInDBById(competitionId, [
                 { name: "Open Division" },
               ]);
