@@ -264,6 +264,14 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
       });
       console.log("✅ TEST 1 PASSED: Previous returns to Basic Info tab");
 
+      // Exit the wizard by clicking Cancel to get back to competitions list
+      const cancelButtonTest1 = page.getByRole("button", {
+        name: "Cancel Changes & Exit",
+      });
+      await cancelButtonTest1.click();
+      await page.waitForTimeout(1000);
+      await expect(page.url()).toMatch(/competitions\/?$/);
+
       // Clean up this tournament
       await cleanupTestTournament(createdTournamentName);
       createdTournamentName = null;
@@ -278,27 +286,47 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
       // Fill some RegPay data but don't save
       await page.locator("#regStartDate").fill("2026-05-01");
       await page.locator("#regEndDate").fill("2026-05-31");
+      await page.waitForTimeout(500);
 
       // Click Cancel button
       const cancelButton = page.getByRole("button", {
         name: "Cancel Changes & Exit",
       });
       await cancelButton.click();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(2000);
 
       // Should return to competitions list
       await expect(page.url()).toMatch(/competitions\/?$/);
       console.log("✅ TEST 2-a PASSED: Navigated back to competitions list");
 
-      // Verify tournament does NOT appear in the list (was not saved)
-      await page.waitForTimeout(2000);
+      // Verify tournament DOES appear in list (Basic Info was saved)
+      await page.waitForTimeout(1000);
       const tournamentRow = page.locator(`text="${createdTournamentName}"`);
-      await expect(tournamentRow).toHaveCount(0);
+      await expect(tournamentRow.first()).toBeVisible({ timeout: 5000 });
       console.log(
-        "✅ TEST 2-b PASSED: Tournament not in list - Cancel did not save changes",
+        "✅ TEST 2-b PASSED: Tournament appears in list (Basic Info saved)",
       );
 
-      // Clean up this tournament (in case it was partially saved)
+      // Verify RegPay changes were NOT saved in database (should remain empty/null)
+      const TestCompetition = global.TestCompetition;
+      const tournamentAfter = await TestCompetition.findOne({
+        "basicInfo.name": createdTournamentName,
+      });
+      const savedRegStartDate =
+        tournamentAfter.regPayInfo?.regStartDate || null;
+      const savedRegEndDate = tournamentAfter.regPayInfo?.regEndDate || null;
+
+      if (savedRegStartDate === null && savedRegEndDate === null) {
+        console.log(
+          "✅ TEST 2-c PASSED: RegPay changes not saved in database (Cancel worked correctly)",
+        );
+      } else {
+        throw new Error(
+          `RegPay changes were saved despite clicking Cancel. Found: regStartDate=${savedRegStartDate}, regEndDate=${savedRegEndDate}`,
+        );
+      }
+
+      // Clean up this tournament
       await cleanupTestTournament(createdTournamentName);
       createdTournamentName = null;
 
