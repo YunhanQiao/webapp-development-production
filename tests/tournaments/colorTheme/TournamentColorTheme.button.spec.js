@@ -178,16 +178,26 @@ async function dismissInitialAlerts(page) {
 }
 
 async function navigateToColorThemeTab(page) {
-  const tournamentsModeButton = page.getByRole("tab", {
-    name: "Competitions",
-  });
-  await tournamentsModeButton.waitFor({ state: "visible" });
-  await tournamentsModeButton.click();
+  // Check if we're already on competitions page
+  const currentUrl = page.url();
+  if (!currentUrl.includes("/competitions")) {
+    // Only click Competitions tab if we're not already there
+    const tournamentsModeButton = page.getByRole("tab", {
+      name: "Competitions",
+    });
+    await tournamentsModeButton.waitFor({ state: "visible" });
+    await tournamentsModeButton.click();
+    await page.waitForTimeout(500);
+  }
+
+  // Wait for the competitions page to be fully loaded
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(1000);
 
   const newTournamentButton = page.getByRole("button", {
     name: "New Tournament",
   });
-  await newTournamentButton.waitFor({ state: "visible" });
+  await newTournamentButton.waitFor({ state: "visible", timeout: 10000 });
   await newTournamentButton.click();
 
   // ========== Fill Basic Info tab (required) ==========
@@ -276,6 +286,14 @@ test.describe("Color Theme Save Buttons - Combined Test", () => {
         "✅ TEST 1 PASSED: Previous returns to Registration & Payment tab",
       );
 
+      // Exit the wizard by clicking Cancel to get back to competitions list
+      const cancelButtonTest1 = page.getByRole("button", {
+        name: "Cancel Changes & Exit",
+      });
+      await cancelButtonTest1.click();
+      await page.waitForTimeout(1000);
+      await expect(page.url()).toMatch(/competitions\/?$/);
+
       // Clean up this tournament
       await cleanupTestTournament(createdTournamentName);
       createdTournamentName = null;
@@ -287,24 +305,75 @@ test.describe("Color Theme Save Buttons - Combined Test", () => {
 
       createdTournamentName = await navigateToColorThemeTab(page);
 
-      // Fill some color data but don't save
+      // Get the default color values from database BEFORE making changes
+      await page.waitForTimeout(1000);
+      const TestCompetition = global.TestCompetition;
+      const tournamentBefore = await TestCompetition.findOne({
+        "basicInfo.name": createdTournamentName,
+      }).lean();
+
+      const originalTitleText = tournamentBefore.colorTheme?.titleText || "";
+      const originalHeaderRowBg =
+        tournamentBefore.colorTheme?.headerRowBg || "";
+      // Make changes to color data in the UI (but don't save)
       await page.locator("#titleText").fill("#111111");
       await page.locator("#headerRowBg").fill("#222222");
+      await page.waitForTimeout(500);
 
       // Click Cancel button
       const cancelButton = page.getByRole("button", {
         name: "Cancel Changes & Exit",
       });
       await cancelButton.click();
+
+      // Wait for the modal to close completely
+      const modal = page.locator(".mode-page.action-dialog");
+      await modal.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+
       await page.waitForTimeout(1000);
 
       // Should return to competitions list
       await expect(page.url()).toMatch(/competitions\/?$/);
-      console.log(
-        "✅ TEST 2 PASSED: Cancel returns to competitions list without saving Color Theme changes",
-      );
+      console.log("✅ TEST 2-a PASSED: Navigated back to competitions list");
 
-      // Clean up this tournament (only Basic Info and RegPay saved)
+      // Reload the competitions page to ensure clean state
+      await page.reload({ waitUntil: "networkidle" });
+      await page.waitForTimeout(1500);
+      await dismissInitialAlerts(page);
+
+      // Verify tournament DOES appear in the list (because Basic Info and RegPay were saved)
+      // but Color Theme changes were not saved
+      await page.waitForTimeout(2000);
+      const tournamentRow = page.locator(`text="${createdTournamentName}"`);
+      await expect(tournamentRow.first()).toBeVisible({ timeout: 5000 });
+      console.log("✅ TEST 2-b PASSED: Tournament appears in list");
+
+      // Verify Color Theme changes were NOT saved in database
+      await page.waitForTimeout(2000);
+      const tournamentAfter = await TestCompetition.findOne({
+        "basicInfo.name": createdTournamentName,
+      }).lean();
+
+      const titleTextAfter = tournamentAfter.colorTheme?.titleText || "";
+      const headerRowBgAfter = tournamentAfter.colorTheme?.headerRowBg || "";
+
+      // The colors should still match the original values, NOT the changes we made (#111111 and #222222)
+      if (
+        titleTextAfter === originalTitleText &&
+        headerRowBgAfter === originalHeaderRowBg
+      ) {
+        console.log(
+          "✅ TEST 2-c PASSED: Color Theme changes not saved in database (Cancel worked correctly)",
+        );
+      } else {
+        throw new Error(
+          `Color Theme changes were saved despite clicking Cancel!\n` +
+            `Expected: titleText="${originalTitleText}", headerRowBg="${originalHeaderRowBg}"\n` +
+            `Got: titleText="${titleTextAfter}", headerRowBg="${headerRowBgAfter}"`,
+        );
+      }
+
+      // Clean up this tournament
       await cleanupTestTournament(createdTournamentName);
       createdTournamentName = null;
 
@@ -357,8 +426,8 @@ test.describe("Color Theme Save Buttons - Combined Test", () => {
 
       // Verify tournament appears in list
       await page.waitForTimeout(2000);
-      const tournamentRow = page.locator(`text="${createdTournamentName}"`);
-      await expect(tournamentRow.first()).toBeVisible({ timeout: 5000 });
+      const tournamentRow3 = page.locator(`text="${createdTournamentName}"`);
+      await expect(tournamentRow3.first()).toBeVisible({ timeout: 5000 });
       console.log("✅ TEST 3-b PASSED: Tournament appears in list after save");
 
       // Verify all 13 color fields saved in database
