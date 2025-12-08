@@ -88,10 +88,6 @@ async function verifyCoursesInDB(tournamentName, expectedCourses) {
       );
     }
 
-    console.log(
-      `📊 Database: Tournament has ${tournament.courses.length} course(s)`,
-    );
-
     // Verify expected number of courses if provided
     if (expectedCourses && expectedCourses.length > 0) {
       if (tournament.courses.length !== expectedCourses.length) {
@@ -314,6 +310,14 @@ test.describe("Courses Save Buttons - Combined Test", () => {
       });
       console.log("✅ TEST 1 PASSED: Previous returns to Color Theme tab");
 
+      // Exit the wizard by clicking Cancel to get back to competitions list
+      const cancelButtonTest1 = page.getByRole("button", {
+        name: "Cancel Changes & Exit",
+      });
+      await cancelButtonTest1.click();
+      await page.waitForTimeout(1000);
+      await expect(page.url()).toMatch(/competitions\/?$/);
+
       // Clean up this tournament
       await cleanupTestTournament(createdTournamentName);
       createdTournamentName = null;
@@ -325,26 +329,61 @@ test.describe("Courses Save Buttons - Combined Test", () => {
 
       createdTournamentName = await navigateToCoursesTab(page);
 
+      // Add a course by searching and selecting one (but don't save)
+      const searchInputTest2 = page.locator("#courseInputBoxId");
+      await searchInputTest2.fill("Golf");
+      await page.waitForTimeout(1500);
+
+      // Wait for search results and click first one
+      const dropdownItemsTest2 = page.locator(".list-group-item");
+      await dropdownItemsTest2
+        .first()
+        .waitFor({ state: "visible", timeout: 5000 });
+      await dropdownItemsTest2.first().click();
+      await page.waitForTimeout(1000);
+
+      // Verify at least one course is present in UI
+      const courseRowsTest2 = page.locator(".courses-table tbody tr");
+      const courseCountTest2 = await courseRowsTest2.count();
+      expect(courseCountTest2).toBeGreaterThan(0);
+
       // Click Cancel button
       const cancelButton = page.getByRole("button", {
         name: "Cancel Changes & Exit",
       });
       await cancelButton.click();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(2000);
 
       // Should return to competitions list
       await expect(page.url()).toMatch(/competitions\/?$/);
       console.log("✅ TEST 2-a PASSED: Navigated back to competitions list");
 
-      // Verify tournament does NOT appear in the list (was not saved)
-      await page.waitForTimeout(2000);
+      // Verify tournament DOES appear in list (Basic Info/RegPay/ColorTheme were saved)
+      await page.waitForTimeout(1000);
       const tournamentRow = page.locator(`text="${createdTournamentName}"`);
-      await expect(tournamentRow).toHaveCount(0);
+      await expect(tournamentRow.first()).toBeVisible({ timeout: 5000 });
       console.log(
-        "✅ TEST 2-b PASSED: Tournament not in list - Cancel did not save changes",
+        "✅ TEST 2-b PASSED: Tournament appears in list (previous tabs saved)",
       );
 
-      // Clean up this tournament (in case it was partially saved)
+      // Verify Courses changes were NOT saved in database (should be empty array or no courses)
+      const TestCompetition = global.TestCompetition;
+      const tournamentAfter = await TestCompetition.findOne({
+        "basicInfo.name": createdTournamentName,
+      });
+      const savedCourses = tournamentAfter.courses || [];
+
+      if (savedCourses.length === 0) {
+        console.log(
+          "✅ TEST 2-c PASSED: Courses not saved in database (Cancel worked correctly)",
+        );
+      } else {
+        throw new Error(
+          `Courses were saved despite clicking Cancel. Found ${savedCourses.length} course(s) in database`,
+        );
+      }
+
+      // Clean up this tournament
       await cleanupTestTournament(createdTournamentName);
       createdTournamentName = null;
 
@@ -370,7 +409,6 @@ test.describe("Courses Save Buttons - Combined Test", () => {
       const courseRows = page.locator(".courses-table tbody tr");
       const courseCount = await courseRows.count();
       expect(courseCount).toBeGreaterThan(0);
-      console.log(`✅ Found ${courseCount} course(s) in table`);
 
       // Click Save & Exit button
       const saveExitButton = page.getByRole("button", { name: "Save & Exit" });
@@ -416,7 +454,6 @@ test.describe("Courses Save Buttons - Combined Test", () => {
       const courseRows2 = page.locator(".courses-table tbody tr");
       const courseCount2 = await courseRows2.count();
       expect(courseCount2).toBeGreaterThan(0);
-      console.log(`✅ Found ${courseCount2} course(s) in table`);
 
       // Click Save & Next button
       const saveNextButton = page.getByRole("button", { name: "Save & Next" });
