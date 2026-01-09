@@ -80,7 +80,7 @@ test.describe("Tournament Wizard Modal Behavior", () => {
     });
   });
 
-  test("should hide mode tab bar when New Tournament button is clicked", async ({
+  test("Tournament Wizard Modal - Initial State Verification", async ({
     page,
   }) => {
     // Login and navigate to Competitions tab
@@ -97,7 +97,6 @@ test.describe("Tournament Wizard Modal Behavior", () => {
     // Verify mode tab bar is visible BEFORE opening wizard
     const modeTabBar = page.locator("#modeTabs, .modetab-container");
     await expect(modeTabBar).toBeVisible();
-    console.log("✅ Mode tab bar is visible before wizard opens");
 
     // Click "New Tournament" button to open wizard
     const newTournamentButton = page.getByRole("button", {
@@ -109,18 +108,61 @@ test.describe("Tournament Wizard Modal Behavior", () => {
 
     // Wait for wizard to load
     await page.waitForSelector(".mode-page.action-dialog", { timeout: 10000 });
-    console.log("✅ Tournament wizard opened");
 
-    // Verify mode tab bar is HIDDEN when wizard is open
+    // TEST 1: Verify mode tab bar is HIDDEN when wizard is open
     const isModeTabBarHidden = await modeTabBar.evaluate((el) => {
       const style = window.getComputedStyle(el);
       return style.display === "none" || style.visibility === "hidden";
     });
     expect(isModeTabBarHidden).toBe(true);
-    console.log("✅ Mode tab bar is hidden when wizard is open");
+    console.log("✓ TEST 1: Mode tab bar is hidden when wizard opens");
+
+    // TEST 2: Verify Basic Info tab is active
+    const basicInfoTab = page.locator(
+      '.nav-link:has-text("Basic Info"), .nav-link:has-text("Basic Tournament Information")',
+    );
+    await expect(basicInfoTab).toBeVisible();
+    await expect(basicInfoTab).toHaveClass(/active/);
+    console.log("✓ TEST 2: Basic Info tab is active");
+
+    // TEST 3: Verify other tabs are disabled/grayed out
+    const tabsToCheck = [
+      "Color Theme",
+      "Courses",
+      "Divisions",
+      "Registration & Payment",
+    ];
+
+    for (const tabName of tabsToCheck) {
+      const tab = page.locator(`.nav-link:has-text("${tabName}")`);
+      await expect(tab).toBeVisible();
+
+      // Check if tab is disabled (has 'disabled' class or attribute)
+      const isDisabled = await tab.evaluate((el) => {
+        return (
+          el.classList.contains("disabled") ||
+          el.hasAttribute("disabled") ||
+          el.getAttribute("aria-disabled") === "true" ||
+          el.style.pointerEvents === "none"
+        );
+      });
+
+      expect(isDisabled).toBe(true);
+
+      // Verify tab is grayed out (check opacity or color)
+      const isGrayedOut = await tab.evaluate((el) => {
+        const style = window.getComputedStyle(el);
+        const opacity = parseFloat(style.opacity);
+        const cursor = style.cursor;
+        return opacity < 1 || cursor === "not-allowed" || cursor === "default";
+      });
+
+      expect(isGrayedOut).toBe(true);
+    }
+    console.log("✓ TEST 3: All other tabs are disabled and grayed out");
 
     console.log(
-      "\n🎉 TEST PASSED: Mode tab bar is dismissed when New Tournament button is clicked",
+      "\n🎉 ALL TESTS PASSED: Mode tab bar hidden, Basic Info active, other tabs disabled",
     );
   });
 });
