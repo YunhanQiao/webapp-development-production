@@ -80,7 +80,7 @@ test.describe("Tournament Wizard Modal Behavior", () => {
     });
   });
 
-  test("Tournament Wizard Modal - Initial State Verification", async ({
+  test("Tournament Wizard Modal - Mode tab should be hidden when wizard is open, Basic Info tab is active and other tabs are disabled", async ({
     page,
   }) => {
     // Login and navigate to Competitions tab

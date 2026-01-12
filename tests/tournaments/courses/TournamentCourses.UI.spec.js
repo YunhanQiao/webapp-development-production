@@ -14,11 +14,13 @@ const dbConfig = {
 };
 
 require("dotenv").config({
-  path: path.join(__dirname, "../../../SpeedScore-backend/.env"),
+  path: path.join(__dirname, "../../../../../backend-production/.env"),
 });
 
-const backendModelsPath =
-  "/Users/yunhanqiao/Desktop/SpeedScore-backend/src/models/index.js";
+const backendModelsPath = path.join(
+  __dirname,
+  "../../../../../backend-production/src/models/index.js",
+);
 const db = require(backendModelsPath);
 
 async function connectToDatabase() {

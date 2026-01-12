@@ -115,17 +115,31 @@ test.describe("Tournament UI Test - Combined Test", () => {
 
     const logoInput = page.locator("#logo");
 
-    const logoValueBefore = await logoInput.inputValue();
+    // Check if logo preview image exists before upload
+    const logoPreviewBefore = await page
+      .locator('img[alt="Tournament Logo preview"]')
+      .isVisible()
+      .catch(() => false);
 
     await logoInput.setInputFiles(TEST_LOGO_PATH);
     await page.waitForTimeout(1500);
 
-    const logoValueAfter = await logoInput.inputValue();
+    // Check if logo preview image appears after upload
+    const logoPreviewAfter = await page
+      .locator('img[alt="Tournament Logo preview"]')
+      .isVisible()
+      .catch(() => false);
 
-    if (logoValueAfter && logoValueAfter !== logoValueBefore) {
-      console.log(`✅ TEST 1 PASSED: Logo uploaded - field value changed`);
+    if (!logoPreviewBefore && logoPreviewAfter) {
+      console.log(
+        `✅ TEST 1 PASSED: Logo preview image displayed after upload`,
+      );
+    } else if (logoPreviewBefore) {
+      console.log(
+        `❌  TEST 1 FAILED: Logo preview already visible before upload`,
+      );
     } else {
-      console.log(`⚠️  TEST 1 FAILED: Logo upload verification inconclusive`);
+      console.log(`❌  TEST 1 FAILED: Logo preview not displayed after upload`);
     }
 
     // ==========================================
@@ -151,11 +165,11 @@ test.describe("Tournament UI Test - Combined Test", () => {
         );
       } else {
         console.log(
-          `⚠️  TEST 2 FAILED: "Test.pdf" not found in display fields`,
+          `❌  TEST 2 FAILED: Uploaded file not found in "Tournament Rules Doc"" fields`,
         );
       }
     } else {
-      console.log("⚠️  TEST 2 SKIPPED: Rules PDF input not found");
+      console.log("❌  TEST 2 FAILED: Rules PDF input not found");
     }
 
     // ==========================================
@@ -174,18 +188,16 @@ test.describe("Tournament UI Test - Combined Test", () => {
 
       if (testPdfCount >= 2) {
         console.log(
-          `✅ TEST 3 PASSED: Prizes PDF "Test.pdf" displayed in field`,
+          `✅ TEST 3 PASSED: Uploaded file found in "Tournament Prizes Doc" fields`,
         );
       } else {
         console.log(
-          `⚠️  TEST 3 FAILED: Expected 2 "Test.pdf" fields, found ${testPdfCount}`,
+          `❌  TEST 3 FAILED: Expected 2 "Test.pdf" fields, found ${testPdfCount}`,
         );
       }
     } else {
-      console.log("⚠️  TEST 3 SKIPPED: Prizes PDF input not found");
+      console.log("❌  TEST 3 FAILED: Prizes PDF input not found");
     }
-
-    console.log("\n🎉 ALL UPLOAD TESTS COMPLETED: Logo, Rules, and Prizes!");
 
     console.log("\n🧪 TEST 4: Admin Field Search and Selection");
 

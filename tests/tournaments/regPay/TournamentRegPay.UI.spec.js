@@ -12,12 +12,14 @@ const dbConfig = {
 
 // Import backend database configuration
 require("dotenv").config({
-  path: path.join(__dirname, "../../../SpeedScore-backend/.env"),
+  path: path.join(__dirname, "../../../../../backend-production/.env"),
 });
 
-// Import the actual backend models - use absolute path directly
-const backendModelsPath =
-  "/Users/yunhanqiao/Desktop/SpeedScore-backend/src/models/index.js";
+// Import the actual backend models - use relative path
+const backendModelsPath = path.join(
+  __dirname,
+  "../../../../../backend-production/src/models/index.js",
+);
 const db = require(backendModelsPath);
 
 // Database helper functions

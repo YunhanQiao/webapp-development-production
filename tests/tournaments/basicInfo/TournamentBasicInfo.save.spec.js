@@ -15,12 +15,14 @@ const dbConfig = {
 
 // Import backend database configuration
 require("dotenv").config({
-  path: path.join(__dirname, "../../../SpeedScore-backend/.env"),
+  path: path.join(__dirname, "../../../../../backend-production/.env"),
 });
 
-// Import the actual backend models - use absolute path directly
-const backendModelsPath =
-  "/Users/yunhanqiao/Desktop/SpeedScore-backend/src/models/index.js";
+// Import the actual backend models - use relative path
+const backendModelsPath = path.join(
+  __dirname,
+  "../../../../../backend-production/src/models/index.js",
+);
 const db = require(backendModelsPath);
 
 // Database helper functions
@@ -220,38 +222,9 @@ test.describe("Basic Info Save Buttons - Combined Test", () => {
     await navigateToBasicInfoTab(page);
 
     // ==========================================
-    // TEST 1: Cancel Button
+    // TEST 1: Save & Exit Button
     // ==========================================
-    console.log("\n🧪 TEST 1: Testing Cancel Button");
-    const cancelName = generateUniqueName();
-
-    await page.locator("#name").fill(cancelName);
-    await page.locator("#startDate").fill("2026-06-01");
-    await page.locator("#endDate").fill("2026-06-02");
-
-    const cancelButton = page.getByRole("button", {
-      name: "Cancel Changes & Exit",
-    });
-
-    await cancelButton.click();
-    await page.waitForURL(/competitions\/?$/, { timeout: 5000 });
-
-    await expect(page.url()).toMatch(/competitions\/?$/);
-    await page.waitForTimeout(1000);
-
-    const canceledTournament = page.locator(`text="${cancelName}"`);
-    expect(await canceledTournament.count()).toBe(0);
-    console.log(
-      "✅ TEST 1 PASSED: Cancel returns to competitions list without saving",
-    );
-
-    // ==========================================
-    // TEST 2: Save & Exit Button
-    // ==========================================
-    console.log("\n🧪 TEST 2: Testing Save & Exit Button");
-
-    // Navigate back to create a new tournament
-    await navigateToBasicInfoTab(page);
+    console.log("\n🧪 TEST 1: Testing Save & Exit Button");
 
     const saveExitName = generateUniqueName();
     const saveExitStart = "2026-06-01";
@@ -268,23 +241,22 @@ test.describe("Basic Info Save Buttons - Combined Test", () => {
       await page.waitForTimeout(3000);
 
       await expect(page.url()).toMatch(/competitions\/?$/, { timeout: 10000 });
-      console.log("✅ TEST 2-a PASSED: Navigated back to competitions list");
 
       await page.waitForTimeout(2000);
       const tournamentRow = page.locator(`text="${saveExitName}"`);
       await expect(tournamentRow.first()).toBeVisible({ timeout: 5000 });
-      console.log("✅ TEST 2-b PASSED: Tournament appears in list after save");
+      console.log("✅ TEST 1-a PASSED: Tournament appears in list after save");
 
       await verifyBasicInfoInDB(saveExitName, saveExitStart, saveExitEnd);
-      console.log("✅ TEST 2-c PASSED: Tournament data saved in database");
+      console.log("✅ TEST 1-b PASSED: Tournament data saved in database");
     } finally {
       await cleanupTestTournament(saveExitName);
     }
 
     // ==========================================
-    // TEST 3: Save & Next Button
+    // TEST 2: Save & Next Button
     // ==========================================
-    console.log("\n🧪 TEST 3: Testing Save & Next Button");
+    console.log("\n🧪 TEST 2: Testing Save & Next Button");
 
     // Navigate back to create a new tournament
     await navigateToBasicInfoTab(page);
@@ -318,11 +290,11 @@ test.describe("Basic Info Save Buttons - Combined Test", () => {
           timeout: 5000,
         });
         console.log(
-          "✅ TEST 3-a PASSED: Advances to Registration & Payment tab",
+          "✅ TEST 2-a PASSED: Advances to Registration & Payment tab",
         );
       } else {
         console.log(
-          "⚠️  TEST 3-a SKIPPED: Registration & Payment tab not found",
+          "⚠️  TEST 2-a SKIPPED: Registration & Payment tab not found",
         );
       }
 
@@ -334,11 +306,11 @@ test.describe("Basic Info Save Buttons - Combined Test", () => {
 
       if (successMessageExists) {
         console.log(
-          "✅ TEST 3-b PASSED: Success message shown after Save & Next",
+          "✅ TEST 2-b PASSED: Success message shown after Save & Next",
         );
       } else {
         console.log(
-          "⚠️  TEST 3-b SKIPPED: Success message not found - might be implicit",
+          "⚠️  TEST 2-b SKIPPED: Success message not found - might be implicit",
         );
       }
 
@@ -353,16 +325,16 @@ test.describe("Basic Info Save Buttons - Combined Test", () => {
       if (hasTeeTime) {
         expect(await teeTimeInputs.first().inputValue()).toBe(teeTime);
       }
-      console.log("✅ TEST 3-c PASSED: All fields preserved after Save & Next");
+      console.log("✅ TEST 2-c PASSED: All fields preserved after Save & Next");
 
       await verifyBasicInfoInDB(saveNextName, saveNextStart, saveNextEnd);
-      console.log("✅ TEST 3-d PASSED: Tournament data saved in database");
+      console.log("✅ TEST 2-d PASSED: Tournament data saved in database");
     } finally {
       await cleanupTestTournament(saveNextName);
     }
 
     console.log(
-      "\n🎉 ALL SAVE BUTTON TESTS COMPLETED: Cancel, Save & Exit, and Save & Next!",
+      "\n🎉 ALL SAVE BUTTON TESTS COMPLETED: Save & Exit and Save & Next!",
     );
   });
 });

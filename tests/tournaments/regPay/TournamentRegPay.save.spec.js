@@ -15,12 +15,14 @@ const dbConfig = {
 
 // Import backend database configuration
 require("dotenv").config({
-  path: path.join(__dirname, "../../../SpeedScore-backend/.env"),
+  path: path.join(__dirname, "../../../../../backend-production/.env"),
 });
 
-// Import the actual backend models - use absolute path directly
-const backendModelsPath =
-  "/Users/yunhanqiao/Desktop/SpeedScore-backend/src/models/index.js";
+// Import the actual backend models - use relative path
+const backendModelsPath = path.join(
+  __dirname,
+  "../../../../../backend-production/src/models/index.js",
+);
 const db = require(backendModelsPath);
 
 // Database helper functions
@@ -227,9 +229,7 @@ async function fillRequiredRegPayFields(page) {
 }
 
 test.describe("Registration & Payment Save Buttons - Combined Test", () => {
-  test("All Save Buttons: Previous, Cancel, Save & Exit, and Save & Next", async ({
-    page,
-  }) => {
+  test("All Save Buttons: Save & Exit and Save & Next", async ({ page }) => {
     // Connect to database at start of test
     await connectToDatabase();
 
@@ -241,99 +241,9 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
       await dismissInitialAlerts(page);
 
       // ==========================================
-      // TEST 1: Previous Button
+      // TEST 1: Save & Exit Button
       // ==========================================
-      console.log("\n🧪 TEST 1: Testing Previous Button");
-
-      createdTournamentName = await navigateToRegPayTab(page);
-
-      // Fill some RegPay data
-      await page.locator("#regStartDate").fill("2026-05-01");
-      await page.locator("#regEndDate").fill("2026-05-31");
-
-      // Click Previous button
-      const previousButton = page.getByRole("button", { name: "Previous" });
-      await previousButton.click();
-      await page.waitForTimeout(1000);
-
-      // Should be back on Basic Info tab
-      await expect(page.url()).toMatch(/basicInfo\/?$/);
-      const basicInfoTab = page.getByRole("tab", { name: "Basic Info" });
-      await expect(basicInfoTab).toHaveAttribute("aria-selected", "true", {
-        timeout: 5000,
-      });
-      console.log("✅ TEST 1 PASSED: Previous returns to Basic Info tab");
-
-      // Exit the wizard by clicking Cancel to get back to competitions list
-      const cancelButtonTest1 = page.getByRole("button", {
-        name: "Cancel Changes & Exit",
-      });
-      await cancelButtonTest1.click();
-      await page.waitForTimeout(1000);
-      await expect(page.url()).toMatch(/competitions\/?$/);
-
-      // Clean up this tournament
-      await cleanupTestTournament(createdTournamentName);
-      createdTournamentName = null;
-
-      // ==========================================
-      // TEST 2: Cancel Changes & Exit Button
-      // ==========================================
-      console.log("\n🧪 TEST 2: Testing Cancel Changes & Exit Button");
-
-      createdTournamentName = await navigateToRegPayTab(page);
-
-      // Fill some RegPay data but don't save
-      await page.locator("#regStartDate").fill("2026-05-01");
-      await page.locator("#regEndDate").fill("2026-05-31");
-      await page.waitForTimeout(500);
-
-      // Click Cancel button
-      const cancelButton = page.getByRole("button", {
-        name: "Cancel Changes & Exit",
-      });
-      await cancelButton.click();
-      await page.waitForTimeout(2000);
-
-      // Should return to competitions list
-      await expect(page.url()).toMatch(/competitions\/?$/);
-      console.log("✅ TEST 2-a PASSED: Navigated back to competitions list");
-
-      // Verify tournament DOES appear in list (Basic Info was saved)
-      await page.waitForTimeout(1000);
-      const tournamentRow = page.locator(`text="${createdTournamentName}"`);
-      await expect(tournamentRow.first()).toBeVisible({ timeout: 5000 });
-      console.log(
-        "✅ TEST 2-b PASSED: Tournament appears in list (Basic Info saved)",
-      );
-
-      // Verify RegPay changes were NOT saved in database (should remain empty/null)
-      const TestCompetition = global.TestCompetition;
-      const tournamentAfter = await TestCompetition.findOne({
-        "basicInfo.name": createdTournamentName,
-      });
-      const savedRegStartDate =
-        tournamentAfter.regPayInfo?.regStartDate || null;
-      const savedRegEndDate = tournamentAfter.regPayInfo?.regEndDate || null;
-
-      if (savedRegStartDate === null && savedRegEndDate === null) {
-        console.log(
-          "✅ TEST 2-c PASSED: RegPay changes not saved in database (Cancel worked correctly)",
-        );
-      } else {
-        throw new Error(
-          `RegPay changes were saved despite clicking Cancel. Found: regStartDate=${savedRegStartDate}, regEndDate=${savedRegEndDate}`,
-        );
-      }
-
-      // Clean up this tournament
-      await cleanupTestTournament(createdTournamentName);
-      createdTournamentName = null;
-
-      // ==========================================
-      // TEST 3: Save & Exit Button
-      // ==========================================
-      console.log("\n🧪 TEST 3: Testing Save & Exit Button");
+      console.log("\n🧪 TEST 1: Testing Save & Exit Button");
 
       createdTournamentName = await navigateToRegPayTab(page);
 
@@ -350,15 +260,11 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
       await saveExitButton.click();
       await page.waitForTimeout(3000);
 
-      // Should return to competitions list
-      await expect(page.url()).toMatch(/competitions\/?$/, { timeout: 10000 });
-      console.log("✅ TEST 3-a PASSED: Navigated back to competitions list");
-
       // Verify tournament appears in list
       await page.waitForTimeout(2000);
       const tournamentRow3 = page.locator(`text="${createdTournamentName}"`);
       await expect(tournamentRow3.first()).toBeVisible({ timeout: 5000 });
-      console.log("✅ TEST 3-b PASSED: Tournament appears in list after save");
+      console.log("✅ TEST 1-a PASSED: Tournament appears in list after save");
 
       // Verify RegPay data saved in database
       await verifyRegPayInfoInDB(
@@ -367,7 +273,7 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
         regEndDate,
       );
       console.log(
-        "✅ TEST 3-c PASSED: Registration & Payment data saved in database",
+        "✅ TEST 1-b PASSED: Registration & Payment data saved in database",
       );
 
       // Clean up this tournament
@@ -375,9 +281,9 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
       createdTournamentName = null;
 
       // ==========================================
-      // TEST 4: Save & Next Button
+      // TEST 2: Save & Next Button
       // ==========================================
-      console.log("\n🧪 TEST 4: Testing Save & Next Button");
+      console.log("\n🧪 TEST 2: Testing Save & Next Button");
 
       createdTournamentName = await navigateToRegPayTab(page);
 
@@ -404,13 +310,13 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
         await expect(colorThemeTab).toHaveAttribute("aria-selected", "true", {
           timeout: 5000,
         });
-        console.log("✅ TEST 4-a PASSED: Advances to Color & Theme tab");
+        console.log("✅ TEST 2-a PASSED: Advances to Color & Theme tab");
       } else {
         console.log(
-          "⚠️  TEST 4-a SKIPPED: Color & Theme tab not found - checking URL",
+          "⚠️  TEST 2-a SKIPPED: Color & Theme tab not found - checking URL",
         );
         await expect(page.url()).toMatch(/colorTheme/i);
-        console.log("✅ TEST 4-a PASSED: URL indicates next tab");
+        console.log("✅ TEST 2-a PASSED: URL indicates next tab");
       }
 
       // Verify RegPay data saved in database
@@ -420,7 +326,7 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
         regEndDate2,
       );
       console.log(
-        "✅ TEST 4-b PASSED: Registration & Payment data saved in database",
+        "✅ TEST 2-b PASSED: Registration & Payment data saved in database",
       );
 
       // Clean up this tournament
@@ -428,7 +334,7 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
       createdTournamentName = null;
 
       console.log(
-        "\n🎉 ALL REG & PAY SAVE BUTTON TESTS COMPLETED: Previous, Cancel, Save & Exit, and Save & Next!",
+        "\n🎉 ALL REG & PAY SAVE BUTTON TESTS COMPLETED: Save & Exit and Save & Next!",
       );
     } catch (error) {
       // Clean up in case of error

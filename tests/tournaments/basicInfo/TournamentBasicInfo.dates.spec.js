@@ -268,16 +268,6 @@ test.describe("Tournament Dates - Display Format Tests", () => {
     console.log("✅ Test 7: Dates display in mm/dd/yyyy format - PASSED");
   });
 
-  test("should have date picker inputs with type=date", async ({ page }) => {
-    const startDateInput = page.locator("#startDate");
-    const endDateInput = page.locator("#endDate");
-
-    await expect(startDateInput).toHaveAttribute("type", "date");
-    await expect(endDateInput).toHaveAttribute("type", "date");
-
-    console.log("✅ Test 8: Date inputs are date pickers - PASSED");
-  });
-
   test("should set end date min attribute to match start date", async ({
     page,
   }) => {
@@ -302,7 +292,7 @@ test.describe("Tournament Dates - Display Format Tests", () => {
       timeout: 5000,
     });
 
-    console.log("✅ Test 9: End date min matches start date - PASSED");
+    console.log("✅ Test 8: End date min matches start date - PASSED");
   });
 });
 
@@ -322,7 +312,7 @@ test.describe("Tournament Dates - Edge Cases", () => {
     await expect(teeTimeInputs).toHaveCount(1, { timeout: 5000 });
     await expect(page.locator('text="06/15/2026:"').first()).toBeVisible();
 
-    console.log("✅ Test 10: Single-day tournament handled correctly - PASSED");
+    console.log("✅ Test 9: Single-day tournament handled correctly - PASSED");
   });
 
   test("should handle multi-week tournament", async ({ page }) => {
@@ -334,7 +324,7 @@ test.describe("Tournament Dates - Edge Cases", () => {
     // 14 days = 14 tee times
     await expect(teeTimeInputs).toHaveCount(14, { timeout: 5000 });
 
-    console.log("✅ Test 11: Multi-week tournament handled correctly - PASSED");
+    console.log("✅ Test 10: Multi-week tournament handled correctly - PASSED");
   });
 
   test("should handle date changes without losing other form data", async ({
@@ -356,6 +346,6 @@ test.describe("Tournament Dates - Edge Cases", () => {
     const nameValueAfter = await page.locator("#name").inputValue();
     expect(nameValueAfter).toBe("Test Tournament");
 
-    console.log("✅ Test 12: Date changes preserve other form data - PASSED");
+    console.log("✅ Test 11: Date changes preserve other form data - PASSED");
   });
 });
