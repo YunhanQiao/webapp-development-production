@@ -15,13 +15,13 @@ const dbConfig = {
 
 // Import backend database configuration
 require("dotenv").config({
-  path: path.join(__dirname, "../../../../../backend-production/.env"),
+  path: path.join(__dirname, "../../../../SpeedScore-backend/.env"),
 });
 
 // Import the actual backend models - use relative path
 const backendModelsPath = path.join(
   __dirname,
-  "../../../../../backend-production/src/models/index.js",
+  "../../../../SpeedScore-backend/src/models/index.js",
 );
 const db = require(backendModelsPath);
 
@@ -210,9 +210,10 @@ async function fillRequiredFields(page, tournamentName) {
 }
 
 test.describe("Basic Info Save Buttons - Combined Test", () => {
-  test("All Save Buttons: Cancel, Save & Exit, and Save & Next", async ({
-    page,
-  }) => {
+  test("All Save Buttons: Save & Exit, and Save & Next", async ({ page }) => {
+    // Increase timeout for this test since it includes database operations
+    test.setTimeout(60000); // 60 seconds
+
     // Connect to database at start of test
     await connectToDatabase();
 
@@ -259,7 +260,19 @@ test.describe("Basic Info Save Buttons - Combined Test", () => {
     console.log("\n🧪 TEST 2: Testing Save & Next Button");
 
     // Navigate back to create a new tournament
-    await navigateToBasicInfoTab(page);
+    // After TEST 1, we're on the tournaments list page, so need to open wizard again
+    const newTournamentButton = page.getByRole("button", {
+      name: "New Tournament",
+    });
+    await newTournamentButton.waitFor({ state: "visible", timeout: 10000 });
+    await newTournamentButton.click();
+
+    // Wait for wizard to open and Basic Info tab to be active
+    const basicInfoTab = page.getByRole("tab", { name: "Basic Info" });
+    await basicInfoTab.waitFor({ state: "visible", timeout: 10000 });
+    await expect(page.locator("#tournamentFormHeader")).toBeVisible({
+      timeout: 10000,
+    });
 
     const saveNextName = generateUniqueName();
     const saveNextStart = "2026-06-15";

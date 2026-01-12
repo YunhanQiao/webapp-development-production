@@ -96,6 +96,15 @@ test.describe("Tournament UI Test - Combined Test", () => {
   test("should upload logos, docs and search and add admins from database", async ({
     page,
   }) => {
+    // Increase timeout for this test since it includes uploads and database operations
+    test.setTimeout(60000); // 60 seconds
+
+    // Setup global dialog handler
+    page.on("dialog", async (dialog) => {
+      console.log(`Dialog detected: ${dialog.message()}`);
+      await dialog.accept();
+    });
+
     // Login and navigate to Basic Info tab
     await loginWithCredentials(page);
     await dismissInitialAlerts(page);
