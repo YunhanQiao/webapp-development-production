@@ -115,7 +115,7 @@ test.describe("Tournament Name Tests", () => {
     const nameField = page.locator("#name");
 
     await nameField.fill("Test Tournament");
-    await page.locator("#startDate").fill("2025-04-01");
+    await page.locator("#startDate").fill("2026-04-01");
 
     await page.waitForTimeout(500);
 
@@ -135,7 +135,7 @@ test.describe("Tournament Name Tests", () => {
     const nameField = page.locator("#name");
 
     await nameField.fill("Championship");
-    await page.locator("#startDate").fill("2025-04-01");
+    await page.locator("#startDate").fill("2026-04-01");
     await page.waitForTimeout(500);
 
     const currentYear = new Date().getFullYear().toString().slice(-2);
@@ -155,7 +155,7 @@ test.describe("Tournament Name Tests", () => {
     const nameField = page.locator("#name");
 
     await nameField.fill("Spring Golf Open");
-    await page.locator("#startDate").fill("2025-04-01");
+    await page.locator("#startDate").fill("2026-04-01");
     await page.waitForTimeout(500);
 
     const currentYear = new Date().getFullYear().toString().slice(-2);
@@ -175,7 +175,7 @@ test.describe("Tournament Name Tests", () => {
     const nameField = page.locator("#name");
 
     await nameField.fill("Annual Spring Summer Golf Championship");
-    await page.locator("#startDate").fill("2025-04-01");
+    await page.locator("#startDate").fill("2026-04-01");
     await page.waitForTimeout(500);
 
     const currentYear = new Date().getFullYear().toString().slice(-2);
@@ -197,26 +197,26 @@ test.describe("Tournament Name Tests", () => {
 
     await nameField.fill("Seal Lab Tournament");
 
-    await page.locator("#startDate").fill("2025-04-01");
+    await page.locator("#startDate").fill("2026-04-01");
     await page.waitForTimeout(500);
     const headerText1 = await header.textContent();
-    expect(headerText1).toMatch(/SLT25/);
-    console.log("✅ TEST 6-a PASSED: Short name shows year 25 for 2025 date");
+    expect(headerText1).toMatch(/SLT26/);
+    console.log("✅ TEST 6-a PASSED: Short name shows year 26 for 2026 date");
+
+    await page.locator("#startDate").fill("2027-04-01");
+    await page.waitForTimeout(500);
+    const headerText2 = await header.textContent();
+    expect(headerText2).toMatch(/SLT27/);
+    console.log(
+      "✅ TEST 6-b PASSED: Short name updates to year 27 for 2027 date",
+    );
 
     await page.locator("#startDate").fill("2026-04-01");
     await page.waitForTimeout(500);
-    const headerText2 = await header.textContent();
-    expect(headerText2).toMatch(/SLT26/);
-    console.log(
-      "✅ TEST 6-b PASSED: Short name updates to year 26 for 2026 date",
-    );
-
-    await page.locator("#startDate").fill("2025-04-01");
-    await page.waitForTimeout(500);
     const headerText3 = await header.textContent();
-    expect(headerText3).toMatch(/SLT25/);
+    expect(headerText3).toMatch(/SLT26/);
     console.log(
-      "✅ TEST 6-c PASSED: Short name updates back to year 25 for 2025 date",
+      "✅ TEST 6-c PASSED: Short name updates back to year 26 for 2026 date",
     );
   });
 
@@ -225,12 +225,12 @@ test.describe("Tournament Name Tests", () => {
     const nameField = page.locator("#name");
 
     await nameField.fill("Test Tournament");
-    await page.locator("#startDate").fill("2025-04-01");
+    await page.locator("#startDate").fill("2026-04-01");
     await page.waitForTimeout(500);
 
     const headerText = await header.textContent();
-    expect(headerText).toMatch(/T.*25/);
-    expect(headerText).not.toContain("2025");
+    expect(headerText).toMatch(/T.*26/);
+    expect(headerText).not.toContain("2026");
 
     console.log("✅ TEST 7 PASSED: Shows two-digit year");
   });
@@ -242,23 +242,23 @@ test.describe("Tournament Name Tests", () => {
     const header = page.locator("#tournamentFormHeader");
     const nameField = page.locator("#name");
 
-    await page.locator("#startDate").fill("2025-04-01");
+    await page.locator("#startDate").fill("2026-04-01");
 
     await nameField.fill("Spring Open");
     await page.waitForTimeout(500);
-    await expect(header).toContainText("SO25", { timeout: 5000 });
-    console.log("✅ TEST 8-a PASSED: 'Spring Open' generates 'SO25'");
+    await expect(header).toContainText("SO26", { timeout: 5000 });
+    console.log("✅ TEST 8-a PASSED: 'Spring Open' generates 'SO26'");
 
     await nameField.fill("Summer Championship");
     await page.waitForTimeout(500);
-    await expect(header).toContainText("SC25", { timeout: 5000 });
-    await expect(header).not.toContainText("SO25");
-    console.log("✅ TEST 8-b PASSED: 'Summer Championship' generates 'SC25'");
+    await expect(header).toContainText("SC26", { timeout: 5000 });
+    await expect(header).not.toContainText("SO26");
+    console.log("✅ TEST 8-b PASSED: 'Summer Championship' generates 'SC26'");
 
     await nameField.fill("Fall Tournament");
     await page.waitForTimeout(500);
-    await expect(header).toContainText("FT25", { timeout: 5000 });
-    console.log("✅ TEST 8-c PASSED: 'Fall Tournament' generates 'FT25'");
+    await expect(header).toContainText("FT26", { timeout: 5000 });
+    console.log("✅ TEST 8-c PASSED: 'Fall Tournament' generates 'FT26'");
   });
 
   // Display and UI Tests
@@ -268,8 +268,8 @@ test.describe("Tournament Name Tests", () => {
     const nameField = page.locator("#name");
 
     await nameField.fill("My Tournament Name");
-    await page.locator("#startDate").fill("2025-04-01");
-    await page.locator("#endDate").fill("2025-04-01");
+    await page.locator("#startDate").fill("2026-04-01");
+    await page.locator("#endDate").fill("2026-04-01");
 
     const nameValue = await nameField.inputValue();
     expect(nameValue).toBe("My Tournament Name");
