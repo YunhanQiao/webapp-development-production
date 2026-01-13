@@ -15,13 +15,13 @@ const dbConfig = {
 
 // Import backend database configuration
 require("dotenv").config({
-  path: path.join(__dirname, "../../../../../backend-production/.env"),
+  path: path.join(__dirname, "../../../../SpeedScore-backend/.env"),
 });
 
 // Import the actual backend models - use relative path
 const backendModelsPath = path.join(
   __dirname,
-  "../../../../../backend-production/src/models/index.js",
+  "../../../../SpeedScore-backend/src/models/index.js",
 );
 const db = require(backendModelsPath);
 
@@ -277,7 +277,11 @@ async function searchAndAddCourse(page, searchQuery) {
 }
 
 test.describe("Courses Save Buttons - Combined Test", () => {
-  test("All Save Buttons: Save & Exit and Save & Next", async ({ page }) => {
+  test.setTimeout(120000); // 120 seconds for database operations (3 tests with DB writes)
+
+  test("All Save Buttons: Previous, Save & Exit and Save & Next", async ({
+    page,
+  }) => {
     // Connect to database at start of test
     await connectToDatabase();
 
@@ -289,51 +293,62 @@ test.describe("Courses Save Buttons - Combined Test", () => {
       await dismissInitialAlerts(page);
 
       // ==========================================
-      // TEST 1: Save & Exit Button
+      // TEST 1: Previous Button - Data Preservation
       // ==========================================
-      console.log("\n🧪 TEST 1: Testing Save & Exit Button");
+      console.log("\n🧪 TEST 1: Testing Previous Button - Data Preservation");
 
       createdTournamentName = await navigateToCoursesTab(page);
 
-      // Add a course by searching and selecting one
+      // Store expected values from Color Theme tab
+      const expectedTitleText = "#000000";
+      const expectedHeaderRowBg = "#FFFFFF";
+
+      // Add a course to simulate user interaction
       const searchInput = page.locator("#courseInputBoxId");
       await searchInput.fill("Golf");
       await page.waitForTimeout(1500);
 
-      // Wait for search results and click first one
       const dropdownItems = page.locator(".list-group-item");
       await dropdownItems.first().waitFor({ state: "visible", timeout: 5000 });
       await dropdownItems.first().click();
       await page.waitForTimeout(1000);
 
-      // Verify at least one course is present
-      const courseRows = page.locator(".courses-table tbody tr");
-      const courseCount = await courseRows.count();
-      expect(courseCount).toBeGreaterThan(0);
-
-      // Click Save & Exit button
-      const saveExitButton = page.getByRole("button", { name: "Save & Exit" });
-      await saveExitButton.click();
-      await page.waitForTimeout(3000);
-
-      // Verify tournament appears in list
+      // Click Previous button
+      const previousButton = page.getByRole("button", { name: "Previous" });
+      await previousButton.click();
       await page.waitForTimeout(2000);
-      const tournamentRow3 = page.locator(`text="${createdTournamentName}"`);
-      await expect(tournamentRow3.first()).toBeVisible({ timeout: 5000 });
-      console.log("✅ TEST 1-a PASSED: Tournament appears in list after save");
 
-      // Verify Courses data saved in database
-      await verifyCoursesInDB(createdTournamentName, null);
-      console.log("✅ TEST 1-b PASSED: Courses data saved in database");
+      // Verify Color Theme field values are preserved
+      const titleTextValue = await page.locator("#titleText").inputValue();
+      const headerRowBgValue = await page.locator("#headerRowBg").inputValue();
+
+      expect(titleTextValue).toBe(expectedTitleText);
+      expect(headerRowBgValue).toBe(expectedHeaderRowBg);
+
+      console.log(
+        "✅ TEST 1-a PASSED: Title text color preserved:",
+        titleTextValue,
+      );
+      console.log(
+        "✅ TEST 1-b PASSED: Header row background color preserved:",
+        headerRowBgValue,
+      );
+
+      // Click Cancel Changes & Exit to close wizard without saving RegPay changes
+      const cancelExitButton = page.getByRole("button", {
+        name: "Cancel Changes & Exit",
+      });
+      await cancelExitButton.click();
+      await page.waitForTimeout(2000);
 
       // Clean up this tournament
       await cleanupTestTournament(createdTournamentName);
       createdTournamentName = null;
 
       // ==========================================
-      // TEST 2: Save & Next Button
+      // TEST 2: Save & Exit Button
       // ==========================================
-      console.log("\n🧪 TEST 2: Testing Save & Next Button");
+      console.log("\n🧪 TEST 2: Testing Save & Exit Button");
 
       createdTournamentName = await navigateToCoursesTab(page);
 
@@ -342,6 +357,7 @@ test.describe("Courses Save Buttons - Combined Test", () => {
       await searchInput2.fill("Golf");
       await page.waitForTimeout(1500);
 
+      // Wait for search results and click first one
       const dropdownItems2 = page.locator(".list-group-item");
       await dropdownItems2.first().waitFor({ state: "visible", timeout: 5000 });
       await dropdownItems2.first().click();
@@ -352,14 +368,16 @@ test.describe("Courses Save Buttons - Combined Test", () => {
       const courseCount2 = await courseRows2.count();
       expect(courseCount2).toBeGreaterThan(0);
 
-      // Click Save & Next button
-      const saveNextButton = page.getByRole("button", { name: "Save & Next" });
-      await saveNextButton.click();
+      // Click Save & Exit button
+      const saveExitButton = page.getByRole("button", { name: "Save & Exit" });
+      await saveExitButton.click();
       await page.waitForTimeout(3000);
 
-      // Should advance to next tab (Divisions) - check URL
-      await expect(page.url()).toMatch(/divisions/i);
-      console.log("✅ TEST 2-a PASSED: Advances to Divisions tab");
+      // Verify tournament appears in list
+      await page.waitForTimeout(2000);
+      const tournamentRow3 = page.locator(`text="${createdTournamentName}"`);
+      await expect(tournamentRow3.first()).toBeVisible({ timeout: 5000 });
+      console.log("✅ TEST 2-a PASSED: Tournament appears in list after save");
 
       // Verify Courses data saved in database
       await verifyCoursesInDB(createdTournamentName, null);
@@ -369,9 +387,44 @@ test.describe("Courses Save Buttons - Combined Test", () => {
       await cleanupTestTournament(createdTournamentName);
       createdTournamentName = null;
 
-      console.log(
-        "\n🎉 ALL COURSES SAVE BUTTON TESTS COMPLETED: Save & Exit and Save & Next!",
-      );
+      // ==========================================
+      // TEST 3: Save & Next Button
+      // ==========================================
+      console.log("\n🧪 TEST 3: Testing Save & Next Button");
+
+      createdTournamentName = await navigateToCoursesTab(page);
+
+      // Add a course by searching and selecting one
+      const searchInput3 = page.locator("#courseInputBoxId");
+      await searchInput3.fill("Golf");
+      await page.waitForTimeout(1500);
+
+      const dropdownItems3 = page.locator(".list-group-item");
+      await dropdownItems3.first().waitFor({ state: "visible", timeout: 5000 });
+      await dropdownItems3.first().click();
+      await page.waitForTimeout(1000);
+
+      // Verify at least one course is present
+      const courseRows3 = page.locator(".courses-table tbody tr");
+      const courseCount3 = await courseRows3.count();
+      expect(courseCount3).toBeGreaterThan(0);
+
+      // Click Save & Next button
+      const saveNextButton = page.getByRole("button", { name: "Save & Next" });
+      await saveNextButton.click();
+      await page.waitForTimeout(3000);
+
+      // Should advance to next tab (Divisions) - check URL
+      await expect(page.url()).toMatch(/divisions/i);
+      console.log("✅ TEST 3-a PASSED: Advances to Divisions tab");
+
+      // Verify Courses data saved in database
+      await verifyCoursesInDB(createdTournamentName, null);
+      console.log("✅ TEST 3-b PASSED: Courses data saved in database");
+
+      // Clean up this tournament
+      await cleanupTestTournament(createdTournamentName);
+      createdTournamentName = null;
     } catch (error) {
       // Clean up in case of error
       if (createdTournamentName) {
