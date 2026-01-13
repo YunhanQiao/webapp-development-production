@@ -15,13 +15,13 @@ const dbConfig = {
 
 // Import backend database configuration
 require("dotenv").config({
-  path: path.join(__dirname, "../../../../../backend-production/.env"),
+  path: path.join(__dirname, "../../../../SpeedScore-backend/.env"),
 });
 
 // Import the actual backend models - use relative path
 const backendModelsPath = path.join(
   __dirname,
-  "../../../../../backend-production/src/models/index.js",
+  "../../../../SpeedScore-backend/src/models/index.js",
 );
 const db = require(backendModelsPath);
 
@@ -247,7 +247,11 @@ async function navigateToColorThemeTab(page) {
 }
 
 test.describe("Color Theme Save Buttons - Combined Test", () => {
-  test("All Save Buttons: Save & Exit and Save & Next", async ({ page }) => {
+  test.setTimeout(120000); // 120 seconds for database operations (3 tests with DB writes)
+
+  test("All Save Buttons: Previous, Save & Exit and Save & Next", async ({
+    page,
+  }) => {
     // Connect to database at start of test
     await connectToDatabase();
 
@@ -259,9 +263,68 @@ test.describe("Color Theme Save Buttons - Combined Test", () => {
       await dismissInitialAlerts(page);
 
       // ==========================================
-      // TEST 1: Save & Exit Button
+      // TEST 1: Previous Button - Data Preservation
       // ==========================================
-      console.log("\n🧪 TEST 1: Testing Save & Exit Button");
+      console.log("\n🧪 TEST 1: Testing Previous Button - Data Preservation");
+
+      createdTournamentName = await navigateToColorThemeTab(page);
+
+      // Store expected values from Registration & Payment tab
+      const expectedRegStartDate = "2026-05-01";
+      const expectedRegEndDate = "2026-05-31";
+      const expectedMaxWithdrawDate = "2026-05-25";
+
+      // Fill some color fields to simulate user interaction
+      await page.locator("#titleText").fill("#FF5733");
+      await page.locator("#headerRowBg").fill("#3498DB");
+      await page.waitForTimeout(500);
+
+      // Click Previous button
+      const previousButton = page.getByRole("button", { name: "Previous" });
+      await previousButton.click();
+      await page.waitForTimeout(2000);
+
+      // Verify Registration & Payment field values are preserved
+      const regStartDateValue = await page
+        .locator("#regStartDate")
+        .inputValue();
+      const regEndDateValue = await page.locator("#regEndDate").inputValue();
+      const maxWithdrawDateValue = await page
+        .locator("#maxAllowedWithdraDate")
+        .inputValue();
+
+      expect(regStartDateValue).toBe(expectedRegStartDate);
+      expect(regEndDateValue).toBe(expectedRegEndDate);
+      expect(maxWithdrawDateValue).toBe(expectedMaxWithdrawDate);
+
+      console.log(
+        "✅ TEST 1-a PASSED: Registration start date preserved:",
+        regStartDateValue,
+      );
+      console.log(
+        "✅ TEST 1-b PASSED: Registration end date preserved:",
+        regEndDateValue,
+      );
+      console.log(
+        "✅ TEST 1-c PASSED: Max withdraw date preserved:",
+        maxWithdrawDateValue,
+      );
+
+      // Click Cancel Changes & Exit to close wizard without saving RegPay changes
+      const cancelExitButton = page.getByRole("button", {
+        name: "Cancel Changes & Exit",
+      });
+      await cancelExitButton.click();
+      await page.waitForTimeout(2000);
+
+      // Clean up this tournament
+      await cleanupTestTournament(createdTournamentName);
+      createdTournamentName = null;
+
+      // ==========================================
+      // TEST 2: Save & Exit Button
+      // ==========================================
+      console.log("\n🧪 TEST 2: Testing Save & Exit Button");
 
       createdTournamentName = await navigateToColorThemeTab(page);
 
@@ -306,7 +369,7 @@ test.describe("Color Theme Save Buttons - Combined Test", () => {
       const tournamentRow3 = page.locator(`text="${createdTournamentName}"`);
       await expect(tournamentRow3.first()).toBeVisible({ timeout: 5000 });
       console.log(
-        "✅ TEST 1-a PASSED: Tournament appears in competitions list after save",
+        "✅ TEST 2-a PASSED: Tournament appears in competitions list after save",
       );
 
       // Verify all 13 color fields saved in database
@@ -326,7 +389,7 @@ test.describe("Color Theme Save Buttons - Combined Test", () => {
         SGParColTxt,
       });
       console.log(
-        "✅ TEST 1-b PASSED: All 13 color theme fields saved in database",
+        "✅ TEST 2-b PASSED: All 13 color theme fields saved in database",
       );
 
       // Clean up this tournament
@@ -334,9 +397,9 @@ test.describe("Color Theme Save Buttons - Combined Test", () => {
       createdTournamentName = null;
 
       // ==========================================
-      // TEST 2: Save & Next Button
+      // TEST 3: Save & Next Button
       // ==========================================
-      console.log("\n🧪 TEST 2: Testing Save & Next Button");
+      console.log("\n🧪 TEST 3: Testing Save & Next Button");
 
       createdTournamentName = await navigateToColorThemeTab(page);
 
@@ -378,7 +441,7 @@ test.describe("Color Theme Save Buttons - Combined Test", () => {
 
       // Should advance to next tab (Courses) - check URL instead of tab to avoid ambiguity
       await expect(page.url()).toMatch(/courses/i);
-      console.log("✅ TEST 2-a PASSED: Advances to Courses tab");
+      console.log("✅ TEST 3-a PASSED: Advances to Courses tab");
 
       // Go back to Color Theme tab to verify fields preserved
       const colorThemeTab = page.getByRole("tab", {
@@ -400,7 +463,7 @@ test.describe("Color Theme Save Buttons - Combined Test", () => {
       expect(currentTitleText).toBeTruthy();
       expect(currentHeaderRowBg).toBeTruthy();
       expect(currentUpdateBtnBg).toBeTruthy();
-      console.log("✅ TEST 2-b PASSED: All fields preserved after Save & Next");
+      console.log("✅ TEST 3-b PASSED: All fields preserved after Save & Next");
 
       // Verify all 13 color fields saved in database
       await verifyColorThemeInDB(createdTournamentName, {
@@ -419,7 +482,7 @@ test.describe("Color Theme Save Buttons - Combined Test", () => {
         SGParColTxt: SGParColTxt2,
       });
       console.log(
-        "✅ TEST 2-c PASSED: All 13 color theme fields saved in database",
+        "✅ TEST 3-c PASSED: All 13 color theme fields saved in database",
       );
 
       // Clean up this tournament
