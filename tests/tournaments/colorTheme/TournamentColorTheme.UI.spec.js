@@ -1,7 +1,78 @@
 const { test, expect } = require("@playwright/test");
+const mongoose = require("mongoose");
+const path = require("path");
 
 const LOGIN_EMAIL = "seal-osu@gmail.com";
 const LOGIN_PASSWORD = "GoodLuck2025!";
+
+// Database configuration - use production DB since frontend calls production API
+const dbConfig = {
+  url: `mongodb+srv://johnsonyqiao_db_user:k6bQihjU4KgszLel@cluster0.f5ssltl.mongodb.net/speedscore-expert?retryWrites=true&w=majority&appName=Cluster0`,
+};
+
+// Import backend database configuration
+require("dotenv").config({
+  path: path.join(__dirname, "../../../../SpeedScore-backend/.env"),
+});
+
+// Import the actual backend models - use relative path
+const backendModelsPath = path.join(
+  __dirname,
+  "../../../../SpeedScore-backend/src/models/index.js",
+);
+const db = require(backendModelsPath);
+
+// Database helper functions
+async function connectToDatabase() {
+  try {
+    // Check if already connected
+    if (global.testConnection && global.testConnection.readyState === 1) {
+      return;
+    }
+
+    const testConnection = mongoose.createConnection();
+
+    await testConnection.openUri(dbConfig.url, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
+    });
+
+    global.testConnection = testConnection;
+    global.TestCompetition = testConnection.model(
+      "Competition",
+      db.competition.schema,
+    );
+  } catch (error) {
+    console.error("❌ Database connection failed:", error.message);
+    throw error;
+  }
+}
+
+async function disconnectFromDatabase() {
+  try {
+    if (global.testConnection && global.testConnection.readyState === 1) {
+      await global.testConnection.close();
+
+      global.testConnection = null;
+      global.TestCompetition = null;
+    }
+  } catch (error) {
+    console.error("⚠️ Database disconnection warning:", error.message);
+  }
+}
+
+async function cleanupTestTournament(tournamentName) {
+  try {
+    const TestCompetition = global.TestCompetition;
+    const result = await TestCompetition.deleteOne({
+      "basicInfo.name": tournamentName,
+    });
+  } catch (error) {
+    console.error(`❌ Error cleaning up test tournament: ${error.message}`);
+  }
+}
 
 async function loginWithCredentials(page) {
   await page.goto("http://localhost:3000/login", {
@@ -123,227 +194,274 @@ async function fillColorInput(page, selector, value) {
 
 test.describe("Color Theme Color Inputs", () => {
   test("All Color Input Tests", async ({ page }) => {
-    // Login and navigate to Color Theme tab
-    await loginWithCredentials(page);
-    await dismissInitialAlerts(page);
-    await navigateToColorThemeTab(page);
+    test.setTimeout(180000); // Set timeout to 180 seconds
 
-    // ==========================================
-    // TEST 1: Title Text - Default value and color change
-    // ==========================================
-    console.log("\n🧪 TEST 1: Testing Title Text");
+    const createdTournamentName = "Color Input Test Tournament";
 
-    // TEST 1-a: Verify default value
-    await expect(page.locator("#titleText")).toHaveValue(/^#000000$/i);
-    console.log("✅ TEST 1-a PASSED: Title Text default value is #000000");
+    try {
+      // Connect to database
+      await connectToDatabase();
 
-    // TEST 1-b: Change color
-    await fillColorInput(page, "#titleText", "#FF0000");
-    await expect(page.locator("#titleText")).toHaveValue(/^#FF0000$/i);
-    console.log("✅ TEST 1-b PASSED: Title Text color changed to #FF0000");
+      // Login and navigate to Color Theme tab
+      await loginWithCredentials(page);
+      await dismissInitialAlerts(page);
+      await navigateToColorThemeTab(page);
 
-    // ==========================================
-    // TEST 2: Header Row Bg - Default value and color change
-    // ==========================================
-    console.log("\n🧪 TEST 2: Testing Header Row Bg");
+      // ==========================================
+      // TEST 1: Verify header displays tournament short name with tab name
+      // ==========================================
+      console.log("\n🧪 TEST 1: Testing Header Name in Color Theme Tab");
 
-    // TEST 2-a: Verify default value
-    await expect(page.locator("#headerRowBg")).toHaveValue(/^#CC2127$/i);
-    console.log("✅ TEST 2-a PASSED: Header Row Bg default value is #CC2127");
+      // TEST 1: Verify header shows "CITT26: Color Theme" (Color Input Test Tournament)
+      const header = page.locator("#tournamentFormHeader");
+      await expect(header).toContainText("CITT26: Color Theme", {
+        timeout: 5000,
+      });
+      console.log("✅ TEST 1 PASSED: Header displays 'CITT26: Color Theme'");
 
-    // TEST 2-b: Change color
-    await fillColorInput(page, "#headerRowBg", "#00FF00");
-    await expect(page.locator("#headerRowBg")).toHaveValue(/^#00FF00$/i);
-    console.log("✅ TEST 2-b PASSED: Header Row Bg color changed to #00FF00");
+      // ==========================================
+      // TEST 2: Title Text - Default value and color change
+      // ==========================================
+      console.log("\n🧪 TEST 2: Testing Title Text");
 
-    // ==========================================
-    // TEST 3: Header Row Txt - Default value and color change
-    // ==========================================
-    console.log("\n🧪 TEST 3: Testing Header Row Txt");
+      // TEST 2-a: Verify default value
+      await expect(page.locator("#titleText")).toHaveValue(/^#000000$/i);
+      console.log("✅ TEST 2-a PASSED: Title Text default value is #000000");
 
-    // TEST 3-a: Verify default value
-    await expect(page.locator("#headerRowTxt")).toHaveValue(/^#FFFFFF$/i);
-    console.log("✅ TEST 3-a PASSED: Header Row Txt default value is #FFFFFF");
+      // TEST 2-b: Change color
+      await fillColorInput(page, "#titleText", "#FF0000");
+      await expect(page.locator("#titleText")).toHaveValue(/^#FF0000$/i);
+      console.log("✅ TEST 2-b PASSED: Title Text color changed to #FF0000");
 
-    // TEST 3-b: Change color
-    await fillColorInput(page, "#headerRowTxt", "#0000FF");
-    await expect(page.locator("#headerRowTxt")).toHaveValue(/^#0000FF$/i);
-    console.log("✅ TEST 3-b PASSED: Header Row Txt color changed to #0000FF");
+      // ==========================================
+      // TEST 3: Header Row Bg - Default value and color change
+      // ==========================================
+      console.log("\n🧪 TEST 3: Testing Header Row Bg");
 
-    // ==========================================
-    // TEST 4: Update Btn Bg - Default value and color change
-    // ==========================================
-    console.log("\n🧪 TEST 4: Testing Update Btn Bg");
+      // TEST 3-a: Verify default value
+      await expect(page.locator("#headerRowBg")).toHaveValue(/^#CC2127$/i);
+      console.log("✅ TEST 3-a PASSED: Header Row Bg default value is #CC2127");
 
-    // TEST 4-a: Verify default value
-    await expect(page.locator("#updateBtnBg")).toHaveValue(/^#13294E$/i);
-    console.log("✅ TEST 4-a PASSED: Update Btn Bg default value is #13294E");
+      // TEST 3-b: Change color
+      await fillColorInput(page, "#headerRowBg", "#00FF00");
+      await expect(page.locator("#headerRowBg")).toHaveValue(/^#00FF00$/i);
+      console.log("✅ TEST 3-b PASSED: Header Row Bg color changed to #00FF00");
 
-    // TEST 4-b: Change color
-    await fillColorInput(page, "#updateBtnBg", "#FFFF00");
-    await expect(page.locator("#updateBtnBg")).toHaveValue(/^#FFFF00$/i);
-    console.log("✅ TEST 4-b PASSED: Update Btn Bg color changed to #FFFF00");
+      // ==========================================
+      // TEST 4: Header Row Txt - Default value and color change
+      // ==========================================
+      console.log("\n🧪 TEST 4: Testing Header Row Txt");
 
-    // ==========================================
-    // TEST 5: Update Btn Txt - Default value and color change
-    // ==========================================
-    console.log("\n🧪 TEST 5: Testing Update Btn Txt");
+      // TEST 4-a: Verify default value
+      await expect(page.locator("#headerRowTxt")).toHaveValue(/^#FFFFFF$/i);
+      console.log(
+        "✅ TEST 4-a PASSED: Header Row Txt default value is #FFFFFF",
+      );
 
-    // TEST 5-a: Verify default value
-    await expect(page.locator("#updateBtnTxt")).toHaveValue(/^#FFFFFF$/i);
-    console.log("✅ TEST 5-a PASSED: Update Btn Txt default value is #FFFFFF");
+      // TEST 4-b: Change color
+      await fillColorInput(page, "#headerRowTxt", "#0000FF");
+      await expect(page.locator("#headerRowTxt")).toHaveValue(/^#0000FF$/i);
+      console.log(
+        "✅ TEST 4-b PASSED: Header Row Txt color changed to #0000FF",
+      );
 
-    // TEST 5-b: Change color
-    await fillColorInput(page, "#updateBtnTxt", "#FF00FF");
-    await expect(page.locator("#updateBtnTxt")).toHaveValue(/^#FF00FF$/i);
-    console.log("✅ TEST 5-b PASSED: Update Btn Txt color changed to #FF00FF");
+      // ==========================================
+      // TEST 5: Update Btn Bg - Default value and color change
+      // ==========================================
+      console.log("\n🧪 TEST 5: Testing Update Btn Bg");
 
-    // ==========================================
-    // TEST 6: Tournament Name Banner Bg - Default value and color change
-    // ==========================================
-    console.log("\n🧪 TEST 6: Testing Tournament Name Banner Bg");
+      // TEST 5-a: Verify default value
+      await expect(page.locator("#updateBtnBg")).toHaveValue(/^#13294E$/i);
+      console.log("✅ TEST 5-a PASSED: Update Btn Bg default value is #13294E");
 
-    // TEST 6-a: Verify default value
-    await expect(page.locator("#tournNameBannerBg")).toHaveValue(/^#13294E$/i);
-    console.log(
-      "✅ TEST 6-a PASSED: Tournament Name Banner Bg default value is #13294E",
-    );
+      // TEST 5-b: Change color
+      await fillColorInput(page, "#updateBtnBg", "#FFFF00");
+      await expect(page.locator("#updateBtnBg")).toHaveValue(/^#FFFF00$/i);
+      console.log("✅ TEST 5-b PASSED: Update Btn Bg color changed to #FFFF00");
 
-    // TEST 6-b: Change color
-    await fillColorInput(page, "#tournNameBannerBg", "#123456");
-    await expect(page.locator("#tournNameBannerBg")).toHaveValue(/^#123456$/i);
-    console.log(
-      "✅ TEST 6-b PASSED: Tournament Name Banner Bg color changed to #123456",
-    );
+      // ==========================================
+      // TEST 6: Update Btn Txt - Default value and color change
+      // ==========================================
+      console.log("\n🧪 TEST 6: Testing Update Btn Txt");
 
-    // ==========================================
-    // TEST 7: Tournament Name Banner Txt - Default value and color change
-    // ==========================================
-    console.log("\n🧪 TEST 7: Testing Tournament Name Banner Txt");
+      // TEST 6-a: Verify default value
+      await expect(page.locator("#updateBtnTxt")).toHaveValue(/^#FFFFFF$/i);
+      console.log(
+        "✅ TEST 6-a PASSED: Update Btn Txt default value is #FFFFFF",
+      );
 
-    // TEST 7-a: Verify default value
-    await expect(page.locator("#tournNameBannerTxt")).toHaveValue(/^#FFFFFF$/i);
-    console.log(
-      "✅ TEST 7-a PASSED: Tournament Name Banner Txt default value is #FFFFFF",
-    );
+      // TEST 6-b: Change color
+      await fillColorInput(page, "#updateBtnTxt", "#FF00FF");
+      await expect(page.locator("#updateBtnTxt")).toHaveValue(/^#FF00FF$/i);
+      console.log(
+        "✅ TEST 6-b PASSED: Update Btn Txt color changed to #FF00FF",
+      );
 
-    // TEST 7-b: Change color
-    await fillColorInput(page, "#tournNameBannerTxt", "#ABCDEF");
-    await expect(page.locator("#tournNameBannerTxt")).toHaveValue(/^#ABCDEF$/i);
-    console.log(
-      "✅ TEST 7-b PASSED: Tournament Name Banner Txt color changed to #ABCDEF",
-    );
+      // ==========================================
+      // TEST 7: Tournament Name Banner Bg - Default value and color change
+      // ==========================================
+      console.log("\n🧪 TEST 7: Testing Tournament Name Banner Bg");
 
-    // ==========================================
-    // TEST 8: Strokes Par Col Bg - Default value and color change
-    // ==========================================
-    console.log("\n🧪 TEST 8: Testing Strokes Par Col Bg");
+      // TEST 7-a: Verify default value
+      await expect(page.locator("#tournNameBannerBg")).toHaveValue(
+        /^#13294E$/i,
+      );
+      console.log(
+        "✅ TEST 7-a PASSED: Tournament Name Banner Bg default value is #13294E",
+      );
 
-    // TEST 8-a: Verify default value
-    await expect(page.locator("#strParColBg")).toHaveValue(/^#13294E$/i);
-    console.log(
-      "✅ TEST 8-a PASSED: Strokes Par Col Bg default value is #13294E",
-    );
+      // TEST 7-b: Change color
+      await fillColorInput(page, "#tournNameBannerBg", "#123456");
+      await expect(page.locator("#tournNameBannerBg")).toHaveValue(
+        /^#123456$/i,
+      );
+      console.log(
+        "✅ TEST 7-b PASSED: Tournament Name Banner Bg color changed to #123456",
+      );
 
-    // TEST 8-b: Change color
-    await fillColorInput(page, "#strParColBg", "#111111");
-    await expect(page.locator("#strParColBg")).toHaveValue(/^#111111$/i);
-    console.log(
-      "✅ TEST 8-b PASSED: Strokes Par Col Bg color changed to #111111",
-    );
+      // ==========================================
+      // TEST 8: Tournament Name Banner Txt - Default value and color change
+      // ==========================================
+      console.log("\n🧪 TEST 8: Testing Tournament Name Banner Txt");
 
-    // ==========================================
-    // TEST 9: Strokes Par Col Txt - Default value and color change
-    // ==========================================
-    console.log("\n🧪 TEST 9: Testing Strokes Par Col Txt");
+      // TEST 8-a: Verify default value
+      await expect(page.locator("#tournNameBannerTxt")).toHaveValue(
+        /^#FFFFFF$/i,
+      );
+      console.log(
+        "✅ TEST 8-a PASSED: Tournament Name Banner Txt default value is #FFFFFF",
+      );
 
-    // TEST 9-a: Verify default value
-    await expect(page.locator("#strParColTxt")).toHaveValue(/^#FFFFFF$/i);
-    console.log(
-      "✅ TEST 9-a PASSED: Strokes Par Col Txt default value is #FFFFFF",
-    );
+      // TEST 8-b: Change color
+      await fillColorInput(page, "#tournNameBannerTxt", "#ABCDEF");
+      await expect(page.locator("#tournNameBannerTxt")).toHaveValue(
+        /^#ABCDEF$/i,
+      );
+      console.log(
+        "✅ TEST 8-b PASSED: Tournament Name Banner Txt color changed to #ABCDEF",
+      );
 
-    // TEST 9-b: Change color
-    await fillColorInput(page, "#strParColTxt", "#222222");
-    await expect(page.locator("#strParColTxt")).toHaveValue(/^#222222$/i);
-    console.log(
-      "✅ TEST 9-b PASSED: Strokes Par Col Txt color changed to #222222",
-    );
+      // ==========================================
+      // TEST 9: Strokes Par Col Bg - Default value and color change
+      // ==========================================
+      console.log("\n🧪 TEST 9: Testing Strokes Par Col Bg");
 
-    // ==========================================
-    // TEST 10: Time Par Col Bg - Default value and color change
-    // ==========================================
-    console.log("\n🧪 TEST 10: Testing Time Par Col Bg");
+      // TEST 9-a: Verify default value
+      await expect(page.locator("#strParColBg")).toHaveValue(/^#13294E$/i);
+      console.log(
+        "✅ TEST 9-a PASSED: Strokes Par Col Bg default value is #13294E",
+      );
 
-    // TEST 10-a: Verify default value
-    await expect(page.locator("#timeParColBg")).toHaveValue(/^#13294E$/i);
-    console.log(
-      "✅ TEST 10-a PASSED: Time Par Col Bg default value is #13294E",
-    );
+      // TEST 9-b: Change color
+      await fillColorInput(page, "#strParColBg", "#111111");
+      await expect(page.locator("#strParColBg")).toHaveValue(/^#111111$/i);
+      console.log(
+        "✅ TEST 9-b PASSED: Strokes Par Col Bg color changed to #111111",
+      );
 
-    // TEST 10-b: Change color
-    await fillColorInput(page, "#timeParColBg", "#333333");
-    await expect(page.locator("#timeParColBg")).toHaveValue(/^#333333$/i);
-    console.log(
-      "✅ TEST 10-b PASSED: Time Par Col Bg color changed to #333333",
-    );
+      // ==========================================
+      // TEST 10: Strokes Par Col Txt - Default value and color change
+      // ==========================================
+      console.log("\n🧪 TEST 10: Testing Strokes Par Col Txt");
 
-    // ==========================================
-    // TEST 11: Time Par Col Txt - Default value and color change
-    // ==========================================
-    console.log("\n🧪 TEST 11: Testing Time Par Col Txt");
+      // TEST 10-a: Verify default value
+      await expect(page.locator("#strParColTxt")).toHaveValue(/^#FFFFFF$/i);
+      console.log(
+        "✅ TEST 10-a PASSED: Strokes Par Col Txt default value is #FFFFFF",
+      );
 
-    // TEST 11-a: Verify default value
-    await expect(page.locator("#timeParColTxt")).toHaveValue(/^#FFFFFF$/i);
-    console.log(
-      "✅ TEST 11-a PASSED: Time Par Col Txt default value is #FFFFFF",
-    );
+      // TEST 10-b: Change color
+      await fillColorInput(page, "#strParColTxt", "#222222");
+      await expect(page.locator("#strParColTxt")).toHaveValue(/^#222222$/i);
+      console.log(
+        "✅ TEST 10-b PASSED: Strokes Par Col Txt color changed to #222222",
+      );
 
-    // TEST 11-b: Change color
-    await fillColorInput(page, "#timeParColTxt", "#444444");
-    await expect(page.locator("#timeParColTxt")).toHaveValue(/^#444444$/i);
-    console.log(
-      "✅ TEST 11-b PASSED: Time Par Col Txt color changed to #444444",
-    );
+      // ==========================================
+      // TEST 11: Time Par Col Bg - Default value and color change
+      // ==========================================
+      console.log("\n🧪 TEST 11: Testing Time Par Col Bg");
 
-    // ==========================================
-    // TEST 12: Speed Golf Par Col Bg - Default value and color change
-    // ==========================================
-    console.log("\n🧪 TEST 12: Testing Speed Golf Par Col Bg");
+      // TEST 11-a: Verify default value
+      await expect(page.locator("#timeParColBg")).toHaveValue(/^#13294E$/i);
+      console.log(
+        "✅ TEST 11-a PASSED: Time Par Col Bg default value is #13294E",
+      );
 
-    // TEST 12-a: Verify default value
-    await expect(page.locator("#SGParColBg")).toHaveValue(/^#000000$/i);
-    console.log(
-      "✅ TEST 12-a PASSED: Speed Golf Par Col Bg default value is #000000",
-    );
+      // TEST 11-b: Change color
+      await fillColorInput(page, "#timeParColBg", "#333333");
+      await expect(page.locator("#timeParColBg")).toHaveValue(/^#333333$/i);
+      console.log(
+        "✅ TEST 11-b PASSED: Time Par Col Bg color changed to #333333",
+      );
 
-    // TEST 12-b: Change color
-    await fillColorInput(page, "#SGParColBg", "#101010");
-    await expect(page.locator("#SGParColBg")).toHaveValue(/^#101010$/i);
-    console.log(
-      "✅ TEST 12-b PASSED: Speed Golf Par Col Bg color changed to #101010",
-    );
+      // ==========================================
+      // TEST 12: Time Par Col Txt - Default value and color change
+      // ==========================================
+      console.log("\n🧪 TEST 12: Testing Time Par Col Txt");
 
-    // ==========================================
-    // TEST 13: Speed Golf Par Col Txt - Default value and color change
-    // ==========================================
-    console.log("\n🧪 TEST 13: Testing Speed Golf Par Col Txt");
+      // TEST 12-a: Verify default value
+      await expect(page.locator("#timeParColTxt")).toHaveValue(/^#FFFFFF$/i);
+      console.log(
+        "✅ TEST 12-a PASSED: Time Par Col Txt default value is #FFFFFF",
+      );
 
-    // TEST 13-a: Verify default value
-    await expect(page.locator("#SGParColTxt")).toHaveValue(/^#FFFFFF$/i);
-    console.log(
-      "✅ TEST 13-a PASSED: Speed Golf Par Col Txt default value is #FFFFFF",
-    );
+      // TEST 12-b: Change color
+      await fillColorInput(page, "#timeParColTxt", "#444444");
+      await expect(page.locator("#timeParColTxt")).toHaveValue(/^#444444$/i);
+      console.log(
+        "✅ TEST 12-b PASSED: Time Par Col Txt color changed to #444444",
+      );
 
-    // TEST 13-b: Change color
-    await fillColorInput(page, "#SGParColTxt", "#202020");
-    await expect(page.locator("#SGParColTxt")).toHaveValue(/^#202020$/i);
-    console.log(
-      "✅ TEST 13-b PASSED: Speed Golf Par Col Txt color changed to #202020",
-    );
+      // ==========================================
+      // TEST 13: Speed Golf Par Col Bg - Default value and color change
+      // ==========================================
+      console.log("\n🧪 TEST 13: Testing Speed Golf Par Col Bg");
 
-    console.log(
-      "\n🎉 ALL COLOR INPUT TESTS COMPLETED: Default values verified and color changing works for all 13 fields!",
-    );
+      // TEST 13-a: Verify default value
+      await expect(page.locator("#SGParColBg")).toHaveValue(/^#000000$/i);
+      console.log(
+        "✅ TEST 13-a PASSED: Speed Golf Par Col Bg default value is #000000",
+      );
+
+      // TEST 13-b: Change color
+      await fillColorInput(page, "#SGParColBg", "#101010");
+      await expect(page.locator("#SGParColBg")).toHaveValue(/^#101010$/i);
+      console.log(
+        "✅ TEST 13-b PASSED: Speed Golf Par Col Bg color changed to #101010",
+      );
+
+      // ==========================================
+      // TEST 14: Speed Golf Par Col Txt - Default value and color change
+      // ==========================================
+      console.log("\n🧪 TEST 14: Testing Speed Golf Par Col Txt");
+
+      // TEST 14-a: Verify default value
+      await expect(page.locator("#SGParColTxt")).toHaveValue(/^#FFFFFF$/i);
+      console.log(
+        "✅ TEST 14-a PASSED: Speed Golf Par Col Txt default value is #FFFFFF",
+      );
+
+      // TEST 14-b: Change color
+      await fillColorInput(page, "#SGParColTxt", "#202020");
+      await expect(page.locator("#SGParColTxt")).toHaveValue(/^#202020$/i);
+      console.log(
+        "✅ TEST 14-b PASSED: Speed Golf Par Col Txt color changed to #202020",
+      );
+
+      // Cleanup the test tournament
+      await cleanupTestTournament(createdTournamentName);
+    } catch (error) {
+      // Cleanup on error
+      try {
+        await cleanupTestTournament(createdTournamentName);
+      } catch (cleanupError) {
+        console.error("Error during cleanup:", cleanupError);
+      }
+      throw error;
+    } finally {
+      // Always disconnect from database
+      await disconnectFromDatabase();
+    }
   });
 });
