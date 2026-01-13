@@ -229,7 +229,18 @@ async function fillRequiredRegPayFields(page) {
 }
 
 test.describe("Registration & Payment Save Buttons - Combined Test", () => {
-  test("All Save Buttons: Save & Exit and Save & Next", async ({ page }) => {
+  test("All Save Buttons: Previous, Save & Exit, and Save & Next", async ({
+    page,
+  }) => {
+    // Increase timeout for this test since it includes database operations
+    test.setTimeout(90000); // 90 seconds
+
+    // Setup global dialog handler
+    page.on("dialog", async (dialog) => {
+      console.log(`Dialog detected: ${dialog.message()}`);
+      await dialog.accept();
+    });
+
     // Connect to database at start of test
     await connectToDatabase();
 
@@ -241,9 +252,52 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
       await dismissInitialAlerts(page);
 
       // ==========================================
-      // TEST 1: Save & Exit Button
+      // TEST 1: Previous Button - Preserve Basic Info
       // ==========================================
-      console.log("\n🧪 TEST 1: Testing Save & Exit Button");
+      console.log("\n🧪 TEST 1: Testing Previous Button - Data Preservation");
+
+      // Use navigateToRegPayTab which creates tournament and goes to RegPay
+      createdTournamentName = await navigateToRegPayTab(page);
+
+      // Store the Basic Info values that were filled by navigateToRegPayTab
+      const expectedName = createdTournamentName;
+      const expectedStartDate = "2026-06-01";
+      const expectedEndDate = "2026-06-05";
+
+      // Click Previous button to go back to Basic Info
+      const previousButton = page.getByRole("button", { name: "Previous" });
+      await previousButton.waitFor({ state: "visible", timeout: 5000 });
+      await previousButton.click();
+      await page.waitForTimeout(2000);
+
+      // Verify all Basic Info fields are preserved
+      const nameValue = await page.locator("#name").inputValue();
+      const startDateValue = await page.locator("#startDate").inputValue();
+      const endDateValue = await page.locator("#endDate").inputValue();
+
+      expect(nameValue).toBe(expectedName);
+      expect(startDateValue).toBe(expectedStartDate);
+      expect(endDateValue).toBe(expectedEndDate);
+
+      console.log("✅ TEST 1-a PASSED: Tournament name preserved:", nameValue);
+      console.log("✅ TEST 1-b PASSED: Start date preserved:", startDateValue);
+      console.log("✅ TEST 1-c PASSED: End date preserved:", endDateValue);
+
+      // Click Cancel Changes & Exit to close wizard without saving RegPay changes
+      const cancelExitButton = page.getByRole("button", {
+        name: "Cancel Changes & Exit",
+      });
+      await cancelExitButton.click();
+      await page.waitForTimeout(2000);
+
+      // Clean up this tournament
+      await cleanupTestTournament(createdTournamentName);
+      createdTournamentName = null;
+
+      // ==========================================
+      // TEST 2: Save & Exit Button
+      // ==========================================
+      console.log("\n🧪 TEST 2: Testing Save & Exit Button");
 
       createdTournamentName = await navigateToRegPayTab(page);
 
@@ -262,9 +316,9 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
 
       // Verify tournament appears in list
       await page.waitForTimeout(2000);
-      const tournamentRow3 = page.locator(`text="${createdTournamentName}"`);
-      await expect(tournamentRow3.first()).toBeVisible({ timeout: 5000 });
-      console.log("✅ TEST 1-a PASSED: Tournament appears in list after save");
+      const tournamentRow = page.locator(`text="${createdTournamentName}"`);
+      await expect(tournamentRow.first()).toBeVisible({ timeout: 5000 });
+      console.log("✅ TEST 2-a PASSED: Tournament appears in list after save");
 
       // Verify RegPay data saved in database
       await verifyRegPayInfoInDB(
@@ -273,7 +327,7 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
         regEndDate,
       );
       console.log(
-        "✅ TEST 1-b PASSED: Registration & Payment data saved in database",
+        "✅ TEST 2-b PASSED: Registration & Payment data saved in database",
       );
 
       // Clean up this tournament
@@ -281,9 +335,9 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
       createdTournamentName = null;
 
       // ==========================================
-      // TEST 2: Save & Next Button
+      // TEST 3: Save & Next Button
       // ==========================================
-      console.log("\n🧪 TEST 2: Testing Save & Next Button");
+      console.log("\n🧪 TEST 3: Testing Save & Next Button");
 
       createdTournamentName = await navigateToRegPayTab(page);
 
@@ -310,13 +364,13 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
         await expect(colorThemeTab).toHaveAttribute("aria-selected", "true", {
           timeout: 5000,
         });
-        console.log("✅ TEST 2-a PASSED: Advances to Color & Theme tab");
+        console.log("✅ TEST 3-a PASSED: Advances to Color & Theme tab");
       } else {
         console.log(
-          "⚠️  TEST 2-a SKIPPED: Color & Theme tab not found - checking URL",
+          "⚠️  TEST 3-a SKIPPED: Color & Theme tab not found - checking URL",
         );
         await expect(page.url()).toMatch(/colorTheme/i);
-        console.log("✅ TEST 2-a PASSED: URL indicates next tab");
+        console.log("✅ TEST 3-a PASSED: URL indicates next tab");
       }
 
       // Verify RegPay data saved in database
@@ -326,7 +380,7 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
         regEndDate2,
       );
       console.log(
-        "✅ TEST 2-b PASSED: Registration & Payment data saved in database",
+        "✅ TEST 3-b PASSED: Registration & Payment data saved in database",
       );
 
       // Clean up this tournament
@@ -334,7 +388,7 @@ test.describe("Registration & Payment Save Buttons - Combined Test", () => {
       createdTournamentName = null;
 
       console.log(
-        "\n🎉 ALL REG & PAY SAVE BUTTON TESTS COMPLETED: Save & Exit and Save & Next!",
+        "\n🎉 ALL REG & PAY TESTS COMPLETED: Previous, Save & Exit, and Save & Next!",
       );
     } catch (error) {
       // Clean up in case of error
