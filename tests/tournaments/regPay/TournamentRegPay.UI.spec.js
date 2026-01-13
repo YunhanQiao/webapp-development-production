@@ -12,13 +12,13 @@ const dbConfig = {
 
 // Import backend database configuration
 require("dotenv").config({
-  path: path.join(__dirname, "../../../../../backend-production/.env"),
+  path: path.join(__dirname, "../../../../SpeedScore-backend/.env"),
 });
 
 // Import the actual backend models - use relative path
 const backendModelsPath = path.join(
   __dirname,
-  "../../../../../backend-production/src/models/index.js",
+  "../../../../SpeedScore-backend/src/models/index.js",
 );
 const db = require(backendModelsPath);
 
@@ -174,6 +174,8 @@ async function navigateToRegPayTab(page) {
 
 test.describe("Registration & Payment Checkboxes", () => {
   test("All Checkbox and Date Validation Tests", async ({ page }) => {
+    test.setTimeout(180000); // Set timeout to 180 seconds
+
     // Connect to database at start of test
     await connectToDatabase();
 
@@ -189,74 +191,90 @@ test.describe("Registration & Payment Checkboxes", () => {
       createdTournamentName = "Checkbox Test Tournament";
 
       // ==========================================
-      // TEST 1: Entry Fee Checkbox (Pay Through App)
+      // TEST 1: Verify header displays tournament short name with tab name
       // ==========================================
-      console.log("\n🧪 TEST 1: Testing Entry Fee Checkbox");
+      console.log(
+        "\n🧪 TEST 1: Testing Header Name in Registration & Payment Tab",
+      );
+
+      // TEST 1: Verify header shows "CTT26: Registration & Payment" (Checkbox Test Tournament)
+      const header = page.locator("#tournamentFormHeader");
+      await expect(header).toContainText("CTT26: Registration & Payment", {
+        timeout: 5000,
+      });
+      console.log(
+        "✅ TEST 1 PASSED: Header displays 'CTT26: Registration & Payment'",
+      );
+
+      // ==========================================
+      // TEST 2: Entry Fee Checkbox (Pay Through App)
+      // ==========================================
+      console.log("\n🧪 TEST 2: Testing Entry Fee Checkbox");
 
       const entryFeeCheckbox = page.locator("#payThroughApp");
 
-      // TEST 1-a: Checkbox starts unchecked
+      // TEST 2-a: Checkbox starts unchecked
       await expect(entryFeeCheckbox).toBeVisible();
       await expect(entryFeeCheckbox).not.toBeChecked();
-      console.log("✅ TEST 1-a PASSED: Entry fee checkbox starts unchecked");
+      console.log("✅ TEST 2-a PASSED: Entry fee checkbox starts unchecked");
 
-      // TEST 1-b: Can check the checkbox
+      // TEST 2-b: Can check the checkbox
       await entryFeeCheckbox.check();
       await expect(entryFeeCheckbox).toBeChecked();
-      console.log("✅ TEST 1-b PASSED: Entry fee checkbox can be checked");
+      console.log("✅ TEST 2-b PASSED: Entry fee checkbox can be checked");
 
-      // TEST 1-c: Related fields become enabled when checked
+      // TEST 2-c: Related fields become enabled when checked
       const processingPercent = page.locator("#processingPercent");
       const processingFee = page.locator("#processingFee");
 
       await expect(processingPercent).toBeEnabled();
       await expect(processingFee).toBeEnabled();
       console.log(
-        "✅ TEST 1-c PASSED: Processing fields enabled when checkbox checked",
+        "✅ TEST 2-c PASSED: Processing fields enabled when checkbox checked",
       );
 
-      // TEST 1-d: Can uncheck the checkbox
+      // TEST 2-d: Can uncheck the checkbox
       await entryFeeCheckbox.uncheck();
       await expect(entryFeeCheckbox).not.toBeChecked();
-      console.log("✅ TEST 1-d PASSED: Entry fee checkbox can be unchecked");
+      console.log("✅ TEST 2-d PASSED: Entry fee checkbox can be unchecked");
 
       // ==========================================
-      // TEST 2: Swag Checkbox
+      // TEST 3: Swag Checkbox
       // ==========================================
-      console.log("\n🧪 TEST 2: Testing Swag Checkbox");
+      console.log("\n🧪 TEST 3: Testing Swag Checkbox");
 
       const swagCheckbox = page.locator("#askSwag");
 
-      // TEST 2-a: Checkbox starts unchecked
+      // TEST 4-a: Checkbox starts unchecked
       await expect(swagCheckbox).toBeVisible();
       await expect(swagCheckbox).not.toBeChecked();
-      console.log("✅ TEST 2-a PASSED: Swag checkbox starts unchecked");
+      console.log("✅ TEST 3-a PASSED: Swag checkbox starts unchecked");
 
-      // TEST 2-b: Can check the checkbox
+      // TEST 4-b: Can check the checkbox
       await swagCheckbox.check();
       await expect(swagCheckbox).toBeChecked();
-      console.log("✅ TEST 2-b PASSED: Swag checkbox can be checked");
+      console.log("✅ TEST 3-b PASSED: Swag checkbox can be checked");
 
-      // TEST 2-c: Swag name field becomes visible/enabled when checked
+      // TEST 4-c: Swag name field becomes visible/enabled when checked
       const swagName = page.locator("#swagName");
       if (await swagName.isVisible()) {
         await expect(swagName).toBeEnabled();
         console.log(
-          "✅ TEST 2-c PASSED: Swag name field enabled when checkbox checked",
+          "✅ TEST 3-c PASSED: Swag name field enabled when checkbox checked",
         );
       } else {
-        console.log("⚠️  TEST 2-c SKIPPED: Swag name field not found");
+        console.log("⚠️  TEST 3-c SKIPPED: Swag name field not found");
       }
 
-      // TEST 2-d: Can uncheck the checkbox
+      // TEST 3-d: Can uncheck the checkbox
       await swagCheckbox.uncheck();
       await expect(swagCheckbox).not.toBeChecked();
-      console.log("✅ TEST 2-d PASSED: Swag checkbox can be unchecked");
+      console.log("✅ TEST 3-d PASSED: Swag checkbox can be unchecked");
 
       // ==========================================
-      // TEST 3: Swag Size Checkboxes
+      // TEST 4: Swag Size Checkboxes
       // ==========================================
-      console.log("\n🧪 TEST 3: Testing Swag Size Checkboxes");
+      console.log("\n🧪 TEST 4: Testing Swag Size Checkboxes");
 
       // Re-check swag checkbox to enable size checkboxes
       await swagCheckbox.check();
@@ -264,7 +282,7 @@ test.describe("Registration & Payment Checkboxes", () => {
 
       const swagSizes = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
 
-      // TEST 3-a: All size checkboxes exist and are visible
+      // TEST 4-a: All size checkboxes exist and are visible
       for (const size of swagSizes) {
         const sizeCheckbox = page.locator(`#${size}`);
         const sizeLabel = page.locator(`label[for="${size}"]`);
@@ -274,10 +292,10 @@ test.describe("Registration & Payment Checkboxes", () => {
         await expect(sizeLabel).toHaveText(size);
       }
       console.log(
-        "✅ TEST 3-a PASSED: All 7 swag size checkboxes exist and are visible",
+        "✅ TEST 4-a PASSED: All 7 swag size checkboxes exist and are visible",
       );
 
-      // TEST 3-b: Can check individual size checkboxes
+      // TEST 4-b: Can check individual size checkboxes
       const testSizes = ["S", "M", "L"];
       for (const size of testSizes) {
         const sizeCheckbox = page.locator(`#${size}`);
@@ -293,10 +311,10 @@ test.describe("Registration & Payment Checkboxes", () => {
         await expect(sizeCheckbox).toBeChecked();
       }
       console.log(
-        "✅ TEST 3-b PASSED: Can check individual size checkboxes (S, M, L)",
+        "✅ TEST 4-b PASSED: Can check individual size checkboxes (S, M, L)",
       );
 
-      // TEST 3-c: Can uncheck individual size checkboxes
+      // TEST 4-c: Can uncheck individual size checkboxes
       for (const size of testSizes) {
         const sizeCheckbox = page.locator(`#${size}`);
         const sizeLabel = page.locator(`label[for="${size}"]`);
@@ -305,10 +323,10 @@ test.describe("Registration & Payment Checkboxes", () => {
         await expect(sizeCheckbox).not.toBeChecked();
       }
       console.log(
-        "✅ TEST 3-c PASSED: Can uncheck individual size checkboxes (S, M, L)",
+        "✅ TEST 4-c PASSED: Can uncheck individual size checkboxes (S, M, L)",
       );
 
-      // TEST 3-d: Can check multiple sizes at once
+      // TEST 4-d: Can check multiple sizes at once
       for (const size of ["XS", "M", "XL", "XXL"]) {
         const sizeLabel = page.locator(`label[for="${size}"]`);
         await sizeLabel.click();
@@ -319,10 +337,10 @@ test.describe("Registration & Payment Checkboxes", () => {
         await expect(sizeCheckbox).toBeChecked();
       }
       console.log(
-        "✅ TEST 3-d PASSED: Can check multiple size checkboxes simultaneously",
+        "✅ TEST 4-d PASSED: Can check multiple size checkboxes simultaneously",
       );
 
-      // TEST 3-e: Can check all sizes
+      // TEST 4-e: Can check all sizes
       for (const size of swagSizes) {
         const sizeCheckbox = page.locator(`#${size}`);
         const sizeLabel = page.locator(`label[for="${size}"]`);
@@ -336,9 +354,9 @@ test.describe("Registration & Payment Checkboxes", () => {
         const sizeCheckbox = page.locator(`#${size}`);
         await expect(sizeCheckbox).toBeChecked();
       }
-      console.log("✅ TEST 3-e PASSED: Can check all 7 size checkboxes");
+      console.log("✅ TEST 4-e PASSED: Can check all 7 size checkboxes");
 
-      // TEST 3-f: Can uncheck all sizes
+      // TEST 4-f: Can uncheck all sizes
       for (const size of swagSizes) {
         const sizeCheckbox = page.locator(`#${size}`);
         const sizeLabel = page.locator(`label[for="${size}"]`);
@@ -352,12 +370,12 @@ test.describe("Registration & Payment Checkboxes", () => {
         const sizeCheckbox = page.locator(`#${size}`);
         await expect(sizeCheckbox).not.toBeChecked();
       }
-      console.log("✅ TEST 3-f PASSED: Can uncheck all size checkboxes");
+      console.log("✅ TEST 4-f PASSED: Can uncheck all size checkboxes");
 
       // ==========================================
-      // TEST 4: Checkbox State Persistence
+      // TEST 5: Checkbox State Persistence
       // ==========================================
-      console.log("\n🧪 TEST 4: Testing Checkbox State Persistence");
+      console.log("\n🧪 TEST 5: Testing Checkbox State Persistence");
 
       // Check both main checkboxes and some sizes
       await entryFeeCheckbox.check();
@@ -378,14 +396,14 @@ test.describe("Registration & Payment Checkboxes", () => {
         await expect(sizeCheckbox).toBeChecked();
       }
       console.log(
-        "✅ TEST 4 PASSED: Multiple checkboxes can be checked simultaneously and maintain state",
+        "✅ TEST 5 PASSED: Multiple checkboxes can be checked simultaneously and maintain state",
       );
 
       // ==========================================
-      // TEST 5: Verify Auto-filled Registration Dates
+      // TEST 6: Verify Auto-filled Registration Dates
       // ==========================================
       console.log(
-        "\n🧪 TEST 5: Testing Auto-filled Registration Dates Satisfy Constraints",
+        "\n🧪 TEST 6: Testing Auto-filled Registration Dates Satisfy Constraints",
       );
 
       // Tournament dates: 2026-06-01 to 2026-06-05 (set in navigateToRegPayTab)
@@ -397,85 +415,85 @@ test.describe("Registration & Payment Checkboxes", () => {
       // Wait for fields to be populated with default values
       await page.waitForTimeout(1000);
 
-      // TEST 5-a: Registration start date is automatically filled
+      // TEST 9-a: Registration start date is automatically filled
       const regStartValue = await regStartDateInput.inputValue();
       expect(regStartValue).toBeTruthy();
       expect(regStartValue).not.toBe("");
       console.log(
-        `✅ TEST 5-a PASSED: Registration start date is auto-filled: ${regStartValue}`,
+        `✅ TEST 6-a PASSED: Registration start date is auto-filled: ${regStartValue}`,
       );
 
-      // TEST 5-b: Registration end date is automatically filled
+      // TEST 9-b: Registration end date is automatically filled
       const regEndValue = await regEndDateInput.inputValue();
       expect(regEndValue).toBeTruthy();
       expect(regEndValue).not.toBe("");
       console.log(
-        `✅ TEST 5-b PASSED: Registration end date is auto-filled: ${regEndValue}`,
+        `✅ TEST 6-b PASSED: Registration end date is auto-filled: ${regEndValue}`,
       );
 
-      // TEST 5-c: Registration end date is on or before tournament start date
+      // TEST 9-c: Registration end date is on or before tournament start date
       const regEndDate = new Date(regEndValue);
       expect(regEndDate.getTime()).toBeLessThanOrEqual(
         tournamentStartDate.getTime(),
       );
       console.log(
-        `✅ TEST 5-c PASSED: Registration end date (${regEndValue}) is on or before tournament start (2026-06-01)`,
+        `✅ TEST 6-c PASSED: Registration end date (${regEndValue}) is on or before tournament start (2026-06-01)`,
       );
 
-      // TEST 5-d: Registration start date is on or before registration end date
+      // TEST 6-d: Registration start date is on or before registration end date
       const regStartDate = new Date(regStartValue);
       expect(regStartDate.getTime()).toBeLessThanOrEqual(regEndDate.getTime());
       console.log(
-        `✅ TEST 5-d PASSED: Registration start date (${regStartValue}) is on or before registration end date (${regEndValue})`,
+        `✅ TEST 6-d PASSED: Registration start date (${regStartValue}) is on or before registration end date (${regEndValue})`,
       );
 
-      // TEST 5-e: Registration start date is on or before tournament start date
+      // TEST 6-e: Registration start date is on or before tournament start date
       expect(regStartDate.getTime()).toBeLessThanOrEqual(
         tournamentStartDate.getTime(),
       );
       console.log(
-        `✅ TEST 5-e PASSED: Registration start date (${regStartValue}) is on or before tournament start (2026-06-01)`,
+        `✅ TEST 6-e PASSED: Registration start date (${regStartValue}) is on or before tournament start (2026-06-01)`,
       );
 
       // ==========================================
-      // TEST 6: Verify Auto-filled Withdrawal Deadline
+      // TEST 7: Verify Auto-filled Withdrawal Deadline
       // ==========================================
       console.log(
-        "\n🧪 TEST 6: Testing Auto-filled Withdrawal Deadline Satisfies Constraints",
+        "\n🧪 TEST 7: Testing Auto-filled Withdrawal Deadline Satisfies Constraints",
       );
 
       const withdrawalDateInput = page.locator("#maxAllowedWithdraDate");
 
-      // TEST 6-a: Withdrawal deadline is automatically filled
+      // TEST 7-a: Withdrawal deadline is automatically filled
       const withdrawalValue = await withdrawalDateInput.inputValue();
       expect(withdrawalValue).toBeTruthy();
       expect(withdrawalValue).not.toBe("");
       console.log(
-        `✅ TEST 6-a PASSED: Withdrawal deadline is auto-filled: ${withdrawalValue}`,
+        `✅ TEST 7-a PASSED: Withdrawal deadline is auto-filled: ${withdrawalValue}`,
       );
 
-      // TEST 6-b: Withdrawal deadline is on or before tournament start date
+      // TEST 7-b: Withdrawal deadline is on or before tournament start date
       const withdrawalDate = new Date(withdrawalValue);
       expect(withdrawalDate.getTime()).toBeLessThanOrEqual(
         tournamentStartDate.getTime(),
       );
       console.log(
-        `✅ TEST 6-b PASSED: Withdrawal deadline (${withdrawalValue}) is on or before tournament start (2026-06-01)`,
+        `✅ TEST 7-b PASSED: Withdrawal deadline (${withdrawalValue}) is on or before tournament start (2026-06-01)`,
       );
 
-      // TEST 6-c: Withdrawal deadline is on or after registration end date (logical constraint)
+      // TEST 7-c: Withdrawal deadline is on or after registration end date (logical constraint)
       expect(withdrawalDate.getTime()).toBeGreaterThanOrEqual(
         regEndDate.getTime(),
       );
       console.log(
-        `✅ TEST 6-c PASSED: Withdrawal deadline (${withdrawalValue}) is on or after registration end (${regEndValue})`,
+        `✅ TEST 7-c PASSED: Withdrawal deadline (${withdrawalValue}) is on or after registration end (${regEndValue})`,
       );
 
       // ==========================================
-      // TEST 7: Registration Window Maintains Offset When Tournament Dates Change
+      // TEST 8: Registration Window Maintains Offset When Tournament Dates Change
       // ==========================================
       console.log(
-        "\n🧪 TEST 7: Testing Registration Window Offset Persistence",
+        "\n🧪 TEST 8: Testing Registration Window Offset Persistence",
       );
 
       // Store initial offsets
@@ -514,7 +532,7 @@ test.describe("Registration & Payment Checkboxes", () => {
       // Wait for fields to be updated
       await page.waitForTimeout(1000);
 
-      // TEST 7-a: Verify registration dates were updated
+      // TEST 9-a: Verify registration dates were updated
       const updatedRegStartValue = await regStartDateInput.inputValue();
       const updatedRegEndValue = await regEndDateInput.inputValue();
 
@@ -524,7 +542,7 @@ test.describe("Registration & Payment Checkboxes", () => {
       expect(updatedRegEndValue).not.toBe(regEndValue);
 
       console.log(
-        `✅ TEST 7-a PASSED: Registration dates updated (start: ${updatedRegStartValue}, end: ${updatedRegEndValue})`,
+        `✅ TEST 8-a PASSED: Registration dates updated (start: ${updatedRegStartValue}, end: ${updatedRegEndValue})`,
       );
 
       // Calculate new offsets
@@ -543,31 +561,31 @@ test.describe("Registration & Payment Checkboxes", () => {
         `   New offsets: Registration opens ${newRegStartOffset} days before, closes ${newRegEndOffset} days before tournament`,
       );
 
-      // TEST 7-b: Verify registration open offset is preserved
+      // TEST 9-b: Verify registration open offset is preserved
       expect(newRegStartOffset).toBe(initialRegStartOffset);
       console.log(
-        `✅ TEST 7-b PASSED: Registration open offset preserved (${newRegStartOffset} days)`,
+        `✅ TEST 8-b PASSED: Registration open offset preserved (${newRegStartOffset} days)`,
       );
 
-      // TEST 7-c: Verify registration close offset is preserved
+      // TEST 9-c: Verify registration close offset is preserved
       expect(newRegEndOffset).toBe(initialRegEndOffset);
       console.log(
-        `✅ TEST 7-c PASSED: Registration close offset preserved (${newRegEndOffset} days)`,
+        `✅ TEST 8-c PASSED: Registration close offset preserved (${newRegEndOffset} days)`,
       );
 
-      // TEST 7-d: Verify dates still satisfy constraint
+      // TEST 9-d: Verify dates still satisfy constraint
       expect(newRegEndDate.getTime()).toBeLessThanOrEqual(
         newTournamentStart.getTime(),
       );
       console.log(
-        `✅ TEST 7-d PASSED: Updated registration end (${updatedRegEndValue}) still on or before tournament start (2026-07-01)`,
+        `✅ TEST 8-d PASSED: Updated registration end (${updatedRegEndValue}) still on or before tournament start (2026-07-01)`,
       );
 
       // ==========================================
-      // TEST 8: Withdrawal Deadline Maintains Offset When Tournament Dates Change
+      // TEST 9: Withdrawal Deadline Maintains Offset When Tournament Dates Change
       // ==========================================
       console.log(
-        "\n🧪 TEST 8: Testing Withdrawal Deadline Offset Persistence",
+        "\n🧪 TEST 9: Testing Withdrawal Deadline Offset Persistence",
       );
 
       // Store initial withdrawal offset (from previous tournament start)
@@ -579,13 +597,13 @@ test.describe("Registration & Payment Checkboxes", () => {
         `   Initial offset: Withdrawal deadline ${initialWithdrawalOffset} day(s) before tournament`,
       );
 
-      // TEST 8-a: Verify withdrawal deadline was updated
+      // TEST 9-a: Verify withdrawal deadline was updated
       const updatedWithdrawalValue = await withdrawalDateInput.inputValue();
       expect(updatedWithdrawalValue).toBeTruthy();
       expect(updatedWithdrawalValue).not.toBe(withdrawalValue);
 
       console.log(
-        `✅ TEST 8-a PASSED: Withdrawal deadline updated (${updatedWithdrawalValue})`,
+        `✅ TEST 9-a PASSED: Withdrawal deadline updated (${updatedWithdrawalValue})`,
       );
 
       // Calculate new withdrawal offset
@@ -598,30 +616,26 @@ test.describe("Registration & Payment Checkboxes", () => {
         `   New offset: Withdrawal deadline ${newWithdrawalOffset} day(s) before tournament`,
       );
 
-      // TEST 8-b: Verify offset is preserved
+      // TEST 9-b: Verify offset is preserved
       expect(newWithdrawalOffset).toBe(initialWithdrawalOffset);
       console.log(
-        `✅ TEST 8-b PASSED: Withdrawal deadline offset preserved (${newWithdrawalOffset} day(s))`,
+        `✅ TEST 9-b PASSED: Withdrawal deadline offset preserved (${newWithdrawalOffset} day(s))`,
       );
 
-      // TEST 8-c: Verify date still satisfies constraint (before tournament start)
+      // TEST 9-c: Verify date still satisfies constraint (before tournament start)
       expect(newWithdrawalDate.getTime()).toBeLessThanOrEqual(
         newTournamentStart.getTime(),
       );
       console.log(
-        `✅ TEST 8-c PASSED: Updated withdrawal deadline (${updatedWithdrawalValue}) still on or before tournament start (2026-07-01)`,
+        `✅ TEST 9-c PASSED: Updated withdrawal deadline (${updatedWithdrawalValue}) still on or before tournament start (2026-07-01)`,
       );
 
-      // TEST 8-d: Verify withdrawal still after registration end
+      // TEST 9-d: Verify withdrawal still after registration end
       expect(newWithdrawalDate.getTime()).toBeGreaterThanOrEqual(
         newRegEndDate.getTime(),
       );
       console.log(
-        `✅ TEST 8-d PASSED: Updated withdrawal deadline (${updatedWithdrawalValue}) still on or after registration end (${updatedRegEndValue})`,
-      );
-
-      console.log(
-        "\n🎉 ALL TESTS COMPLETED: Checkboxes, Date Validation, and Offset Persistence - All constraints satisfied!",
+        `✅ TEST 9-d PASSED: Updated withdrawal deadline (${updatedWithdrawalValue}) still on or after registration end (${updatedRegEndValue})`,
       );
 
       // Wait a moment for database writes to complete
