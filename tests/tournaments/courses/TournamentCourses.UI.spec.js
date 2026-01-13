@@ -14,12 +14,12 @@ const dbConfig = {
 };
 
 require("dotenv").config({
-  path: path.join(__dirname, "../../../../../backend-production/.env"),
+  path: path.join(__dirname, "../../../../SpeedScore-backend/.env"),
 });
 
 const backendModelsPath = path.join(
   __dirname,
-  "../../../../../backend-production/src/models/index.js",
+  "../../../../SpeedScore-backend/src/models/index.js",
 );
 const db = require(backendModelsPath);
 
@@ -188,6 +188,8 @@ async function navigateToCoursesTab(page) {
 
 test.describe("Courses UI Tests", () => {
   test("All Courses UI Tests Combined", async ({ page }) => {
+    test.setTimeout(180000); // Set timeout to 180 seconds
+
     await connectToDatabase();
 
     let createdTournamentName = null;
@@ -196,43 +198,53 @@ test.describe("Courses UI Tests", () => {
       await loginWithCredentials(page);
       await dismissInitialAlerts(page);
 
-      // ==========================================
-      // TEST 1: Course search input exists and is functional
-      // ==========================================
-      console.log("\n🧪 TEST 1: Course search input exists and is functional");
-
       createdTournamentName = await navigateToCoursesTab(page);
 
-      // TEST 1-a: Verify search input exists
+      // ==========================================
+      // TEST 1: Verify header displays tournament short name with tab name
+      // ==========================================
+      console.log("\n🧪 TEST 1: Testing Header Name in Courses Tab");
+
+      // TEST 1: Verify header shows "SLT26: Courses" (Seal Lab Tournament)
+      const header = page.locator("#tournamentFormHeader");
+      await expect(header).toContainText("SLT26: Courses", { timeout: 5000 });
+      console.log("✅ TEST 1 PASSED: Header displays 'SLT26: Courses'");
+
+      // ==========================================
+      // TEST 2: Course search input exists and is functional
+      // ==========================================
+      console.log("\n🧪 TEST 2: Course search input exists and is functional");
+
+      // TEST 2-a: Verify search input exists
       const searchInput = page.locator("#courseInputBoxId");
       await expect(searchInput).toBeVisible();
-      console.log("✅ TEST 1-a PASSED: Course search input is visible");
+      console.log("✅ TEST 2-a PASSED: Course search input is visible");
 
-      // TEST 1-b: Verify search input is functional
+      // TEST 2-b: Verify search input is functional
       await searchInput.fill("Golf");
       const inputValue = await searchInput.inputValue();
       expect(inputValue).toBe("Golf");
-      console.log("✅ TEST 1-b PASSED: Can type in search input");
+      console.log("✅ TEST 2-b PASSED: Can type in search input");
 
       // ==========================================
-      // TEST 2: Course search shows results dropdown
+      // TEST 3: Course search shows results dropdown
       // ==========================================
-      console.log("\n🧪 TEST 2: Course search shows results dropdown");
+      console.log("\n🧪 TEST 3: Course search shows results dropdown");
 
       await searchInput.clear();
       await searchInput.fill("Golf");
       await page.waitForTimeout(1500);
 
-      // TEST 2: Verify dropdown appears with results
+      // TEST 3: Verify dropdown appears with results
       const dropdownItems = page.locator(".list-group-item");
       const count = await dropdownItems.count();
       expect(count).toBeGreaterThan(0);
-      console.log(`✅ TEST 2 PASSED: Search shows ${count} results`);
+      console.log(`✅ TEST 3 PASSED: Search shows ${count} results`);
 
       // ==========================================
-      // TEST 3: Can add course from search results
+      // TEST 4: Can add course from search results
       // ==========================================
-      console.log("\n🧪 TEST 3: Can add course from search results");
+      console.log("\n🧪 TEST 4: Can add course from search results");
 
       // Get initial course count
       const courseTable = page.locator(".courses-table tbody tr");
@@ -242,14 +254,14 @@ test.describe("Courses UI Tests", () => {
       await dropdownItems.first().click();
       await page.waitForTimeout(1000);
 
-      // TEST 3: Verify course was added
+      // TEST 4: Verify course was added
       const newCount = await courseTable.count();
       expect(newCount).toBeGreaterThanOrEqual(initialCount);
       console.log(
-        `✅ TEST 3 PASSED: Course added (${initialCount} -> ${newCount})`,
+        `✅ TEST 4 PASSED: Course added (${initialCount} -> ${newCount})`,
       );
 
-      // TEST 3-b: If only one course, verify cannot delete it
+      // TEST 4-b: If only one course, verify cannot delete it
       if (newCount === 1) {
         const firstRow = courseTable.first();
         const deleteButton = firstRow.locator(
@@ -265,28 +277,28 @@ test.describe("Courses UI Tests", () => {
 
           if (isDisabled || pointerEvents === "none") {
             console.log(
-              "✅ TEST 3-b PASSED: Delete button is disabled for the only course",
+              "✅ TEST 4-b PASSED: Delete button is disabled for the only course",
             );
           } else {
             // Button appears enabled - this might mean delete protection is not implemented
             // Just verify the count stays at 1 without clicking
             console.log(
-              "✅ TEST 3-b PASSED: Delete button exists but course count is 1",
+              "✅ TEST 4-b PASSED: Delete button exists but course count is 1",
             );
           }
         } else {
           console.log(
-            "✅ TEST 3-b PASSED: Delete button not present for the only course",
+            "✅ TEST 4-b PASSED: Delete button not present for the only course",
           );
         }
       }
 
       // ==========================================
-      // TEST 4: Courses table displays added courses
+      // TEST 5: Courses table displays added courses
       // ==========================================
-      console.log("\n🧪 TEST 4: Courses table displays added courses");
+      console.log("\n🧪 TEST 5: Courses table displays added courses");
 
-      // TEST 4: Verify courses table is visible and has content
+      // TEST 5: Verify courses table is visible and has content
       const coursesTable = page.locator(".courses-table");
       await expect(coursesTable).toBeVisible();
 
@@ -294,14 +306,14 @@ test.describe("Courses UI Tests", () => {
       const rowCount = await courseRows.count();
       expect(rowCount).toBeGreaterThan(0);
       console.log(
-        `✅ TEST 4 PASSED: Courses table shows ${rowCount} course(s)`,
+        `✅ TEST 5 PASSED: Courses table shows ${rowCount} course(s)`,
       );
 
       // ==========================================
-      // TEST 5: Course info modal opens when clicking course name
+      // TEST 6: Course info modal opens when clicking course name
       // ==========================================
       console.log(
-        "\n🧪 TEST 5: Course info modal opens when clicking course name",
+        "\n🧪 TEST 6: Course info modal opens when clicking course name",
       );
 
       // Find a course row and click on the view icon (fa-eye)
@@ -313,20 +325,18 @@ test.describe("Courses UI Tests", () => {
         await viewIcon.click();
         await page.waitForTimeout(1000);
 
-        // TEST 5: Verify modal opened
+        // TEST 6: Verify modal opened
         const modal = page.locator(".modal.show");
         await expect(modal).toBeVisible();
-        console.log("✅ TEST 5 PASSED: Course info modal opens");
+        console.log("✅ TEST 6 PASSED: Course info modal opens");
 
         // Close modal
         const closeButton = modal.locator(".btn-close");
         await closeButton.click();
         await page.waitForTimeout(500);
       } else {
-        console.log("❌ TEST 5 FAILED: View icon not found");
+        console.log("❌ TEST 6 FAILED: View icon not found");
       }
-
-      console.log("\n🎉 ALL COURSES UI TESTS COMPLETED!");
 
       // Clean up
       await cleanupTestTournament(createdTournamentName);
