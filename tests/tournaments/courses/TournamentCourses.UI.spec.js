@@ -258,7 +258,7 @@ test.describe("Courses UI Tests", () => {
       const newCount = await courseTable.count();
       expect(newCount).toBeGreaterThanOrEqual(initialCount);
       console.log(
-        `✅ TEST 4 PASSED: Course added (${initialCount} -> ${newCount})`,
+        `✅ TEST 4-a PASSED: Course added (${initialCount} -> ${newCount})`,
       );
 
       // TEST 4-b: If only one course, verify cannot delete it
