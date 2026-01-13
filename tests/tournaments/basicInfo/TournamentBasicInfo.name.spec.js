@@ -101,11 +101,17 @@ test.describe("Tournament Name Tests", () => {
   });
 
   // Short Name Generation Algorithm Tests
-  test("TEST 1: Show 'New Tournament' as default header", async ({ page }) => {
+  test("TEST 1: Show 'New Tournament: Basic Info' as default header", async ({
+    page,
+  }) => {
     const header = page.locator("#tournamentFormHeader");
-    await expect(header).toHaveText("New Tournament", { timeout: 5000 });
+    await expect(header).toHaveText("New Tournament: Basic Info", {
+      timeout: 5000,
+    });
 
-    console.log("✅ TEST 1 PASSED: Default header is 'New Tournament'");
+    console.log(
+      "✅ TEST 1 PASSED: Default header is 'New Tournament: Basic Info'",
+    );
   });
 
   test("TEST 2: Generate short name from two-word tournament name", async ({
@@ -122,10 +128,13 @@ test.describe("Tournament Name Tests", () => {
     const currentYear = new Date().getFullYear().toString().slice(-2);
     const headerText = await header.textContent();
 
-    expect(headerText).toMatch(new RegExp(`T.*${currentYear}`));
+    // Should contain short name pattern (e.g., "TT26: Basic Info")
+    expect(headerText).toMatch(new RegExp(`TT${currentYear}.*Basic Info`));
     await expect(header).not.toContainText("New Tournament");
 
-    console.log("✅ TEST 2 PASSED: Two-word name generates correct short name");
+    console.log(
+      "✅ TEST 2 PASSED: Two-word name generates correct short name with tab",
+    );
   });
 
   test("TEST 3: Generate short name from single-word tournament name", async ({

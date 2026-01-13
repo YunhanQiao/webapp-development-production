@@ -631,9 +631,28 @@ const AddTournament = () => {
       <Navbar />
       <div className="mode-page action-dialog" tabIndex="0">
         <h1 id="tournamentFormHeader" className="mode-page-header">
-          {activeTournament?.basicInfo?.uniqueName ||
-            wizardState?.basicInfo?.uniqueName ||
-            "New Tournament"}
+          {(() => {
+            const uniqueName =
+              activeTournament?.basicInfo?.uniqueName ||
+              wizardState?.basicInfo?.uniqueName ||
+              "New Tournament";
+            const tabName = tabConfig[tab]?.name || "";
+
+            // If we have a unique name other than default and a tab name, combine them
+            if (uniqueName !== "New Tournament" && tabName) {
+              return `${uniqueName}: ${tabName}`;
+            }
+            // If only unique name exists, show it
+            if (uniqueName !== "New Tournament") {
+              return uniqueName;
+            }
+            // If we have a tab name but no unique name, show "New Tournament: Tab Name"
+            if (tabName) {
+              return `New Tournament: ${tabName}`;
+            }
+            // Default fallback
+            return "New Tournament";
+          })()}
         </h1>
         <FormProvider {...methods}>
           <Tabs
