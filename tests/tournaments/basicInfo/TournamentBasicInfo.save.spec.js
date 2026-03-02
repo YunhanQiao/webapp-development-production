@@ -298,18 +298,10 @@ test.describe("Basic Info Save Buttons - Combined Test", () => {
         name: "Registration & Payment",
       });
 
-      if ((await regPaymentTab.count()) > 0) {
-        await expect(regPaymentTab).toHaveAttribute("aria-selected", "true", {
-          timeout: 5000,
-        });
-        console.log(
-          "✅ TEST 2-a PASSED: Advances to Registration & Payment tab",
-        );
-      } else {
-        console.log(
-          "⚠️  TEST 2-a SKIPPED: Registration & Payment tab not found",
-        );
-      }
+      await expect(regPaymentTab).toHaveAttribute("aria-selected", "true", {
+        timeout: 5000,
+      });
+      console.log("✅ TEST 2-a PASSED: Advances to Registration & Payment tab");
 
       const basicInfoTab = page.getByRole("tab", { name: "Basic Info" });
       await basicInfoTab.click();
