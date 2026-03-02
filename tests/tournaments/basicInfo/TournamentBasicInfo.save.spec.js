@@ -311,22 +311,6 @@ test.describe("Basic Info Save Buttons - Combined Test", () => {
         );
       }
 
-      const successMessageExists =
-        (await page.locator(".alert-success").count()) > 0 ||
-        (await page.locator(".toast-success").count()) > 0 ||
-        (await page.locator("text=/saved/i").count()) > 0 ||
-        (await page.locator("text=/success/i").count()) > 0;
-
-      if (successMessageExists) {
-        console.log(
-          "✅ TEST 2-b PASSED: Success message shown after Save & Next",
-        );
-      } else {
-        console.log(
-          "⚠️  TEST 2-b SKIPPED: Success message not found - might be implicit",
-        );
-      }
-
       const basicInfoTab = page.getByRole("tab", { name: "Basic Info" });
       await basicInfoTab.click();
       await page.waitForTimeout(1000);
@@ -338,10 +322,10 @@ test.describe("Basic Info Save Buttons - Combined Test", () => {
       if (hasTeeTime) {
         expect(await teeTimeInputs.first().inputValue()).toBe(teeTime);
       }
-      console.log("✅ TEST 2-c PASSED: All fields preserved after Save & Next");
+      console.log("✅ TEST 2-b PASSED: All fields preserved after Save & Next");
 
       await verifyBasicInfoInDB(saveNextName, saveNextStart, saveNextEnd);
-      console.log("✅ TEST 2-d PASSED: Tournament data saved in database");
+      console.log("✅ TEST 2-c PASSED: Tournament data saved in database");
     } finally {
       await cleanupTestTournament(saveNextName);
     }

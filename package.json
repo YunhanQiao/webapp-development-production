@@ -85,7 +85,7 @@
   "devDependencies": {
     "@babel/core": "^7.23.2",
     "@babel/register": "^7.22.15",
-    "@playwright/test": "^1.39.0",
+    "@playwright/test": "^1.42.1",
     "@types/node": "^20.8.6",
     "gh-pages": "^6.0.0",
     "husky": "^9.1.6",
